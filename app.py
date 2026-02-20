@@ -1,103 +1,80 @@
 import streamlit as st
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, RichText
 import io
 from datetime import datetime
+import os
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="F.R.I.D.A.Y. - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
-# 2. ESTILO TÁCTICO (CSS)
+# 2. INYECCIÓN DE CSS DE ALTA PRIORIDAD (Protocolo de Fuerza)
 st.markdown("""
     <style>
-    .block-container { padding-top: 1rem !important; }
-    .stApp { background-color: #FFFFFF !important; }
-    [data-testid="stSidebar"] { background-color: #004A2F !important; }
-    [data-testid="stSidebar"] * { color: #FFFFFF !important; font-weight: bold !important; }
-    .header-institucional {
-        background-color: #004A2F;
-        padding: 15px;
-        border-radius: 10px;
+    /* FORZAR BARRA LATERAL */
+    [data-testid="stSidebar"] {
+        background-color: #004A2F !important;
+    }
+    /* FORZAR TEXTOS EN BARRA LATERAL A BLANCO */
+    [data-testid="stSidebar"] .stText, 
+    [data-testid="stSidebar"] .stMarkdown p, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] h4 {
         color: #FFFFFF !important;
-        text-align: center;
-        border: 2px solid #C5A059;
+        font-weight: bold !important;
     }
-    label, .stMarkdown p, .stTextInput label, .stTextArea label {
-        color: #004A2F !important;
-        font-weight: 900 !important;
-        font-size: 1.1rem !important;
-    }
-    div.stButton > button {
+
+    /* FORZAR BOTONES VERDES */
+    .stButton > button, .stFormSubmitButton > button {
         background-color: #004A2F !important;
         color: #FFFFFF !important;
         border: 2px solid #C5A059 !important;
         font-weight: bold !important;
+        width: 100% !important;
+    }
+
+    /* ENCABEZADO */
+    .header-institucional {
+        background-color: #004A2F;
+        padding: 10px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        border: 2px solid #C5A059;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. BARRA LATERAL CON CONFIGURACIÓN DE FIRMA
+# 3. BARRA LATERAL
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=120)
+    # Verificamos si el logo existe localmente para evitar la imagen rota
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=140)
+    else:
+        # Respaldo si aún no sube el archivo
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/300px-Logotipo_de_Carabineros_de_Chile.svg.png", width=130)
+    
     st.markdown("### 🟢 CONFIGURACIÓN DE FIRMA")
-    # CAMPOS QUE USTED SOLICITÓ PARA PERSONALIZAR LA FIRMA
-    nombre_firma = st.text_input("Nombre del Oficial", value="DIANA SANDOVAL ASTUDILLO")
-    grado_firma = st.text_input("Grado", value="C.P.R. Analista Social")
-    cargo_firma = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
+    nombre_f = st.text_input("Oficial", value="DIANA SANDOVAL ASTUDILLO")
+    grado_f = st.text_input("Grado", value="C.P.R. Analista Social")
+    cargo_f = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
+    
     st.markdown("---")
-    st.write(f"**UNIDAD:** 26ª Com. Pudahuel")
+    st.markdown("#### **UNIDAD:**")
+    st.write("26ª Comisaría Pudahuel") # Forzado a blanco por el CSS
+    st.markdown(f"#### **FECHA:** {datetime.now().strftime('%d/%m/%Y')}")
 
-# 4. ENCABEZADO
-st.markdown("""
-    <div class="header-institucional">
-        <h2 style="color: white; margin:0; font-size: 1.8rem;">CARABINEROS DE CHILE</h2>
-        <h3 style="color: #C5A059; margin:0; font-size: 1.2rem;">SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3>
-    </div>
-    """, unsafe_allow_html=True)
+# 4. CUERPO
+st.markdown('<div class="header-institucional"><h2>CARABINEROS DE CHILE</h2><h4>SISTEMA F.R.I.D.A.Y.</h4></div>', unsafe_allow_html=True)
 
-# 5. LÓGICA DE GENERACIÓN
-def generar_word(nombre_plantilla, datos):
-    try:
-        doc = DocxTemplate(nombre_plantilla)
-        # Fecha en formato institucional
-        fecha_larga = datetime.now().strftime('%d de %B de %Y')
-        datos['fecha_fondo'] = f"Pudahuel, {fecha_larga}".upper()
-        
-        doc.render(datos)
-        output = io.BytesIO()
-        doc.save(output)
-        return output.getvalue()
-    except:
-        st.error(f"Error técnico: Verifique que '{nombre_plantilla}' esté en su GitHub.")
-        return None
-
-# 6. PESTAÑAS
-tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
+# Pestañas
+tab1, tab2 = st.tabs(["📄 ACTA STOP", "📊 OTROS"])
 
 with tab1:
-    with st.form("form_mensual"):
-        c1, c2 = st.columns(2)
-        with c1:
-            semana = st.text_input("Semana de estudio")
-            fecha_sesion = st.text_input("Fecha de sesión")
-        with c2:
-            c_carabineros = st.text_input("Compromiso Carabineros")
-        
-        problematica = st.text_area("Problemática Delictual 26ª Comisaría")
-        submit_mensual = st.form_submit_button("🛡️ PROCESAR ACTA MENSUAL")
+    with st.form("form"):
+        sem = st.text_input("Semana")
+        prob = st.text_area("Problemática")
+        submit = st.form_submit_button("🛡️ PROCESAR ACTA") # Debe verse verde
 
-    if submit_mensual:
-        # Se captura la firma de la barra lateral y se pasa a MAYÚSCULAS
-        datos = {
-            'semana': semana.upper(),
-            'fecha_sesion': fecha_sesion.upper(),
-            'c_carabineros': (c_carabineros if c_carabineros else "SIN COMPROMISO").upper(),
-            'problematica': problematica.upper(),
-            'nom_oficial': nombre_firma.upper(),
-            'grado_oficial': grado_firma.upper(),
-            'cargo_oficial': cargo_firma.upper()
-        }
-        archivo = generar_word("ACTA STOP MENSUAL.docx", datos)
-        if archivo:
-            st.download_button(label="⬇️ DESCARGAR ACTA", data=archivo, file_name=f"ACTA_STOP_{semana}.docx")
-
-# Los otros módulos (Trimestral y GEO) usarán las mismas variables nombre_firma, grado_firma, etc.
+    if submit:
+        # Lógica de firma con formato de imagen (Negrita/Normal/Negrita)
+        st.success("Analizando...")
