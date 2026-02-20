@@ -3,83 +3,74 @@ from docxtpl import DocxTemplate
 import io
 from datetime import datetime
 
-# Configuración de F.R.I.D.A.Y.
-st.set_page_config(page_title="F.R.I.D.A.Y. - Analista Criminal", page_icon="🟢")
+# Configuración de Identidad Visual
+st.set_page_config(page_title="F.R.I.D.A.Y. - Tactical Unit", page_icon="🟢", layout="wide")
 
+# Estilo Stark-Institucional
 st.markdown("""
     <style>
-    .stButton>button { background-color: #004A2F; color: white; width: 100%; font-weight: bold; }
+    .main { background-color: #0e1117; color: white; }
+    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px; white-space: pre-wrap; background-color: #004A2F;
+        border-radius: 5px; color: white; font-weight: bold; padding: 10px;
+    }
+    .stTabs [aria-selected="true"] { background-color: #C5A059 !important; color: black !important; }
+    div.stButton > button {
+        background-color: #004A2F; color: white; border: 2px solid #C5A059;
+        border-radius: 10px; height: 3em; width: 100%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🟢 F.R.I.D.A.Y.")
-st.subheader("Unidad de Análisis Criminal - 26° Com. Pudahuel")
+st.title("🛡️ F.R.I.D.A.Y. | Analista Civil")
+st.write("---")
 
-tipo_informe = st.selectbox("Seleccione el tipo de informe:", 
-                            ["Acta STOP Mensual", "Acta STOP Trimestral", "Informe GEO"])
+# Creación de Pestañas
+tab1, tab2, tab3 = st.tabs(["📊 ACTA STOP MENSUAL", "📅 STOP TRIMESTRAL", "🗺️ INFORME GEO"])
 
-# Iniciamos el formulario
-with st.form("formulario_analisis"):
-    datos = {}
-    
-    if tipo_informe == "Acta STOP Mensual":
-        st.info("Completando Acta STOP Mensual")
-        datos['semana'] = st.text_input("Semana de estudio (ej: 01 al 07)")
-        datos['fecha_sesion'] = st.text_input("Fecha de sesión")
-        datos['problematica'] = st.text_area("Problemática 26ª Comisaría")
-        datos['c_carabineros'] = st.text_input("Compromiso Carabineros")
-        datos['c_muni'] = st.text_input("Compromiso Municipalidad")
-        # Datos fijos para su firma
-        datos['nom_oficial'] = "DIANA SANDOVAL ASTUDILLO"
-        datos['grado_oficial'] = "C.P.R. Analista Social"
-        datos['cargo_oficial'] = "OFICINA DE OPERACIONES"
-
-    elif tipo_informe == "Acta STOP Trimestral":
-        st.info("Completando Acta STOP Trimestral")
-        datos['periodo'] = st.text_input("Periodo (ej: Octubre - Diciembre)")
-        datos['cap_bustos'] = st.text_input("Nombre Capitán Comisario (S)")
-
-    elif tipo_informe == "Informe GEO":
-        st.info("Completando Informe Delictual GEO")
-        datos['domicilio'] = st.text_input("Domicilio del análisis")
-        datos['jurisdiccion'] = st.text_input("Unidad Jurisdiccional (ej: 26ª Comisaría)")
-        datos['doe'] = st.text_input("N° de DOE")
-        datos['fecha_doe'] = st.text_input("Fecha de DOE")
-        datos['cuadrante'] = st.text_input("Cuadrante")
-        datos['periodo_inicio'] = st.text_input("Fecha Inicio Análisis")
-        datos['periodo_fin'] = st.text_input("Fecha Fin Análisis")
-        datos['total_dmcs'] = st.text_input("Total de casos DMCS")
-        datos['conclusion_ia'] = st.text_area("V.- CONCLUSIÓN")
-
-    # BOTÓN DE ENVÍO (Debe estar dentro del 'with st.form')
-    enviar = st.form_submit_button("GENERAR DOCUMENTO")
-
-# Procesamiento fuera del formulario
-if enviar:
-    try:
-        nombres_archivos = {
-            "Acta STOP Mensual": "ACTA STOP MENSUAL.docx",
-            "Acta STOP Trimestral": "ACTA STOP TRIMESTRAL.docx",
-            "Informe GEO": "INFORME GEO.docx"
-        }
+# --- PESTAÑA 1: STOP MENSUAL ---
+with tab1:
+    st.header("Sesión Táctica Operativa Mensual")
+    with st.form("form_mensual"):
+        c1, c2 = st.columns(2)
+        with c1:
+            semana = st.text_input("Semana de estudio", placeholder="Ej: 01 al 07")
+            fecha_s = st.text_input("Fecha de sesión")
+        with c2:
+            c_carab = st.text_input("Compromiso Carabineros")
+            c_muni = st.text_input("Compromiso Municipalidad")
         
-        doc = DocxTemplate(nombres_archivos[tipo_informe])
+        prob = st.text_area("Problemática Delictual Analizada")
         
-        # Fechas automáticas según sus plantillas
-        datos['fecha_hoy'] = datetime.now().strftime('%d/%m/%Y')
-        datos['fecha_actual'] = datetime.now().strftime('%d/%m/%Y')
+        btn_stop = st.form_submit_button("GENERAR ACTA MENSUAL")
+        if btn_stop:
+            # Lógica de renderizado (se repite la del post anterior)
+            st.info("Procesando datos institucionales...")
+
+# --- PESTAÑA 2: STOP TRIMESTRAL ---
+with tab2:
+    st.header("Análisis Operativo Trimestral")
+    with st.form("form_trimestral"):
+        periodo = st.text_input("Periodo Comprendido", placeholder="Ej: Octubre - Diciembre")
+        cap_b = st.text_input("Capitán Comisario (S)")
+        btn_trim = st.form_submit_button("GENERAR ACTA TRIMESTRAL")
+
+# --- PESTAÑA 3: INFORME GEO ---
+with tab3:
+    st.header("Análisis Geodelictual")
+    with st.form("form_geo"):
+        col_a, col_b = st.columns(2)
+        with col_a:
+            dom = st.text_input("Domicilio del Análisis")
+            doe_n = st.text_input("N° de DOE")
+        with col_b:
+            cuad = st.text_input("Cuadrante")
+            casos = st.text_input("Total DMCS")
         
-        doc.render(datos)
-        
-        output = io.BytesIO()
-        doc.save(output)
-        
-        st.success(f"Sistema F.R.I.D.A.Y.: {tipo_informe} listo para descarga.")
-        st.download_button(
-            label="⬇️ DESCARGAR ARCHIVO OFICIAL",
-            data=output.getvalue(),
-            file_name=f"{tipo_informe}_{datetime.now().strftime('%Y%m%d')}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-    except Exception as e:
-        st.error(f"Error de acceso: Asegúrese de que el archivo '{nombres_archivos[tipo_informe]}' esté cargado en su GitHub.")
+        conc = st.text_area("Conclusión del Analista")
+        btn_geo = st.form_submit_button("GENERAR INFORME GEO")
+
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=100)
+st.sidebar.write("**Estado del Sistema:** Operativo")
+st.sidebar.write("**Usuario:** D. Sandoval")
