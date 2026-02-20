@@ -3,79 +3,83 @@ from docxtpl import DocxTemplate
 import io
 from datetime import datetime
 
-# Configuración de página con estética institucional
+# Configuración de F.R.I.D.A.Y.
 st.set_page_config(page_title="F.R.I.D.A.Y. - Analista Criminal", page_icon="🟢")
 
-# Busque estas líneas en su app.py y reemplácelas
 st.markdown("""
     <style>
-    .main { background-color: #f0f2f6; }
-    .stButton>button { 
-        background-color: #004A2F; 
-        color: white; 
-        width: 100%; 
-        border-radius: 5px;
-        height: 3em;
-        font-weight: bold;
-    }
+    .stButton>button { background-color: #004A2F; color: white; width: 100%; font-weight: bold; }
     </style>
-    """, unsafe_allow_html=True) # <-- Aquí estaba el error, ahora dice html
+    """, unsafe_allow_html=True)
 
 st.title("🟢 F.R.I.D.A.Y.")
 st.subheader("Unidad de Análisis Criminal - 26° Com. Pudahuel")
 
-# Selección de Informe
-tipo_informe = st.selectbox("Seleccione el tipo de informe a generar:", 
+tipo_informe = st.selectbox("Seleccione el tipo de informe:", 
                             ["Acta STOP Mensual", "Acta STOP Trimestral", "Informe GEO"])
 
-with st.form("datos_informe"):
+# Iniciamos el formulario
+with st.form("formulario_analisis"):
     datos = {}
     
     if tipo_informe == "Acta STOP Mensual":
-        datos['semana'] = st.text_input("Semana de estudio (ej: 01 al 07)") [cite: 4]
-        datos['fecha_sesion'] = st.text_input("Fecha de sesión") [cite: 5]
-        datos['problematica'] = st.text_area("Problemática detectada") [cite: 22]
-        datos['c_carabineros'] = st.text_input("Compromiso Carabineros") [cite: 24]
-        datos['nom_oficial'] = "DIANA SANDOVAL ASTUDILLO" # Por defecto según su perfil [cite: 93]
+        st.info("Completando Acta STOP Mensual")
+        datos['semana'] = st.text_input("Semana de estudio (ej: 01 al 07)")
+        datos['fecha_sesion'] = st.text_input("Fecha de sesión")
+        datos['problematica'] = st.text_area("Problemática 26ª Comisaría")
+        datos['c_carabineros'] = st.text_input("Compromiso Carabineros")
+        datos['c_muni'] = st.text_input("Compromiso Municipalidad")
+        # Datos fijos para su firma
+        datos['nom_oficial'] = "DIANA SANDOVAL ASTUDILLO"
+        datos['grado_oficial'] = "C.P.R. Analista Social"
+        datos['cargo_oficial'] = "OFICINA DE OPERACIONES"
 
     elif tipo_informe == "Acta STOP Trimestral":
-        datos['periodo'] = st.text_input("Periodo (ej: Octubre - Diciembre)") [cite: 40]
-        datos['cap_bustos'] = st.text_input("Nombre Comisario Subrogante") [cite: 43]
+        st.info("Completando Acta STOP Trimestral")
+        datos['periodo'] = st.text_input("Periodo (ej: Octubre - Diciembre)")
+        datos['cap_bustos'] = st.text_input("Nombre Capitán Comisario (S)")
 
     elif tipo_informe == "Informe GEO":
-        datos['domicilio'] = st.text_input("Domicilio del análisis") [cite: 68]
-        datos['doe'] = st.text_input("Número de DOE") [cite: 75]
-        datos['cuadrante'] = st.text_input("Cuadrante") [cite: 78]
-        datos['total_dmcs'] = st.number_input("Total DMCS detectados", step=1) [cite: 85]
-        datos['conclusion_ia'] = st.text_area("Conclusión del Analista") [cite: 91]
+        st.info("Completando Informe Delictual GEO")
+        datos['domicilio'] = st.text_input("Domicilio del análisis")
+        datos['jurisdiccion'] = st.text_input("Unidad Jurisdiccional (ej: 26ª Comisaría)")
+        datos['doe'] = st.text_input("N° de DOE")
+        datos['fecha_doe'] = st.text_input("Fecha de DOE")
+        datos['cuadrante'] = st.text_input("Cuadrante")
+        datos['periodo_inicio'] = st.text_input("Fecha Inicio Análisis")
+        datos['periodo_fin'] = st.text_input("Fecha Fin Análisis")
+        datos['total_dmcs'] = st.text_input("Total de casos DMCS")
+        datos['conclusion_ia'] = st.text_area("V.- CONCLUSIÓN")
 
-    submitted = st.form_submit_button("PROCESAR DOCUMENTO")
+    # BOTÓN DE ENVÍO (Debe estar dentro del 'with st.form')
+    enviar = st.form_submit_button("GENERAR DOCUMENTO")
 
-    if submitted:
-        # Mapeo de archivos según su selección
-        archivos = {
+# Procesamiento fuera del formulario
+if enviar:
+    try:
+        nombres_archivos = {
             "Acta STOP Mensual": "ACTA STOP MENSUAL.docx",
             "Acta STOP Trimestral": "ACTA STOP TRIMESTRAL.docx",
             "Informe GEO": "INFORME GEO.docx"
         }
         
-        try:
-            doc = DocxTemplate(archivos[tipo_informe])
-            datos['fecha_hoy'] = datetime.now().strftime('%d/%m/%Y') [cite: 29, 62]
-            datos['fecha_actual'] = datetime.now().strftime('%d/%m/%Y') [cite: 69]
-            
-            doc.render(datos)
-            
-            # Guardar en memoria para descarga
-            bio = io.BytesIO()
-            doc.save(bio)
-            
-            st.success(f"✅ {tipo_informe} generado con éxito.")
-            st.download_button(
-                label="⬇️ DESCARGAR WORD",
-                data=bio.getvalue(),
-                file_name=f"Generado_{tipo_informe}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
-        except Exception as e:
-            st.error(f"Error: Asegúrese de que el archivo {archivos[tipo_informe]} esté en el mismo nivel que app.py")
+        doc = DocxTemplate(nombres_archivos[tipo_informe])
+        
+        # Fechas automáticas según sus plantillas
+        datos['fecha_hoy'] = datetime.now().strftime('%d/%m/%Y')
+        datos['fecha_actual'] = datetime.now().strftime('%d/%m/%Y')
+        
+        doc.render(datos)
+        
+        output = io.BytesIO()
+        doc.save(output)
+        
+        st.success(f"Sistema F.R.I.D.A.Y.: {tipo_informe} listo para descarga.")
+        st.download_button(
+            label="⬇️ DESCARGAR ARCHIVO OFICIAL",
+            data=output.getvalue(),
+            file_name=f"{tipo_informe}_{datetime.now().strftime('%Y%m%d')}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+    except Exception as e:
+        st.error(f"Error de acceso: Asegúrese de que el archivo '{nombres_archivos[tipo_informe]}' esté cargado en su GitHub.")
