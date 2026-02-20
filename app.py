@@ -6,12 +6,20 @@ from datetime import datetime
 # Configuración de página con estética institucional
 st.set_page_config(page_title="F.R.I.D.A.Y. - Analista Criminal", page_icon="🟢")
 
+# Busque estas líneas en su app.py y reemplácelas
 st.markdown("""
     <style>
     .main { background-color: #f0f2f6; }
-    .stButton>button { background-color: #004A2F; color: white; width: 100%; }
+    .stButton>button { 
+        background-color: #004A2F; 
+        color: white; 
+        width: 100%; 
+        border-radius: 5px;
+        height: 3em;
+        font-weight: bold;
+    }
     </style>
-    """, unsafe_allow_index=True)
+    """, unsafe_allow_html=True) # <-- Aquí estaba el error, ahora dice html
 
 st.title("🟢 F.R.I.D.A.Y.")
 st.subheader("Unidad de Análisis Criminal - 26° Com. Pudahuel")
