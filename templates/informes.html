@@ -1,0 +1,26 @@
+<div class="container mt-4">
+    <h2 class="text-verde">Gestión de Informes Institucionales</h2>
+    <hr>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <button class="btn btn-carabinero w-100 p-4" onclick="mostrarForm('stop')">
+                📄 ACTA SESIÓN STOP MENSUAL
+            </button>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-carabinero w-100 p-4" onclick="mostrarForm('geo')">
+                🗺️ INFORME DELICTUAL GEO
+            </button>
+        </div>
+    </div>
+
+    <div id="formulario-contenedor" class="card p-4 shadow-sm d-none">
+        <form id="form-datos">
+            <h4 id="titulo-informe"></h4>
+            <div id="campos-dinamicos" class="row">
+                </div>
+            <button type="submit" class="btn btn-success mt-3">Generar y Descargar Word</button>
+        </form>
+    </div>
+</div>
