@@ -6,105 +6,118 @@ from datetime import datetime
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="F.R.I.D.A.Y. - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
-# 2. ESTILO INSTITUCIONAL DE ALTO CONTRASTE
+# 2. ESTILO DE CONTRASTES DINÁMICOS (CSS)
 st.markdown("""
     <style>
-    /* Fondo Blanco Puro */
+    /* Fondo General Blanco */
     .stApp {
         background-color: #FFFFFF !important;
     }
     
-    /* Barra Lateral Verde JARVIS */
+    /* BARRA LATERAL: Fondo Verde, Letra Blanca */
     [data-testid="stSidebar"] {
         background-color: #004A2F !important;
     }
-    
-    /* LETRAS EN VERDE OSCURO, NEGRITAS Y GRUESAS */
-    label, .stMarkdown p, .stTextInput label, .stTextArea label, h1, h2, h3 {
-        color: #004A2F !important;
-        font-weight: 900 !important; /* Grosor máximo */
-        font-family: 'Arial', sans-serif !important;
-    }
-
-    /* Input text color para que lo que escribas se vea negro */
-    input {
-        color: #000000 !important;
+    [data-testid="stSidebar"] * {
+        color: #FFFFFF !important;
         font-weight: bold !important;
     }
 
-    /* Botones */
-    div.stButton > button {
+    /* ENCABEZADOS Y TÍTULOS: Fondo Verde, Letra Blanca */
+    .header-verde {
         background-color: #004A2F;
-        color: white;
-        border: 3px solid #C5A059;
-        font-weight: bold;
-        height: 3.5em;
+        padding: 20px;
+        border-radius: 10px;
+        color: #FFFFFF !important;
+        margin-bottom: 20px;
+        border: 2px solid #C5A059;
     }
+    
+    /* LETRAS DONDE EL FONDO ES BLANCO: Verde Oscuro y Negrita */
+    label, .stMarkdown p, .stTextInput label, .stTextArea label {
+        color: #004A2F !important;
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+    }
+
+    /* BOTONES: Fondo Verde, Letra Blanca */
+    div.stButton > button {
+        background-color: #004A2F !important;
+        color: #FFFFFF !important;
+        border: 2px solid #C5A059 !important;
+        font-weight: bold !important;
+        height: 3.5em !important;
+        width: 100% !important;
+        text-transform: uppercase;
+    }
+    
+    /* Pestañas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F; border-radius: 5px; }
+    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; font-weight: bold; }
+    .stTabs [aria-selected="true"] { background-color: #C5A059 !important; color: #000000 !important; }
+
     </style>
     """, unsafe_allow_html=True)
 
-# 3. BARRA LATERAL (Sidebar)
+# 3. BARRA LATERAL
 with st.sidebar:
-    # Logo alternativo para evitar link roto
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/1200px-Logotipo_de_Carabineros_de_Chile.svg.png", width=120)
-    st.markdown("### 🟢 SISTEMA ACTIVO")
-    st.write("**Unidad:** 26ª Comisaría")
-    st.write("**Analista:** D. Sandoval A.")
-    st.write(f"**Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
+    # Usando el logo con un parámetro para forzar la carga
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/800px-Logotipo_de_Carabineros_de_Chile.svg.png", width=120)
+    st.markdown("### 🟢 UNIDAD ACTIVA")
+    st.write("26ª Comisaría Pudahuel")
+    st.write(f"Analista: D. Sandoval\n{datetime.now().strftime('%d/%m/%Y')}")
 
-# 4. ENCABEZADO PRINCIPAL (Logo corregido)
-col1, col2 = st.columns([1, 4])
-with col1:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/1200px-Logotipo_de_Carabineros_de_Chile.svg.png", width=150)
-with col2:
-    st.markdown("# CARABINEROS DE CHILE")
-    st.markdown("## SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE")
+# 4. ENCABEZADO CON FONDO VERDE
+st.markdown("""
+    <div class="header-verde">
+        <h1 style="color: white; margin:0;">CARABINEROS DE CHILE</h1>
+        <h3 style="color: white; margin:0;">SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.write("---")
-
-# 5. SISTEMA DE PESTAÑAS
+# 5. PESTAÑAS
 tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
 
 # --- PESTAÑA 1: STOP MENSUAL ---
 with tab1:
     with st.form("form_mensual"):
-        st.markdown("### 📝 DATOS PARA ACTA STOP MENSUAL") [cite: 1, 2]
+        st.markdown("### 📝 COMPLETAR ACTA STOP MENSUAL")
         c1, c2 = st.columns(2)
         with c1:
-            semana = st.text_input("Semana de estudio analizada", placeholder="Ej: 01 al 07") [cite: 4]
-            fecha_sesion = st.text_input("Fecha de sesión") [cite: 5]
+            semana = st.text_input("Semana de estudio", placeholder="Ej: 01 al 07")
+            fecha_s = st.text_input("Fecha de sesión")
         with c2:
-            c_carabineros = st.text_input("Compromiso Carabineros") [cite: 24]
-            c_muni = st.text_input("Compromiso Municipalidad") [cite: 26]
+            c_carab = st.text_input("Compromiso Carabineros")
+            c_muni = st.text_input("Compromiso Municipalidad")
         
-        problematica = st.text_area("Problemática 26ª Comisaría Pudahuel") [cite: 22]
+        prob = st.text_area("Problemática Delictual Detectada")
         
-        if st.form_submit_button("🛡️ GENERAR ACTA STOP"):
-            st.success("Escribiendo documento...")
+        if st.form_submit_button("GENERAR DOCUMENTO"):
+            st.success("Analizando datos para el Acta...")
 
 # --- PESTAÑA 2: STOP TRIMESTRAL ---
 with tab2:
     with st.form("form_trimestral"):
-        st.markdown("### 📊 DATOS STOP TRIMESTRAL") [cite: 39]
-        periodo = st.text_input("Semana de estudio comprendida", placeholder="Ej: Octubre - Diciembre") [cite: 40]
-        cap_bustos = st.text_input("Nombre Comisario Subrogante") [cite: 43]
+        st.markdown("### 📊 COMPLETAR STOP TRIMESTRAL")
+        periodo = st.text_input("Periodo (Meses)", placeholder="Ej: Enero a Marzo")
+        capitan = st.text_input("Comisario Subrogante")
         
-        st.form_submit_button("📊 GENERAR TRIMESTRAL")
+        if st.form_submit_button("GENERAR TRIMESTRAL"):
+            st.info("Preparando análisis trimestral...")
 
 # --- PESTAÑA 3: INFORME GEO ---
 with tab3:
     with st.form("form_geo"):
-        st.markdown("### 📍 DATOS INFORME DELICTUAL GEO") [cite: 72]
+        st.markdown("### 📍 COMPLETAR INFORME GEO")
         col_a, col_b = st.columns(2)
         with col_a:
-            domicilio = st.text_input("Domicilio del análisis") [cite: 68]
-            doe = st.text_input("N° de DOE") [cite: 75]
-            cuadrante = st.text_input("Cuadrante") [cite: 78]
+            dom = st.text_input("Domicilio Análisis")
+            doe_n = st.text_input("N° DOE")
         with col_b:
-            p_inicio = st.text_input("Fecha Inicio Análisis") [cite: 77]
-            p_fin = st.text_input("Fecha Fin Análisis") [cite: 77]
-            total_dmcs = st.text_input("Total DMCS") [cite: 85]
+            cuad = st.text_input("Cuadrante")
+            casos = st.text_input("Total DMCS")
         
-        conclusion_ia = st.text_area("V.- CONCLUSIÓN") [cite: 91, 92]
+        conclusion = st.text_area("V.- CONCLUSIÓN TÁCTICA")
         
-        st.form_submit_button("🗺️ GENERAR INFORME GEO")
+        if st.form_submit_button("GENERAR INFORME GEO"):
+            st.success("Geolocalizando datos...")
