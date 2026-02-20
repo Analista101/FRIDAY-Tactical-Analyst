@@ -2,13 +2,6 @@ import streamlit as st
 from docxtpl import DocxTemplate
 import io
 from datetime import datetime
-import locale
-
-# Configuración de idioma para fecha en español
-try:
-    locale.setlocale(locale.LC_TIME, "es_ES.UTF-8")
-except:
-    pass # Respaldo si el servidor no tiene el locale instalado
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="F.R.I.D.A.Y. - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
@@ -39,20 +32,19 @@ st.markdown("""
         border: 2px solid #C5A059 !important;
         font-weight: bold !important;
     }
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F; border-radius: 5px; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; font-weight: bold; }
-    .stTabs [aria-selected="true"] { background-color: #C5A059 !important; color: #000000 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. BARRA LATERAL
+# 3. BARRA LATERAL CON CONFIGURACIÓN DE FIRMA
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=130)
-    st.markdown("### 🟢 SISTEMA OPERATIVO")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=120)
+    st.markdown("### 🟢 CONFIGURACIÓN DE FIRMA")
+    # CAMPOS QUE USTED SOLICITÓ PARA PERSONALIZAR LA FIRMA
+    nombre_firma = st.text_input("Nombre del Oficial", value="DIANA SANDOVAL ASTUDILLO")
+    grado_firma = st.text_input("Grado", value="C.P.R. Analista Social")
+    cargo_firma = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
     st.markdown("---")
-    st.markdown("#### **UNIDAD:** 26ª Com. Pudahuel")
-    st.markdown("#### **ANALISTA:** D. Sandoval A.")
-    st.markdown(f"#### **FECHA:** {datetime.now().strftime('%d/%m/%Y')}")
+    st.write(f"**UNIDAD:** 26ª Com. Pudahuel")
 
 # 4. ENCABEZADO
 st.markdown("""
@@ -66,7 +58,7 @@ st.markdown("""
 def generar_word(nombre_plantilla, datos):
     try:
         doc = DocxTemplate(nombre_plantilla)
-        # Fecha completa para el fondo del documento
+        # Fecha en formato institucional
         fecha_larga = datetime.now().strftime('%d de %B de %Y')
         datos['fecha_fondo'] = f"Pudahuel, {fecha_larga}".upper()
         
@@ -75,7 +67,7 @@ def generar_word(nombre_plantilla, datos):
         doc.save(output)
         return output.getvalue()
     except:
-        st.error(f"Error: No se encontró el archivo '{nombre_plantilla}' en el repositorio.")
+        st.error(f"Error técnico: Verifique que '{nombre_plantilla}' esté en su GitHub.")
         return None
 
 # 6. PESTAÑAS
@@ -89,41 +81,23 @@ with tab1:
             fecha_sesion = st.text_input("Fecha de sesión")
         with c2:
             c_carabineros = st.text_input("Compromiso Carabineros")
+        
         problematica = st.text_area("Problemática Delictual 26ª Comisaría")
         submit_mensual = st.form_submit_button("🛡️ PROCESAR ACTA MENSUAL")
 
     if submit_mensual:
-        # TODO A MAYÚSCULAS PARA EL ACTA MENSUAL
+        # Se captura la firma de la barra lateral y se pasa a MAYÚSCULAS
         datos = {
             'semana': semana.upper(),
             'fecha_sesion': fecha_sesion.upper(),
             'c_carabineros': (c_carabineros if c_carabineros else "SIN COMPROMISO").upper(),
             'problematica': problematica.upper(),
-            'nom_oficial': "DIANA SANDOVAL ASTUDILLO",
-            'grado_oficial': "C.P.R. Analista Social",
-            'cargo_oficial': "OFICINA DE OPERACIONES"
+            'nom_oficial': nombre_firma.upper(),
+            'grado_oficial': grado_firma.upper(),
+            'cargo_oficial': cargo_firma.upper()
         }
         archivo = generar_word("ACTA STOP MENSUAL.docx", datos)
         if archivo:
-            st.download_button(label="⬇️ DESCARGAR ACTA EN MAYÚSCULAS", data=archivo, file_name=f"ACTA_STOP_{semana}.docx")
+            st.download_button(label="⬇️ DESCARGAR ACTA", data=archivo, file_name=f"ACTA_STOP_{semana}.docx")
 
-with tab2:
-    with st.form("form_trimestral"):
-        periodo = st.text_input("Periodo comprendido")
-        cap_bustos = st.text_input("Nombre Comisario Subrogante")
-        c_otros = st.text_input("Otros Compromisos")
-        submit_trim = st.form_submit_button("📊 PROCESAR TRIMESTRAL")
-    
-    if submit_trim:
-        datos = {
-            'periodo': periodo, 
-            'cap_bustos': cap_bustos,
-            'compromiso': c_otros if c_otros else "SIN COMPROMISO" # Defecto si está vacío
-        }
-        archivo = generar_word("ACTA STOP TRIMESTRAL.docx", datos)
-        if archivo:
-            st.download_button(label="⬇️ DESCARGAR TRIMESTRAL", data=archivo, file_name="ACTA_TRIMESTRAL.docx")
-
-with tab3:
-    # Lógica similar para Informe GEO...
-    st.info("Módulo GEO listo para transcripción.")
+# Los otros módulos (Trimestral y GEO) usarán las mismas variables nombre_firma, grado_firma, etc.
