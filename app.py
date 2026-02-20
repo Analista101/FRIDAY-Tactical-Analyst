@@ -3,74 +3,122 @@ from docxtpl import DocxTemplate
 import io
 from datetime import datetime
 
-# Configuración de Identidad Visual
-st.set_page_config(page_title="F.R.I.D.A.Y. - Tactical Unit", page_icon="🟢", layout="wide")
+# Configuración Superior del Sistema
+st.set_page_config(
+    page_title="F.R.I.D.A.Y. - Análisis Criminal",
+    page_icon="🟢",
+    layout="wide"
+)
 
-# Estilo Stark-Institucional
+# Inyección de Estilo Institucional (Verde y Dorado)
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: white; }
-    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px; white-space: pre-wrap; background-color: #004A2F;
-        border-radius: 5px; color: white; font-weight: bold; padding: 10px;
+    /* Fondo y contenedores */
+    .stApp { background-color: #F4F4F4; }
+    
+    /* Barra lateral */
+    [data-testid="stSidebar"] {
+        background-color: #004A2F;
+        color: white;
     }
-    .stTabs [aria-selected="true"] { background-color: #C5A059 !important; color: black !important; }
+    
+    /* Títulos y Subtítulos */
+    h1, h2, h3 { color: #004A2F; font-family: 'Arial Black', sans-serif; }
+    
+    /* Pestañas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #E0E0E0;
+        border-radius: 5px 5px 0px 0px;
+        padding: 10px 25px;
+        color: #004A2F;
+        font-weight: bold;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #004A2F !important;
+        color: white !important;
+        border-bottom: 4px solid #C5A059 !important;
+    }
+
+    /* Botones */
     div.stButton > button {
-        background-color: #004A2F; color: white; border: 2px solid #C5A059;
-        border-radius: 10px; height: 3em; width: 100%;
+        background-color: #004A2F;
+        color: white;
+        border: 2px solid #C5A059;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    div.stButton > button:hover {
+        background-color: #C5A059;
+        color: #004A2F;
+        border: 2px solid #004A2F;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🛡️ F.R.I.D.A.Y. | Analista Civil")
+# Encabezado con Identidad
+col_logo, col_titulo = st.columns([1, 5])
+with col_logo:
+    st.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=120)
+with col_titulo:
+    st.title("CARABINEROS DE CHILE")
+    st.subheader("SISTEMA F.R.I.D.A.Y. - PREFECTURA SANTIAGO OCCIDENTE")
+
 st.write("---")
 
-# Creación de Pestañas
-tab1, tab2, tab3 = st.tabs(["📊 ACTA STOP MENSUAL", "📅 STOP TRIMESTRAL", "🗺️ INFORME GEO"])
+# Navegación por Pestañas
+tab1, tab2, tab3 = st.tabs(["📝 ACTA STOP MENSUAL", "📅 STOP TRIMESTRAL", "🗺️ INFORME GEO"])
 
 # --- PESTAÑA 1: STOP MENSUAL ---
 with tab1:
-    st.header("Sesión Táctica Operativa Mensual")
-    with st.form("form_mensual"):
+    st.markdown("### 📄 Formulario: Acta de Sesión Mensual")
+    with st.form("mensual"):
         c1, c2 = st.columns(2)
         with c1:
-            semana = st.text_input("Semana de estudio", placeholder="Ej: 01 al 07")
+            semana = st.text_input("Semana de estudio analizada", placeholder="Ej: 05 al 11")
             fecha_s = st.text_input("Fecha de sesión")
         with c2:
-            c_carab = st.text_input("Compromiso Carabineros")
-            c_muni = st.text_input("Compromiso Municipalidad")
+            c_carab = st.text_input("Compromisos Institucionales")
+            c_muni = st.text_input("Compromisos Municipalidad")
+        prob = st.text_area("Problemáticas Delictuales Analizadas (26ª Comisaría)")
         
-        prob = st.text_area("Problemática Delictual Analizada")
+        btn_stop = st.form_submit_button("GENERAR DOCUMENTO OFICIAL")
         
-        btn_stop = st.form_submit_button("GENERAR ACTA MENSUAL")
         if btn_stop:
-            # Lógica de renderizado (se repite la del post anterior)
-            st.info("Procesando datos institucionales...")
+            # Aquí iría la lógica de renderizado que ya tenemos
+            st.info("Generando documento... Verifique los campos en el Word.")
 
 # --- PESTAÑA 2: STOP TRIMESTRAL ---
 with tab2:
-    st.header("Análisis Operativo Trimestral")
-    with st.form("form_trimestral"):
-        periodo = st.text_input("Periodo Comprendido", placeholder="Ej: Octubre - Diciembre")
-        cap_b = st.text_input("Capitán Comisario (S)")
+    st.markdown("### 📅 Formulario: Análisis Operativo Trimestral")
+    with st.form("trimestral"):
+        periodo = st.text_input("Periodo (Meses)", placeholder="Ej: Enero - Marzo")
+        cap_bustos = st.text_input("Nombre Comisario Subrogante")
         btn_trim = st.form_submit_button("GENERAR ACTA TRIMESTRAL")
 
 # --- PESTAÑA 3: INFORME GEO ---
 with tab3:
-    st.header("Análisis Geodelictual")
-    with st.form("form_geo"):
-        col_a, col_b = st.columns(2)
-        with col_a:
-            dom = st.text_input("Domicilio del Análisis")
-            doe_n = st.text_input("N° de DOE")
-        with col_b:
-            cuad = st.text_input("Cuadrante")
-            casos = st.text_input("Total DMCS")
-        
-        conc = st.text_area("Conclusión del Analista")
+    st.markdown("### 🗺️ Formulario: Informe Delictual GEO")
+    with st.form("geo"):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            domicilio = st.text_input("Domicilio Análisis")
+            doe = st.text_input("N° DOE")
+        with c2:
+            cuadrante = st.text_input("Cuadrante")
+            total_dmcs = st.text_input("Total DMCS")
+        with c3:
+            p_inicio = st.text_input("Fecha Inicio")
+            p_fin = st.text_input("Fecha Fin")
+            
+        conclusion = st.text_area("V.- CONCLUSIÓN")
         btn_geo = st.form_submit_button("GENERAR INFORME GEO")
 
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/a/a2/Logotipo_de_Carabineros_de_Chile.svg", width=100)
-st.sidebar.write("**Estado del Sistema:** Operativo")
-st.sidebar.write("**Usuario:** D. Sandoval")
+# Barra Lateral (Sidebar) de Estado
+st.sidebar.markdown("### 🟢 ESTADO DEL SISTEMA")
+st.sidebar.write("**Unidad:** 26ª Com. Pudahuel")
+st.sidebar.write("**Analista:** D. Sandoval A.")
+st.sidebar.write(f"**Fecha:** {datetime.now().strftime('%d/%m/%Y')}")
+st.sidebar.write("---")
+st.sidebar.info("F.R.I.D.A.Y. está conectada a la base de datos local.")
