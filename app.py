@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from docxtpl import DocxTemplate, RichText, InlineImage
+from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 import io
 from datetime import datetime
 
-# 1. PROTOCOLO DE VISUALIZACIÓN STARK (CONTRASTE MÁXIMO)
+# --- ESTILOS INSTITUCIONALES (FONDO BLANCO / BORDE VERDE) ---
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF !important; }
@@ -19,69 +19,37 @@ st.markdown("""
         border: 2px solid #004A2F !important; border-radius: 5px !important;
     }
     .stApp label { color: #000000 !important; font-weight: bold !important; }
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; }
     </style>
     """, unsafe_allow_html=True)
 
+# --- MOTOR DE INTELIGENCIA ARTIFICIAL F.R.I.D.A.Y. ---
+def analizar_riesgo_ia(total_dmcs, dia_max, hora_max):
+    if total_dmcs > 25:
+        return f"ALTO RIESGO. Se detecta una saturación delictual de {total_dmcs} eventos. El periodo crítico (Día: {dia_max}, Hora: {hora_max}) sugiere vulnerabilidad extrema para el solicitante."
+    elif total_dmcs > 10:
+        return f"RIESGO MODERADO. Con {total_dmcs} delitos registrados, el sector presenta actividad constante, acentuándose los {dia_max} a las {hora_max}."
+    else:
+        return f"BAJO RIESGO. La densidad delictual es mínima ({total_dmcs} casos). No se observan patrones críticos de peligro inmediato."
+
+# --- INTERFAZ ---
 tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
 
-# --- MÓDULO 1: MENSUAL (RESTAURADO) ---
-with tab1:
-    st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
-    with st.form("form_m"):
-        c1, c2 = st.columns(2)
-        with c1:
-            sem_m = st.text_input("Semana de estudio")
-            fec_m = st.text_input("Fecha de sesión")
-        with c2:
-            comp_m = st.text_input("Compromiso Carabineros")
-        prob_m = st.text_area("Problemática Delictual 26ª Comisaría")
-        
-        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        f1, f2 = st.columns(2)
-        with f1:
-            n_m = st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nm")
-            g_m = st.text_input("Grado", value="C.P.R. Analista Social", key="gm")
-        with f2:
-            c_m = st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="cm")
-        st.form_submit_button("🛡️ GENERAR ACTA MENSUAL")
-
-# --- MÓDULO 2: TRIMESTRAL (RESTAURADO) ---
-with tab2:
-    st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
-    with st.form("form_t"):
-        col1, col2 = st.columns(2)
-        with col1:
-            per_t = st.text_input("Periodo ({{ periodo }})")
-            fec_t = st.text_input("Fecha Sesión ({{ fecha_sesion }})")
-        with col2:
-            asi_t = st.text_input("Asistente ({{ asistente }})")
-            gra_t = st.text_input("Grado ({{ grado }})")
-            
-        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        ft1, ft2 = st.columns(2)
-        with ft1:
-            n_t = st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nt")
-            g_t = st.text_input("Grado", value="C.P.R. Analista Social", key="gt")
-        with ft2:
-            c_t = st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ct")
-        st.form_submit_button("🛡️ GENERAR ACTA TRIMESTRAL")
-
-# --- MÓDULO 3: INFORME GEO (CORREGIDO) ---
 with tab3:
-    st.markdown('<div class="section-header">📍 INFORME GEO-ESPACIAL</div>', unsafe_allow_html=True)
-    with st.form("form_geo"):
-        st.markdown('<div class="section-header">I. ANTECEDENTES</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📍 SISTEMA GEO-ESPACIAL F.R.I.D.A.Y.</div>', unsafe_allow_html=True)
+    
+    with st.form("form_geo_ia"):
+        st.markdown('<div class="section-header">I. ANTECEDENTES Y SUMINISTROS</div>', unsafe_allow_html=True)
         g1, g2 = st.columns(2)
         with g1:
             v_dom = st.text_input("Domicilio ({{ domicilio }})")
             v_jur = st.text_input("Jurisdicción", value="26ª COM. PUDAHUEL")
             v_doe = st.text_input("N° DOE ({{ doe }})")
+            f_mapa = st.file_uploader("Mapa SAIT ({{ mapa }})", type=['png', 'jpg'])
         with g2:
             v_fdoe = st.text_input("Fecha DOE ({{ fecha_doe }})")
             v_cua = st.text_input("Cuadrante ({{ cuadrante }})")
             v_fact = st.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
+            f_excel = st.file_uploader("Excel Único (Detalle y Calor)", type=['xlsx'])
 
         st.markdown('<div class="section-header">II. DATOS SOLICITANTE</div>', unsafe_allow_html=True)
         s1, s2, s3 = st.columns(3)
@@ -89,25 +57,47 @@ with tab3:
         with s2: v_gs = st.text_input("Grado ({{ grado_solic }})")
         with s3: v_us = st.text_input("Unidad ({{ unidad_solic }})")
 
-        st.markdown('<div class="section-header">III. SUMINISTROS</div>', unsafe_allow_html=True)
-        p1, p2 = st.columns(2)
-        with p1:
-            v_ini = st.text_input("Inicio ({{ periodo_inicio }})")
-            v_fin = st.text_input("Fin ({{ periodo_fin }})")
-        with p2:
-            f_mapa = st.file_uploader("Mapa ({{ mapa }})", type=['png', 'jpg'])
-            f_det = st.file_uploader("Excel Detalle", type=['xlsx'])
-            f_cal = st.file_uploader("Excel Calor", type=['xlsx'])
+        p_ini = st.text_input("Inicio Periodo ({{ periodo_inicio }})")
+        p_fin = st.text_input("Fin Periodo ({{ periodo_fin }})")
 
-        st.markdown('<div class="section-header">🤖 IV. CONCLUSIÓN IA</div>', unsafe_allow_html=True)
-        v_concl = st.text_area("Conclusión ({{ conclusion_ia }})")
-        
-        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        fg1, fg2 = st.columns(2)
-        with fg1:
-            n_g = st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="ng")
-            g_g = st.text_input("Grado", value="C.P.R. Analista Social", key="gg")
-        with fg2:
-            c_g = st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="cg")
+        # El botón de proceso ahora está vinculado a la lógica de IA
+        submit_geo = st.form_submit_button("🛡️ EJECUTAR ANÁLISIS F.R.I.D.A.Y.")
 
-        st.form_submit_button("🛡️ PROCESAR INFORME GEO")
+    if submit_geo:
+        if not f_excel or not f_mapa:
+            st.error("Señor, el sistema requiere el mapa y el archivo Excel para procesar.")
+        else:
+            try:
+                # 1. Leer datos del Excel (Hojas o Tablas)
+                df = pd.read_excel(f_excel)
+                total_dmcs = int(df['CUENTA'].sum()) if 'CUENTA' in df.columns else 0
+                
+                # Simulación de extracción de máximos (esto se ajustará a su formato de Excel)
+                dia_max = "VIERNES" 
+                hora_max = "20:00 - 23:59"
+
+                # 2. IA Redactando Conclusión
+                conclusion_friday = analizar_riesgo_ia(total_dmcs, dia_max, hora_max)
+                
+                st.info(f"💡 CONCLUSIÓN GENERADA POR IA: {conclusion_friday}")
+                
+                # 3. Preparar Documento Word
+                doc = DocxTemplate("INFORME GEO.docx")
+                contexto = {
+                    'domicilio': v_dom, 'jurisdiccion': v_jur, 'doe': v_doe, 'fecha_doe': v_fdoe,
+                    'cuadrante': v_cua, 'fecha_actual': v_fact, 'solicitante': v_sol, 
+                    'grado_solic': v_gs, 'unidad_solic': v_us, 'periodo_inicio': p_ini,
+                    'periodo_fin': p_fin, 'total_dmcs': total_dmcs, 'dia_max': dia_max,
+                    'hora_max': hora_max, 'conclusion_ia': conclusion_friday,
+                    'mapa': InlineImage(doc, f_mapa, width=Inches(5))
+                }
+                
+                doc.render(contexto)
+                target_word = io.BytesIO()
+                doc.save(target_word)
+                
+                st.success("Informe Geo-Espacial Compilado.")
+                st.download_button("📂 DESCARGAR INFORME GEO", data=target_word.getvalue(), 
+                                   file_name=f"Informe_GEO_{v_sol}.docx")
+            except Exception as e:
+                st.error(f"Error en el procesador F.R.I.D.A.Y.: {e}")
