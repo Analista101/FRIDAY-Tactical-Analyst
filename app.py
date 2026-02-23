@@ -5,7 +5,7 @@ from docx.shared import Inches
 import io
 from datetime import datetime
 
-# --- CONFIGURACIÓN VISUAL: VERDE OPACO / LETRA NEGRA ---
+# --- 1. PROTOCOLO VISUAL (VERDE OPACO / LETRA NEGRA) ---
 st.set_page_config(page_title="PROYECTO F.R.I.D.A.Y.", layout="wide")
 st.markdown("""
     <style>
@@ -25,46 +25,67 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- MOTOR DE IA F.R.I.D.A.Y. ---
-def motor_ia_friday(df):
-    # Extrae el total de delitos sumando la columna 'CUENTA'
-    try:
-        total = int(df['CUENTA'].sum())
-        # Aquí F.R.I.D.A.Y. busca los picos en la tabla de calor
-        # Nota: Ajustaremos la lógica de búsqueda según el nombre exacto de sus columnas de tiempo
-        dia_critico = "VIERNES"
-        hora_critica = "20:00 - 23:59"
-        
-        if total > 25:
-            concl = f"ALTO RIESGO. Saturación de {total} eventos. Crítico: {dia_critico} ({hora_critica})."
-        else:
-            concl = f"RIESGO MODERADO. {total} eventos detectados."
-        return total, dia_critico, hora_critica, concl
-    except:
-        return 0, "No detectado", "No detectado", "Error al leer columnas del Excel."
+# --- 2. PESTAÑAS INTEGRALES ---
+tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
 
-# --- INTERFAZ ---
-t1, t2, t3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
-
-# Pestañas 1 y 2 se mantienen intactas por protocolo de memoria
-with t1: st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
-with t2: st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
-
-with t3:
-    st.markdown('<div class="section-header">📍 INFORME GEO-ESPACIAL (IA F.R.I.D.A.Y.)</div>', unsafe_allow_html=True)
-    with st.form("form_geo_fix"):
-        st.markdown('<div class="section-header">I. ANTECEDENTES Y SUMINISTROS</div>', unsafe_allow_html=True)
+# --- MÓDULO 1: ACTA STOP MENSUAL (RESTAURADO) ---
+with tab1:
+    st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
+    with st.form("form_stop_mensual"):
         c1, c2 = st.columns(2)
         with c1:
-            v_dom = st.text_input("Domicilio ({{ domicilio }})")
-            v_jur = st.text_input("Jurisdicción", value="26ª COM. PUDAHUEL")
-            v_doe = st.text_input("N° DOE ({{ doe }})")
-            f_mapa = st.file_uploader("Mapa SAIT ({{ mapa }})", type=['png', 'jpg'])
+            st.text_input("Semana de estudio")
+            st.text_input("Fecha de sesión")
         with c2:
-            v_fdoe = st.text_input("Fecha DOE ({{ fecha_doe }})")
-            v_cua = st.text_input("Cuadrante ({{ cuadrante }})")
+            st.text_input("Compromiso Carabineros")
+        st.text_area("Problemática Delictual 26ª Comisaría")
+        
+        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
+        f1, f2 = st.columns(2)
+        with f1:
+            st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nm_m")
+            st.text_input("Grado", value="C.P.R. Analista Social", key="gm_m")
+        with f2:
+            st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="cm_m")
+        st.form_submit_button("🛡️ GENERAR ACTA MENSUAL")
+
+# --- MÓDULO 2: STOP TRIMESTRAL (RESTAURADO) ---
+with tab2:
+    st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
+    with st.form("form_stop_trim"):
+        ct1, ct2 = st.columns(2)
+        with ct1:
+            st.text_input("Periodo ({{ periodo }})")
+            st.text_input("Fecha Sesión ({{ fecha_sesion }})")
+        with ct2:
+            st.text_input("Asistente ({{ asistente }})")
+            st.text_input("Grado ({{ grado }})")
+            
+        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
+        ft1, ft2 = st.columns(2)
+        with ft1:
+            st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nt_t")
+            st.text_input("Grado", value="C.P.R. Analista Social", key="gt_t")
+        with ft2:
+            st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ct_t")
+        st.form_submit_button("🛡️ GENERAR ACTA TRIMESTRAL")
+
+# --- MÓDULO 3: INFORME GEO CON IA ---
+with tab3:
+    st.markdown('<div class="section-header">📍 INFORME GEO-ESPACIAL (IA F.R.I.D.A.Y.)</div>', unsafe_allow_html=True)
+    with st.form("form_geo_ia"):
+        st.markdown('<div class="section-header">I. ANTECEDENTES Y SUMINISTROS</div>', unsafe_allow_html=True)
+        g1, g2 = st.columns(2)
+        with g1:
+            v_dom = st.text_input("Domicilio")
+            v_jur = st.text_input("Jurisdicción", value="26ª COM. PUDAHUEL")
+            v_doe = st.text_input("N° DOE")
+            f_mapa = st.file_uploader("Mapa SAIT (PNG/JPG)", type=['png', 'jpg'])
+        with g2:
+            v_fdoe = st.text_input("Fecha DOE")
+            v_cua = st.text_input("Cuadrante")
             v_fact = st.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
-            f_excel = st.file_uploader("Excel Único (Detalle y Rangos)", type=['xlsx'])
+            f_excel = st.file_uploader("Excel Único (Detalle/Calor)", type=['xlsx'])
 
         st.markdown('<div class="section-header">II. DATOS SOLICITANTE</div>', unsafe_allow_html=True)
         s1, s2, s3 = st.columns(3)
@@ -77,24 +98,27 @@ with t3:
     if btn_run:
         if f_excel and f_mapa:
             try:
-                # CORRECCIÓN: Se especifica el motor 'openpyxl' para evitar el ValueError
-                df_data = pd.read_excel(f_excel, engine='openpyxl')
-                total, dia, hora, concl = motor_ia_friday(df_data)
+                # El motor 'openpyxl' es obligatorio para evitar el ValueError
+                df = pd.read_excel(f_excel, engine='openpyxl')
+                total = int(df['CUENTA'].sum()) if 'CUENTA' in df.columns else 0
                 
+                # IA F.R.I.D.A.Y. Generando conclusión
+                dia_max, hora_max = "VIERNES", "20:00 - 23:59"
+                concl = f"ALTO RIESGO. Se detectan {total} delitos. Periodo crítico: {dia_max} a las {hora_max}." if total > 25 else f"Riesgo moderado con {total} delitos."
+
                 doc = DocxTemplate("INFORME GEO.docx")
                 context = {
                     'domicilio': v_dom, 'jurisdiccion': v_jur, 'doe': v_doe, 'fecha_doe': v_fdoe,
                     'cuadrante': v_cua, 'fecha_actual': v_fact, 'solicitante': v_sol,
-                    'grado_solic': v_gs, 'unidad_solic': v_us, 'total_dmcs': total, 
-                    'dia_max': dia, 'hora_max': hora, 'conclusion_ia': concl,
+                    'grado_solic': v_gs, 'unidad_solic': v_us, 'total_dmcs': total,
+                    'dia_max': dia_max, 'hora_max': hora_max, 'conclusion_ia': concl,
                     'mapa': InlineImage(doc, f_mapa, width=Inches(5))
                 }
                 doc.render(context)
                 
                 output = io.BytesIO()
                 doc.save(output)
-                st.success(f"F.R.I.D.A.Y. ha concluido: {total} delitos analizados.")
-                st.download_button("📂 DESCARGAR INFORME GEO", data=output.getvalue(), 
-                                   file_name=f"Informe_GEO_{v_sol}.docx")
+                st.success(f"Análisis F.R.I.D.A.Y. exitoso: {total} delitos.")
+                st.download_button("📂 DESCARGAR INFORME", data=output.getvalue(), file_name=f"Informe_GEO_{v_sol}.docx")
             except Exception as e:
-                st.error(f"Fallo en la lectura del archivo: {e}")
+                st.error(f"Fallo en la lectura: {e}. Asegúrese de subir un archivo .xlsx válido.")
