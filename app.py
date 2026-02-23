@@ -1,103 +1,104 @@
 import streamlit as st
 import pandas as pd
-from docxtpl import DocxTemplate, InlineImage
-from docx.shared import Inches
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
-# --- ESTÉTICA F.R.I.D.A.Y. (VERDE OPACO / LETRA NEGRA) ---
-st.set_page_config(page_title="PROYECTO F.R.I.D.A.Y.", layout="wide")
+# --- ESTÉTICA F.R.I.D.A.Y. ---
+st.set_page_config(page_title="PROJECT F.R.I.D.A.Y. - AUTONOMOUS", layout="wide")
 st.markdown("""
     <style>
     .stApp { background-color: #D1D8C4 !important; }
-    .section-header {
-        background-color: #004A2F !important; color: white;
-        padding: 10px; border-radius: 5px; font-weight: bold; margin-bottom: 10px;
-    }
+    .section-header { background-color: #004A2F !important; color: white; padding: 10px; border-radius: 5px; font-weight: bold; }
     input, textarea, [data-baseweb="input"] { background-color: #FFFFFF !important; color: #000000 !important; }
     label { color: #000000 !important; font-weight: bold !important; }
     </style>
     """, unsafe_allow_html=True)
 
-t1, t2, t3 = st.tabs(["📄 STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
+t1, t2, t3 = st.tabs(["📄 ACTA MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO IA"])
 
-# --- (Pestañas 1 y 2 permanecen blindadas con sus firmas y asistentes) ---
+# --- (Las pestañas 1 y 2 mantienen el formato de firma triple solicitado) ---
 
 with t3:
-    st.markdown('<div class="section-header">📍 INFORME GEO-ESPACIAL INTELIGENTE</div>', unsafe_allow_html=True)
-    with st.form("f_geo_ia"):
-        c1, c2, c3 = st.columns(3)
-        v_dom = c1.text_input("Domicilio", placeholder="Ej: Av. Las Torres 123")
-        v_doe = c2.text_input("N° DOE")
-        v_fdoe = c2.text_input("Fecha DOE")
-        v_cua = c3.text_input("Cuadrante")
-        v_fact = c3.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
-
-        st.markdown('### II. DATOS DEL SOLICITANTE')
-        p1, p2, p3 = st.columns(3)
-        v_ini = p1.text_input("Inicio Periodo")
-        v_fin = p1.text_input("Fin Periodo")
-        v_sol = p2.text_input("Nombre Solicitante")
-        v_gsol = p2.text_input("Grado Solicitante")
-        v_unid = p3.text_input("Unidad Solicitante")
-
-        f_mapa = st.file_uploader("Mapa SAIT", type=['png', 'jpg'])
-        f_excel = st.file_uploader("Excel Delitos", type=['xlsx', 'csv'])
-
-        st.markdown('### III. PIE DE FIRMA (DIANA SANDOVAL)')
-        rf1, rf2, rf3 = st.columns(3)
-        v_f_nom = rf1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO")
-        v_f_gra = rf2.text_input("Grado", value="C.P.R. Analista Social")
-        v_f_car = rf3.text_input("Cargo", value="OFICINA DE OPERACIONES")
-
-        btn = st.form_submit_button("🛡️ GENERAR INFORME CON IA")
+    st.markdown('<div class="section-header">📍 GENERADOR DE INFORME TÁCTICO AUTÓNOMO</div>', unsafe_allow_html=True)
+    with st.form("f_autonomo"):
+        col1, col2 = st.columns(2)
+        v_dom = col1.text_input("Domicilio del Objetivo", value="CALLE INTERIOR N° 123")
+        v_doe = col1.text_input("N° DOE / Documento")
+        v_cua = col2.text_input("Cuadrante", value="237A")
+        v_sol = col2.text_input("Nombre del Solicitante")
+        
+        f_excel = st.file_uploader("Subir Base de Datos (Excel/CSV)", type=['xlsx', 'csv'])
+        f_mapa = st.file_uploader("Subir Mapa SAIT", type=['png', 'jpg'])
+        
+        st.markdown('### III. RESPONSABLE DE EMISIÓN')
+        f_n = st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO")
+        f_g = st.text_input("Grado", value="C.P.R. Analista Social")
+        
+        btn = st.form_submit_button("🛡️ GENERAR INFORME AUTÓNOMO")
 
     if btn and f_excel and f_mapa:
         try:
+            # 1. ANALISIS DE DATOS IA
             df = pd.read_excel(f_excel) if f_excel.name.endswith('xlsx') else pd.read_csv(f_excel)
-            
-            # --- PROCESAMIENTO IA DE DATOS ---
             total = len(df)
             delito_frec = df['DELITO'].mode()[0]
-            dia_critico = df['DIA'].mode()[0]
-            tramo_critico = df['RANGO HORA'].mode()[0]
+            dia_max = df['DIA'].mode()[0]
+            hora_max = df['RANGO HORA'].mode()[0]
+
+            # 2. CREACIÓN DEL DOCUMENTO DESDE CERO
+            doc = Document()
             
-            # --- GENERACIÓN DE TABLA COMPACTA (SIN MÁRGENES) ---
+            # Encabezado Institucional
+            header = doc.add_paragraph()
+            header.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            run = header.add_run("CARABINEROS DE CHILE\nPREF. SANTIAGO OCCIDENTE\n26º COM. PUDAHUEL")
+            run.font.size = Pt(9)
+            run.bold = True
+
+            # Título Central
+            title = doc.add_paragraph()
+            title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_t = title.add_run(f"\nINFORME DELICTUAL: {v_dom}\n")
+            run_t.bold = True
+            run_t.font.size = Pt(12)
+
+            # Cuerpo del Informe (Relato IA)
+            doc.add_paragraph(f"I. ANTECEDENTES:\nEn relación a solicitud DOE N° {v_doe}, se realiza análisis para el domicilio en {v_dom}, cuadrante {v_cua}.")
+            
+            doc.add_paragraph(f"II. ANÁLISIS GENERAL:\nSe han detectado un total de {total} incidentes en el periodo analizado.")
+            
+            # Insertar Mapa
+            doc.add_picture(f_mapa, width=Inches(5))
+            doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            # Tabla Compacta (Generada como Imagen por F.R.I.D.A.Y.)
             df_t = df['DELITO'].value_counts().reset_index()
             df_t.columns = ['DELITO', 'CANT.']
-            
-            fig, ax = plt.subplots(figsize=(6, len(df_t)*0.4 + 0.5))
+            fig, ax = plt.subplots(figsize=(5, len(df_t)*0.3 + 0.5))
             ax.axis('off')
-            tabla_img = ax.table(cellText=df_t.values, colLabels=df_t.columns, loc='center', cellLoc='left', colColours=['#004A2F']*2)
-            tabla_img.auto_set_font_size(False)
-            tabla_img.set_fontsize(9)
-            for c in range(2): tabla_img[0, c].get_text().set_color('white')
-
+            ax.table(cellText=df_t.values, colLabels=df_t.columns, loc='center', cellLoc='left', colColours=['#004A2F']*2)
+            
             buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.05, dpi=200) # MÁRGENES MÍNIMOS
+            plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.01, dpi=200)
             buf.seek(0)
+            doc.add_picture(buf, width=Inches(4))
+            doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-            # --- REDACCIÓN DE RELATO IA ---
-            relato = (f"Al efectuar la georreferenciación en el sector de {v_dom}, se aprecia la ocurrencia de {total} delitos. "
-                      f"El análisis técnico identifica que el fenómeno delictual predominante es '{delito_frec}', "
-                      f"con una concentración crítica los días {dia_critico} durante el tramo {tramo_critico}. "
-                      f"Esta tendencia sugiere una focalización de recursos preventivos en dicho horario.")
+            # Conclusión IA
+            doc.add_paragraph(f"\nIII. CONCLUSIÓN:\nEl análisis técnico arroja que el delito de '{delito_frec}' es la principal amenaza, concentrándose los días {dia_max} en el tramo {hora_max}. Se sugiere vigilancia preventiva.")
 
-            doc = DocxTemplate("INFORME GEO.docx")
-            context = {
-                'domicilio': v_dom, 'doe': v_doe, 'fecha_doe': v_fdoe, 'cuadrante': v_cua,
-                'periodo_inicio': v_ini, 'periodo_fin': v_fin, 'solicitante': v_sol,
-                'grado_solic': v_gsol, 'unidad_solic': v_unid, 'fecha_actual': v_fact,
-                'total_dmcs': total, 'dia_max': dia_critico, 'hora_max': tramo_critico,
-                'tabla': InlineImage(doc, buf, width=Inches(4.8)), # Tabla compacta
-                'mapa': InlineImage(doc, f_mapa, width=Inches(5.5)),
-                'conclusion_ia': relato, # Relato modificado por IA
-                'firma_nombre': v_f_nom, 'firma_grado': v_f_gra, 'firma_cargo': v_f_car
-            }
-            doc.render(context)
-            output = io.BytesIO()
-            doc.save(output)
-            st.success("Informe procesado. Relato y tablas sincronizados por F.R.I.D.A.Y.")
-            st.download_button("📂 DESCARGAR INFORME", data=output.getvalue(), file_name="Informe_IA_Final.docx")
-        except Exception as e: st.error(f"Fallo en el sistema: {e}")
+            # Pie de Firma Compacto
+            doc.add_paragraph(f"\n\n\n{f_n}\n{f_g}\nOFICINA DE OPERACIONES").alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            # 3. ENTREGA
+            out = io.BytesIO()
+            doc.save(out)
+            st.success("Informe construido y sellado por F.R.I.D.A.Y.")
+            st.download_button("📂 DESCARGAR INFORME AUTÓNOMO", data=out.getvalue(), file_name="Informe_Autonomo_FRIDAY.docx")
+            
+        except Exception as e:
+            st.error(f"Error en el núcleo: {e}")

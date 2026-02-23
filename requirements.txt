@@ -3,3 +3,4 @@ pandas
 docxtpl
 matplotlib
 openpyxl
+python-docx
