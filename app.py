@@ -5,24 +5,34 @@ from datetime import datetime
 import os
 
 # 1. CONFIGURACIÓN DEL SISTEMA
-st.set_page_config(page_title="PROJECT FRIDAY - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
+st.set_page_config(page_title="PROJECT JARVIS - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
-# 2. INYECCIÓN DE ESTILO TÁCTICO
+# 2. INYECCIÓN DE ESTILO TÁCTICO (FUERZA BRUTA)
 st.markdown("""
     <style>
+    /* FONDO GENERAL BLANCO */
     .stApp { background-color: #FFFFFF !important; }
+
+    /* TEXTO EN FONDO BLANCO CON MARGEN VERDE (Inputs y Áreas de texto) */
+    .stApp label { color: #000000 !important; font-weight: bold !important; }
     
-    /* TODO EL TEXTO EN FONDO BLANCO A NEGRO */
-    .stApp, .stApp p, .stApp label, .stApp h3, .stApp span {
+    .stTextInput>div>div>input, .stTextArea>div>textarea {
         color: #000000 !important;
-        font-weight: bold !important;
+        border: 2px solid #004A2F !important; /* Margen verde solicitado */
+        border-radius: 5px;
     }
 
-    /* BARRA LATERAL VERDE */
+    /* BARRA LATERAL VERDE CON BOTONES BORDY VERDE */
     [data-testid="stSidebar"] { background-color: #004A2F !important; }
     [data-testid="stSidebar"] * { color: #FFFFFF !important; }
+    
+    /* Botones de la barra con borde verde resaltado */
+    [data-testid="stSidebar"] button {
+        border: 2px solid #28a745 !important; 
+        background-color: rgba(255,255,255,0.1) !important;
+    }
 
-    /* BOTONES VERDES CON LETRA BLANCA */
+    /* BOTONES PRINCIPALES VERDES CON LETRA BLANCA */
     div.stButton > button, .stFormSubmitButton > button {
         background-color: #004A2F !important;
         color: #FFFFFF !important;
@@ -32,6 +42,7 @@ st.markdown("""
         text-transform: uppercase;
     }
 
+    /* TEXTO EN FONDO VERDE SIEMPRE BLANCO */
     .stark-header {
         background-color: #004A2F;
         padding: 15px;
@@ -42,6 +53,9 @@ st.markdown("""
         margin-bottom: 25px;
     }
     .stark-header h2, .stark-header h3 { color: #FFFFFF !important; }
+    
+    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
+    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -58,22 +72,16 @@ with st.sidebar:
 # 4. ENCABEZADO
 st.markdown('<div class="stark-header"><h2>CARABINEROS DE CHILE</h2><h3>SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3></div>', unsafe_allow_html=True)
 
-# 5. MOTOR DE FIRMA FRIDAY (BOOKMAN OLD STYLE 11 - CENTRADO)
+# 5. MOTOR DE FIRMA (ESTILO BOOKMAN OLD STYLE 11 CENTRADO)
 def generar_word(nombre_plantilla, datos):
     try:
         doc = DocxTemplate(nombre_plantilla)
-        
-        # PROTOCOLO DE FIRMA: Negrita-Normal-Negrita, Bookman Old Style, Tamaño 11
         rt = RichText()
-        # Nombre en Negrita
-        rt.add(datos['n_oficial'].upper(), bold=True, font='Bookman Old Style', size=22) # size 22 equivale a 11pt
+        rt.add(datos['n_oficial'].upper(), bold=True, font='Bookman Old Style', size=22)
         rt.add('\n')
-        # Grado en Normal
         rt.add(datos['g_oficial'], bold=False, font='Bookman Old Style', size=22)
         rt.add('\n')
-        # Cargo en Negrita
         rt.add(datos['c_oficial'].upper(), bold=True, font='Bookman Old Style', size=22)
-        
         datos['firma_completa'] = rt
         
         now = datetime.now()
@@ -124,8 +132,7 @@ with tab1:
             'g_oficial': gra,
             'c_oficial': car
         }
-        
         archivo_word = generar_word("ACTA STOP MENSUAL.docx", datos_finales)
         if archivo_word:
-            st.success("Documento generado con la nueva firma centrada.")
+            st.success("Documento generado con éxito.")
             st.download_button("⬇️ DESCARGAR WORD", archivo_word, f"ACTA_{semana}.docx")
