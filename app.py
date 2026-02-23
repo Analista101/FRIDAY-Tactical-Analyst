@@ -91,14 +91,17 @@ with tab1:
         btn_m = st.form_submit_button("🛡️ PROCESAR ACTA")
 
     if btn_m:
+        # CORRECCIÓN DE LÓGICA AQUÍ:
+        val_compromiso = comp_carab.upper() if comp_carab else "SIN COMPROMISO"
+        
         datos_m = {
             'semana': sem.upper(), 
             'fecha_sesion': fec_sesion.upper(),
-            'c_carabineros': (comp_carab if comp_carab es None or comp_carab == "" else comp_carab).upper(),
+            'c_carabineros': val_compromiso,
             'problematica': prob_delictual.upper(),
             'n': n_f, 'g': g_f, 'c': c_f
         }
-        if not comp_carab: datos_m['c_carabineros'] = "SIN COMPROMISO"
+        
         archivo = generar_word("ACTA STOP MENSUAL.docx", datos_m)
         if archivo:
             st.download_button("⬇️ DESCARGAR WORD", archivo, f"ACTA_{sem}.docx")
@@ -112,7 +115,7 @@ with tab2:
     if btn_t:
         datos_t = {
             'periodo': periodo.upper(), 
-            'compromiso': (comp_trim if comp_trim else "SIN COMPROMISO").upper(), 
+            'compromiso': (comp_trim.upper() if comp_trim else "SIN COMPROMISO"), 
             'n': n_f, 'g': g_f, 'c': c_f
         }
         archivo = generar_word("ACTA STOP TRIMESTRAL.docx", datos_t)
