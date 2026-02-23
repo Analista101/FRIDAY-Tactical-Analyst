@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
+import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
