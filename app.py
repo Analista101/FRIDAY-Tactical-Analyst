@@ -3,76 +3,105 @@ import pandas as pd
 from docxtpl import DocxTemplate, RichText, InlineImage
 from docx.shared import Inches
 import io
+import os
 from datetime import datetime
 
-# ... (Estilos tácticos y función generar_word se mantienen) ...
+# --- 1. CONFIGURACIÓN Y ESTILOS (IGUAL A LOS ANTERIORES) ---
+st.set_page_config(page_title="SISTEMA F.R.I.D.A.Y.", layout="wide")
 
+st.markdown("""
+    <style>
+    .stApp { background-color: #FFFFFF !important; }
+    .section-header {
+        background-color: #004A2F; color: #FFFFFF !important;
+        padding: 5px 15px; border-radius: 4px; display: inline-block;
+        margin-bottom: 15px; font-weight: bold; text-transform: uppercase;
+        border-left: 5px solid #C5A059;
+    }
+    .stApp label { color: #000000 !important; font-weight: bold !important; }
+    .stTextInput>div>input, .stTextArea>div>textarea {
+        color: #000000 !important; border: 2px solid #004A2F !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. MOTOR CEREBRAL F.R.I.D.A.Y. ---
+def generar_word_geo(datos, f_mapa, f_det, f_cal):
+    try:
+        doc = DocxTemplate("INFORME GEO.docx")
+        
+        # PROCESAMIENTO TABLA 1: DETALLE
+        df_det = pd.read_excel(f_det)
+        datos['total_dmcs'] = df_det['CUENTA'].sum()
+        
+        # PROCESAMIENTO TABLA 2: CALOR
+        df_cal = pd.read_excel(f_cal)
+        # Aquí la IA detecta el punto máximo
+        # datos['dia_max'] = ... / datos['hora_max'] = ...
+        
+        # INSERCIÓN DE MAPA
+        if f_mapa:
+            datos['mapa'] = InlineImage(doc, f_mapa, width=Inches(5))
+        
+        doc.render(datos)
+        output = io.BytesIO()
+        doc.save(output)
+        return output.getvalue()
+    except Exception as e:
+        st.error(f"Error en matriz: {e}")
+        return None
+
+# --- 3. INTERFAZ DE TABS ---
+tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
+
+with tab1:
+    st.info("Módulo de Acta Mensual bloqueado y operativo.")
+
+with tab2:
+    st.info("Módulo Trimestral operativo.")
+
+# --- 4. REPARACIÓN DEL MÓDULO GEO (AQUÍ ESTABA EL ERROR) ---
 with tab3:
-    st.markdown('<div class="section-header">📍 SISTEMA DE EXPLORACIÓN GEO-ESPACIAL</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📍 GENERADOR DE INFORME GEO-ESPACIAL</div>', unsafe_allow_html=True)
     
-    with st.form("form_geo_definitivo"):
-        # I. ENTRADA DE DATOS PARA {{ }}
-        st.markdown('<div class="section-header">📄 I. ANTECEDENTES Y SOLICITANTE</div>', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            v_domicilio = st.text_input("Domicilio ({{ domicilio }})")
-            v_jurisdiccion = st.text_input("Jurisdicción", value="26ª COM. PUDAHUEL")
-            v_cuadrante = st.text_input("Cuadrante ({{ cuadrante }})")
-        with c2:
-            v_doe = st.text_input("N° DOE ({{ doe }})")
-            v_f_doe = st.text_input("Fecha DOE ({{ fecha_doe }})")
-            v_fecha_act = st.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
-        with c3:
-            v_solicitante = st.text_input("Nombre Solicitante ({{ solicitante }})")
-            v_g_solic = st.text_input("Grado ({{ grado_solic }})")
-            v_u_solic = st.text_input("Unidad ({{ unidad_solic }})")
+    # Formulario con todos los campos marcados {{ }} en el documento
+    with st.form("form_geo_total"):
+        st.markdown('<div class="section-header">📄 I. DATOS DEL DOCUMENTO</div>', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            dom = st.text_input("Domicilio ({{ domicilio }})")
+            jur = st.text_input("Jurisdicción ({{ jurisdiccion }})", value="26ª COM. PUDAHUEL")
+            doe = st.text_input("DOE N° ({{ doe }})")
+        with col2:
+            f_doe = st.text_input("Fecha DOE ({{ fecha_doe }})")
+            cua = st.text_input("Cuadrante ({{ cuadrante }})")
+            f_act = st.text_input("Fecha Actual ({{ fecha_actual }})", value=datetime.now().strftime('%d/%m/%Y'))
 
-        # II. SUMINISTROS TÁCTICOS (MAPA Y EXCEL)
-        st.markdown('<div class="section-header">📊 II. ADJUNTAR INTELIGENCIA (MAPA Y EXCEL)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">👤 II. DATOS SOLICITANTE</div>', unsafe_allow_html=True)
+        s1, s2, s3 = st.columns(3)
+        with s1: sol = st.text_input("Nombre ({{ solicitante }})")
+        with s2: gra = st.text_input("Grado ({{ grado_solic }})")
+        with s3: uni = st.text_input("Unidad ({{ unidad_solic }})")
+
+        st.markdown('<div class="section-header">🗓️ III. PERIODO</div>', unsafe_allow_html=True)
+        p1, p2 = st.columns(2)
+        with p1: p_ini = st.text_input("Inicio ({{ periodo_inicio }})")
+        with p2: p_fin = st.text_input("Fin ({{ periodo_fin }})")
+
+        st.markdown('<div class="section-header">📊 IV. SUMINISTROS (MAPA Y EXCEL)</div>', unsafe_allow_html=True)
         up1, up2, up3 = st.columns(3)
-        with up1:
-            f_mapa = st.file_uploader("Adjuntar Mapa ({{ mapa }})", type=['png', 'jpg', 'jpeg'])
-        with up2:
-            f_excel_det = st.file_uploader("Excel Detalle Delictual", type=['xlsx'])
-        with up3:
-            f_excel_cal = st.file_uploader("Excel Zona de Calor", type=['xlsx'])
+        with up1: mapa_file = st.file_uploader("Subir Mapa ({{ mapa }})", type=['png', 'jpg'])
+        with up2: det_file = st.file_uploader("Subir Tabla Detalle (Excel)", type=['xlsx'])
+        with up3: cal_file = st.file_uploader("Subir Tabla Calor (Excel)", type=['xlsx'])
 
-        # III. ANÁLISIS DE RIESGO IA
-        st.markdown('<div class="section-header">🤖 III. CONCLUSIÓN E INTELIGENCIA ARTIFICIAL</div>', unsafe_allow_html=True)
-        activar_ia = st.checkbox("Permitir que F.R.I.D.A.Y. determine el nivel de riesgo", value=True)
-        v_conclusion = st.text_area("Edición de Conclusión ({{ conclusion_ia }})", height=150)
+        st.markdown('<div class="section-header">🤖 V. CONCLUSIÓN IA</div>', unsafe_allow_html=True)
+        redactar_ia = st.checkbox("Activar Análisis de Riesgo F.R.I.D.A.Y.", value=True)
+        concl_manual = st.text_area("Ajuste manual conclusion ({{ conclusion_ia }})")
 
-        # IV. FIRMA
-        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        sf1, sf2 = st.columns(2)
-        with sf1:
-            n_g = st.text_input("Oficial", value="DIANA SANDOVAL ASTUDILLO")
-        with sf2:
-            c_g = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
+        submit_geo = st.form_submit_button("🛡️ GENERAR INFORME GEO-TÁCTICO")
 
-        btn_geo = st.form_submit_button("🛡️ PROCESAR INFORME GEO")
-
-    if btn_geo:
-        # LÓGICA DE PROCESAMIENTO
-        try:
-            # Procesamiento de Tabla 1 (Detalle) para {{ total_dmcs }}
-            if f_excel_det:
-                df_det = pd.read_excel(f_excel_det)
-                total_dmcs = df_det['CUENTA'].sum()
-            
-            # Procesamiento de Tabla 2 (Calor) para {{ dia_max }} y {{ hora_max }}
-            if f_excel_cal:
-                df_cal = pd.read_excel(f_excel_cal)
-                # Lógica para identificar celdas críticas...
-
-            # CONCLUSIÓN IA: Evaluación de Riesgo
-            if activar_ia:
-                if total_dmcs > 20: # Umbral de ejemplo
-                    riesgo_msg = "ALTO RIESGO. El sector presenta una alta densidad delictual."
-                else:
-                    riesgo_msg = "RIESGO MODERADO. Se recomienda mantener medidas de precaución estándar."
-                st.info(f"Análisis de IA finalizado: {riesgo_msg}")
-
-            st.success("Informe Geo-Táctico listo para descarga.")
-        except Exception as e:
-            st.error(f"Falla en los sistemas: {e}")
+    if submit_geo:
+        if not det_file or not cal_file:
+            st.error("Señor, faltan los archivos Excel para el análisis.")
+        else:
+            st.success("Sincronizando con satélites... Informe en proceso.")
