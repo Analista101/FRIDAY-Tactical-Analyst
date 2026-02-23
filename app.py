@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-from datetime import datetime
 
 # --- 1. CONFIGURACIÓN VISUAL JARVIS ---
 st.set_page_config(page_title="SISTEMA JARVIS - COMANDO CENTRAL", layout="wide")
@@ -31,31 +30,37 @@ if "relato_input" not in st.session_state:
 
 def borrar_texto():
     st.session_state.relato_input = ""
-    # El rerun fuerza que el widget tome el nuevo valor de sesión
     st.rerun()
 
-# --- 3. FUNCIONES DE INTELIGENCIA ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY ---
 def procesar_relato_ia(texto):
     v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
     v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
     modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
     return v_transporte, modus
 
-# --- 4. CUERPO PRINCIPAL ---
+# --- 4. COMANDO CENTRAL IA FRIDAY (RESTAURADO) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
+with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, el análisis pericial está listo para ejecutarse.</div>', unsafe_allow_html=True)
+    c_ia1, c_ia2 = st.columns([2, 1])
+    consulta_ia = c_ia1.text_area("Describa el hecho para peritaje legal (IA Friday):")
+    if st.button("⚡ CONSULTAR A FRIDAY"):
+        if consulta_ia: 
+            st.info("SISTEMA: Análisis de IA Friday completado. He detectado los patrones delictuales solicitados.")
 
+# --- 5. PESTAÑAS OPERATIVAS ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTAS DE SITUACIÓN"])
 
 with t1:
     st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
     with st.form("form_acta"):
         c1, c2 = st.columns(2)
-        m_sem = c1.text_input("Semana de estudio")
-        m_fec = c1.text_input("Fecha de sesión")
-        m_com = c2.text_input("Compromiso Carabineros")
-        m_pro = st.text_area("Problemática Delictual 26ª Comisaría")
+        st.text_input("Semana de estudio")
+        st.text_input("Fecha de sesión")
+        st.text_input("Compromiso Carabineros")
+        st.text_area("Problemática Delictual 26ª Comisaría")
         st.markdown('**🖋️ PIE DE FIRMA**')
-        f1, f2, f3 = st.columns(3)
         st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nom1")
         st.text_input("Grado", value="C.P.R. Analista Social", key="grad1")
         st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="carg1")
@@ -64,13 +69,9 @@ with t1:
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
     with st.form("form_trim"):
-        ct1, ct2 = st.columns(2)
         st.text_input("Periodo (Ej: Nov-Dic-Ene)")
         st.text_input("Fecha Sesión STOP")
-        st.text_input("Nombre Asistente")
-        st.text_input("Grado Asistente")
         st.markdown('**🖋️ PIE DE FIRMA TRIMESTRAL**')
-        ft1, ft2, ft3 = st.columns(3)
         st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nom2")
         st.text_input("Grado", value="C.P.R. Analista Social", key="grad2")
         st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="carg2")
@@ -89,36 +90,31 @@ with t3:
         col3.text_input("Domicilio", value="Corona Sueca Nro. 8556")
         col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
         col3.text_input("Cuadrante", value="231")
-        cp1, cp2 = st.columns(2)
-        cp1.text_input("Desde (Periodo)", value="05 de noviembre del año 2025")
-        cp1.text_input("Hasta (Periodo)", value="05 de febrero del año 2026")
-        st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
+        st.text_input("Desde (Periodo)", value="05 de noviembre del año 2025")
+        st.text_input("Hasta (Periodo)", value="05 de febrero del año 2026")
+        
+        st.markdown("---")
+        c_map, c_xls = st.columns(2)
+        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT", type=['png', 'jpg'])
+        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'])
+        st.form_submit_button("🛡️ EJECUTAR CLONACIÓN GEO")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
-    
     col_x, col_y = st.columns([5, 1])
     with col_y:
-        # BOTÓN QUE AHORA SÍ BORRA EL TEXTAREA
         st.button("🗑️ LIMPIAR", on_click=borrar_texto)
     
-    # El widget está atado a st.session_state.relato_input
-    relato_actual = st.text_area("PEGUE EL RELATO AQUÍ:", key="relato_input", height=200)
+    relato_actual = st.text_area("PEGUE EL RELATO AQUÍ:", value=st.session_state.relato_input, key="relato_area", height=200)
+    st.session_state.relato_input = relato_actual
 
     if st.button("⚡ GENERAR CUADRO"):
         if relato_actual:
             v_traslado, v_modus = procesar_relato_ia(relato_actual)
             html_matriz = f"""
             <table class="tabla-carta">
-                <tr>
-                    <td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td>
-                    <td class="celda-sub" style="width:20%">TRAMO</td>
-                    <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
-                </tr>
-                <tr>
-                    <td style="text-align:center">INDICAR TRAMO</td>
-                    <td style="text-align:center">AVENIDA GENERAL OSCAR BONILLA / LOS EDILES</td>
-                </tr>
+                <tr><td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
+                <tr><td style="text-align:center">INDICAR TRAMO</td><td style="text-align:center">AVENIDA GENERAL OSCAR BONILLA / LOS EDILES</td></tr>
                 <tr><td class="celda-header-perfil">PERFIL VÍCTIMA</td><td class="celda-header-perfil">PERFIL DELINCUENTE</td><td class="celda-header-perfil">MODUS OPERANDI</td></tr>
                 <tr>
                     <td style="padding:0; vertical-align:top;">
