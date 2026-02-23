@@ -4,19 +4,17 @@ import io
 from datetime import datetime
 import os
 
-# 1. CONFIGURACIÓN DEL SISTEMA
+# 1. CONFIGURACIÓN DEL SISTEMA JARVIS
 st.set_page_config(page_title="PROJECT JARVIS - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
 # 2. INYECCIÓN DE ESTILO (CSS)
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF !important; }
-    
-    /* BARRA LATERAL VERDE */
     [data-testid="stSidebar"] { background-color: #004A2F !important; }
     [data-testid="stSidebar"] * { color: #FFFFFF !important; font-weight: bold !important; }
 
-    /* ETIQUETAS DE FORMULARIO EN NEGRO (Para que resalten en blanco) */
+    /* ETIQUETAS EN NEGRO PARA RESALTAR EN FONDO BLANCO */
     .stApp label {
         color: #000000 !important;
         font-weight: bold !important;
@@ -30,12 +28,8 @@ st.markdown("""
         border: 2px solid #C5A059 !important;
         font-weight: bold !important;
         width: 100% !important;
+        text-transform: uppercase;
     }
-
-    /* PESTAÑAS */
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; border-radius: 5px; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; font-weight: bold !important; }
-    .stTabs [aria-selected="true"] { background-color: #C5A059 !important; color: #000000 !important; }
 
     .stark-header {
         background-color: #004A2F;
@@ -49,18 +43,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. BARRA LATERAL
+# 3. BARRA LATERAL (Solo para información de Unidad)
 with st.sidebar:
-    # Carga del logo local para evitar imagen rota
     if os.path.exists("logo.png"):
         st.image("logo.png", width=160)
     else:
-        st.error("Error: logo.png no encontrado en la carpeta.")
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/640px-Logotipo_de_Carabineros_de_Chile.svg.png", width=140)
     
-    st.markdown("### 🟢 CONFIGURACIÓN DE FIRMA")
-    n_f = st.text_input("Nombre Oficial", value="DIANA SANDOVAL ASTUDILLO")
-    g_f = st.text_input("Grado", value="C.P.R. Analista Social")
-    c_f = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
     st.markdown("---")
     st.markdown("#### **UNIDAD:**")
     st.write("26ª Comisaría Pudahuel") 
@@ -69,22 +58,22 @@ with st.sidebar:
 # 4. ENCABEZADO
 st.markdown('<div class="stark-header"><h2>CARABINEROS DE CHILE</h2><h3>SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3></div>', unsafe_allow_html=True)
 
-# 5. FUNCION DE GENERACIÓN DE FIRMA Y WORD
+# 5. FUNCION DE GENERACIÓN DE WORD
 def generar_word(nombre_plantilla, datos):
     try:
         doc = DocxTemplate(nombre_plantilla)
         
-        # PROTOCOLO DE FIRMA (IMAGEN 25fb57)
+        # PROTOCOLO DE FIRMA (IMAGEN 25fb57): Negrita-Normal-Negrita
         rt = RichText()
-        rt.add(datos['n'].upper(), bold=True)
+        rt.add(datos['n_oficial'].upper(), bold=True)
         rt.add('\n')
-        rt.add(datos['g'], bold=False)
+        rt.add(datos['g_oficial'], bold=False)
         rt.add('\n')
-        rt.add(datos['c'].upper(), bold=True)
+        rt.add(datos['c_oficial'].upper(), bold=True)
         
-        # Inyectar la firma en el diccionario de datos
         datos['firma_completa'] = rt
         
+        # Fecha fondo para el pie del documento
         now = datetime.now()
         meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
         datos['fecha_fondo'] = f"PUDAHUEL, {now.day} DE {meses[now.month-1].upper()} DE {now.year}"
@@ -94,7 +83,7 @@ def generar_word(nombre_plantilla, datos):
         doc.save(output)
         return output.getvalue()
     except Exception as e:
-        st.error(f"Error en motor de firma: {e}")
+        st.error(f"Error en motor JARVIS: {e}")
         return None
 
 # 6. PESTAÑAS
@@ -102,25 +91,40 @@ tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "�
 
 with tab1:
     with st.form("form_mensual"):
-        st.markdown("### 📝 ACTA MENSUAL")
-        col1, col2 = st.columns(2)
-        with col1:
-            sem = st.text_input("Semana de estudio")
-            fec_s = st.text_input("Fecha de sesión")
-        with col2:
+        st.markdown("### 📋 DATOS DEL ACTA")
+        c1, c2 = st.columns(2)
+        with c1:
+            semana = st.text_input("Semana de estudio")
+            fecha_s = st.text_input("Fecha de sesión")
+        with c2:
             comp_c = st.text_input("Compromiso Carabineros")
-        prob_d = st.text_area("Problemática Delictual 26ª Comisaría")
-        btn_m = st.form_submit_button("🛡️ PROCESAR ACTA")
+        
+        problema = st.text_area("Problemática Delictual 26ª Comisaría")
+        
+        st.markdown("---")
+        st.markdown("### 🖋️ CONFIGURACIÓN DE FIRMA (PIE DE PÁGINA)")
+        cf1, cf2 = st.columns(2)
+        with cf1:
+            nom = st.text_input("Nombre del Oficial", value="DIANA SANDOVAL ASTUDILLO")
+            gra = st.text_input("Grado", value="C.P.R. Analista Social")
+        with cf2:
+            car = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
+            
+        submit = st.form_submit_button("🛡️ PROCESAR Y GENERAR DOCUMENTO")
 
-    if btn_m:
-        val_comp = comp_c.upper() if comp_c else "SIN COMPROMISO"
-        datos_m = {
-            'semana': sem.upper(), 'fecha_sesion': fec_s.upper(),
-            'c_carabineros': val_comp, 'problematica': prob_d.upper(),
-            'n': n_f, 'g': g_f, 'c': c_f
+    if submit:
+        # Validación y Mayúsculas
+        datos_finales = {
+            'semana': semana.upper(),
+            'fecha_sesion': fecha_s.upper(),
+            'c_carabineros': (comp_c.upper() if comp_c else "SIN COMPROMISO"),
+            'problematica': problema.upper(),
+            'n_oficial': nom,
+            'g_oficial': gra,
+            'c_oficial': car
         }
-        archivo = generar_word("ACTA STOP MENSUAL.docx", datos_m)
-        if archivo:
-            st.download_button("⬇️ DESCARGAR WORD", archivo, f"ACTA_{sem}.docx", key="dw_m")
-
-# (Se mantienen iguales tab2 y tab3 con sus respectivos diccionarios de datos)
+        
+        archivo_word = generar_word("ACTA STOP MENSUAL.docx", datos_finales)
+        if archivo_word:
+            st.success("Firma procesada correctamente.")
+            st.download_button("⬇️ DESCARGAR ACTA", archivo_word, f"ACTA_{semana}.docx")
