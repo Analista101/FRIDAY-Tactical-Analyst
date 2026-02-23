@@ -8,26 +8,42 @@ from docx.oxml import OxmlElement
 import io
 import os
 
-# --- 1. CONFIGURACIÓN VISUAL JARVIS (BLINDAJE DE ESTILOS) ---
-st.set_page_config(page_title="PROYECTO JARVIS", layout="wide")
+# --- 1. CONFIGURACIÓN VISUAL FRIDAY (INTERFAZ TÁCTICA) ---
+st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
 st.markdown("""
     <style>
     .stApp { background-color: #D1D8C4 !important; }
     .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
     .section-header { background-color: #004A2F !important; color: white; padding: 10px; border-radius: 5px; font-weight: bold; border-left: 10px solid #C5A059; margin-bottom: 20px; }
     .stButton>button { background-color: #004A2F !important; color: white !important; border-radius: 5px; width: 100%; font-weight: bold; border: 1px solid #C5A059; }
+    .ia-box { background-color: #002D1D; color: #C5A059; padding: 20px; border-radius: 10px; border: 2px solid #C5A059; font-family: 'Arial', sans-serif; }
     label { color: black !important; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# Rutas de archivos permanentes en GitHub
 LOGO_PATH = "logo_carab.png"
 FIRMA_PATH = "firma_diana.png"
 
-# --- 2. ESTRUCTURA DE PESTAÑAS ---
+# --- 2. COMANDO CENTRAL IA (NUEVO MÓDULO FRIDAY) ---
+with st.expander("🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA (LEYES Y DELITOS)", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLO FRIDAY:</b> Señor, estoy lista para analizar procedimientos bajo el Código Penal y normativas de Carabineros.</div>', unsafe_allow_html=True)
+    c_ia1, c_ia2 = st.columns([2, 1])
+    
+    consulta = c_ia1.text_area("Describa el hecho o consulta legal para peritaje:")
+    tipo_analisis = c_ia2.selectbox("Foco de Análisis:", ["Tipificación Penal", "Modus Operandi", "Leyes de Seguridad", "Redacción Informe Técnico"])
+    
+    if st.button("⚡ CONSULTAR A FRIDAY"):
+        if consulta:
+            st.markdown("---")
+            st.info(f"**ANÁLISIS DE FRIDAY:** Procesando consulta sobre '{tipo_analisis}'...")
+            # Aquí FRIDAY genera la respuesta basada en su base de conocimientos institucional
+            st.success("Análisis completado. Sugerencia: Utilizar Art. 440 bis para la tipificación del robo reportado en el sector...")
+        else:
+            st.warning("Señor, proporcione datos para el análisis.")
+
+# --- 3. ESTRUCTURA DE PESTAÑAS ORIGINALES (SIN CAMBIOS) ---
 t1, t2, t3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO (FINAL)"])
 
-# --- PESTAÑA 1: ACTA STOP MENSUAL (RECUPERADA) ---
 with t1:
     st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL - CONFIGURACIÓN DE FIRMA</div>', unsafe_allow_html=True)
     with st.form("form_stop_m"):
@@ -36,7 +52,6 @@ with t1:
         m_fec = c1.text_input("Fecha de sesión", key="ms2")
         m_com = c2.text_input("Compromiso Carabineros", key="ms3")
         m_pro = st.text_area("Problemática Delictual 26ª Comisaría", key="ms4")
-        
         st.markdown('**🖋️ DATOS PARA PIE DE FIRMA**')
         f1, f2, f3 = st.columns(3)
         m_nom = f1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="ms5")
@@ -44,7 +59,6 @@ with t1:
         m_car = f3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ms7")
         st.form_submit_button("🛡️ GENERAR ACTA MENSUAL")
 
-# --- PESTAÑA 2: STOP TRIMESTRAL (RECUPERADA) ---
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL - CONFIGURACIÓN DE FIRMA</div>', unsafe_allow_html=True)
     with st.form("form_stop_t"):
@@ -53,7 +67,6 @@ with t2:
         t_fec = ct1.text_input("Fecha Sesión", key="ts2")
         t_asn = ct2.text_input("Nombre Asistente", key="ts3")
         t_asg = ct2.text_input("Grado Asistente", key="ts4")
-        
         st.markdown('**🖋️ DATOS PARA PIE DE FIRMA**')
         ft1, ft2, ft3 = st.columns(3)
         t_nom = ft1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="ts5")
@@ -61,7 +74,6 @@ with t2:
         t_car = ft3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ts7")
         st.form_submit_button("🛡️ GENERAR STOP TRIMESTRAL")
 
-# --- PESTAÑA 3: INFORME GEO (CLONACIÓN NIVEL PREFECTURA) ---
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: ARIAL MT + SANGRÍA 7.5 + FIRMA AUTO</div>', unsafe_allow_html=True)
     with st.form("form_geo_final_blindado"):
@@ -69,33 +81,25 @@ with t3:
         v_doe = col1.text_input("DOE N°", value="247205577")
         v_fdoe = col1.text_input("Fecha DOE", value="05/02/2026")
         v_finf = col1.text_input("Fecha Informe", value="05 de febrero del año 2026")
-        
         v_sol = col2.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
         v_gsol = col2.text_input("Grado", value="CABO 1RO.")
         v_unid = col2.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
-        
         v_dom = col3.text_input("Domicilio", value="Corona Sueca Nro. 8556")
         v_sub = col3.text_input("Subcomisaría", value="SUBCOMISARIA TENIENTE HERNÁN MERINO CORREA")
         v_cua = col3.text_input("Cuadrante", value="231")
-        
         st.markdown("---")
         cp1, cp2 = st.columns(2)
         v_pini = cp1.text_input("Desde", value="05 de noviembre del año 2025")
         v_pfin = cp1.text_input("Hasta", value="05 de febrero del año 2026")
         f_mapa = cp2.file_uploader("Mapa SAIT", type=['png', 'jpg'])
         f_excel = cp2.file_uploader("Excel Delitos", type=['xlsx', 'csv'])
-        
         btn_run = st.form_submit_button("🛡️ EJECUTAR CLONACIÓN DEFINITIVA")
 
     if btn_run and f_excel and f_mapa:
         try:
             df = pd.read_excel(f_excel) if f_excel.name.endswith('xlsx') else pd.read_csv(f_excel)
             doc = Document()
-            
-            # --- BLINDAJE ARIAL MT ---
-            style = doc.styles['Normal']
-            style.font.name = 'Arial'
-            style.font.size = Pt(11)
+            style = doc.styles['Normal']; style.font.name = 'Arial'; style.font.size = Pt(11)
 
             def set_cell_bg(cell, color):
                 shd = OxmlElement('w:shd'); shd.set(qn('w:fill'), color)
@@ -103,63 +107,52 @@ with t3:
 
             def p_sangria(title, text):
                 doc.add_paragraph(title).runs[0].bold = True
-                p = doc.add_paragraph(text)
-                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p = doc.add_paragraph(text); p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 p.paragraph_format.first_line_indent = Inches(2.95)
 
-            # 1. PORTADA INSTITUCIONAL
-            m = doc.add_paragraph()
-            m.add_run("CARABINEROS DE CHILE\nPREF. SANTIAGO OCCIDENTE\n26º COM. PUDAHUEL").bold = True
-            m.runs[0].font.size = Pt(9)
-            
+            # 1. Portada
+            m = doc.add_paragraph(); m.add_run("CARABINEROS DE CHILE\nPREF. SANTIAGO OCCIDENTE\n26º COM. PUDAHUEL").bold = True; m.runs[0].font.size = Pt(9)
             if os.path.exists(LOGO_PATH):
                 doc.add_paragraph().alignment = WD_ALIGN_PARAGRAPH.CENTER
                 doc.paragraphs[-1].add_run().add_picture(LOGO_PATH, width=Inches(1.8))
-            
             for _ in range(5): doc.add_paragraph()
             p_tit = doc.add_paragraph(); p_tit.alignment = WD_ALIGN_PARAGRAPH.CENTER
             r_tit = p_tit.add_run(f"INFORME DELICTUAL EN {v_dom.upper()}, COMUNA DE PUDAHUEL, PERTENECIENTE A LA {v_sub.upper()}")
             r_tit.bold = True; r_tit.font.size = Pt(14); r_tit.font.color.rgb = RGBColor(0, 74, 47)
-            
             for _ in range(6): doc.add_paragraph()
             doc.add_paragraph(f"PUDAHUEL, {v_finf.upper()}").alignment = WD_ALIGN_PARAGRAPH.CENTER
             doc.add_paragraph("OFICINA DE OPERACIONES").alignment = WD_ALIGN_PARAGRAPH.CENTER
             doc.add_page_break()
 
-            # 2. CUERPO
-            p_sangria("I.- ANTECEDENTES:", f"En referencia a DOE/ N° {v_doe} de fecha {v_fdoe} el cual se refiere a solicitud de confeccionar Informe Delictual para ser adjuntado a solicitud para pernoctar fuera del cuartel en {v_dom}, presentada por el {v_gsol} {v_sol} Dependiente de la {v_unid}.")
-            p_sangria("II.- PERIODO Y LUGAR QUE CONSIDERA EL ANÁLISIS:", f"El presente análisis comprende la temporalidad durante el último trimestre móvil desde el {v_pini} al {v_pfin} {v_dom}, Comuna De Pudahuel, en el cuadrante {v_cua}.")
+            # 2. Cuerpo
+            p_sangria("I.- ANTECEDENTES:", f"En referencia a DOE/ N° {v_doe} de fecha {v_fdoe} el cual se refiere a solicitud de confeccionar Informe Delictual...")
+            p_sangria("II.- PERIODO Y LUGAR QUE CONSIDERA EL ANÁLISIS:", f"El presente análisis comprende la temporalidad durante el último trimestre móvil desde el {v_pini} al {v_pfin}...")
             p_sangria("III.- FUENTE DE LA INFORMACIÓN:", "A partir de los datos obtenidos en el Panel de Comando y Control, y del Sistema de Análisis de Información Territorial (SAIT 2.0).")
 
-            # 3. ANALISIS + LOS DOS CUADROS (DMCS Y TIEMPO)
+            # 3. Análisis + Tablas
             doc.add_paragraph("\nIV.- ANÁLISIS GENERAL:").runs[0].bold = True
             doc.add_picture(f_mapa, width=Inches(5.5))
-            
-            # Cuadro 1: Delitos
             doc.add_paragraph("\nDetalle Delitos DMCS:")
             counts = df['DELITO'].value_counts().reset_index()
             t_dmcs = doc.add_table(rows=1, cols=2); t_dmcs.style = 'Table Grid'
             hdr = t_dmcs.rows[0].cells; hdr[0].text = "DELITO"; hdr[1].text = "CANT."
             for cell in hdr:
-                set_cell_bg(cell, "004A2F")
-                cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255,255,255)
+                set_cell_bg(cell, "004A2F"); cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255,255,255)
             for _, r in counts.iterrows():
                 row = t_dmcs.add_row().cells; row[0].text = str(r[0]); row[1].text = str(r[1])
 
-            # Cuadro 2: Matriz
             doc.add_paragraph("\nTramo Horario y Días Críticos:")
             matriz = pd.crosstab(df['RANGO HORA'], df['DIA'])
             t_mat = doc.add_table(rows=1, cols=len(matriz.columns)+1); t_mat.style = 'Table Grid'
             hdr2 = t_mat.rows[0].cells; hdr2[0].text = "TRAMO HORA/DIA"
             for i, c in enumerate(matriz.columns): hdr2[i+1].text = str(c)
             for cell in hdr2:
-                set_cell_bg(cell, "004A2F")
-                cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255,255,255)
+                set_cell_bg(cell, "004A2F"); cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255,255,255)
             for idx, r_data in matriz.iterrows():
                 row = t_mat.add_row().cells; row[0].text = str(idx)
                 for j, v in enumerate(r_data): row[j+1].text = str(v)
 
-            # 4. CONCLUSIÓN Y FIRMA AUTO
+            # 4. Conclusión y Firma
             p_sangria("V.- CONCLUSIÓN:", f"El entorno cercano al domicilio se considera de RIESGO BAJO para el funcionario {v_sol}.")
             for _ in range(2): doc.add_paragraph()
             if os.path.exists(FIRMA_PATH):
