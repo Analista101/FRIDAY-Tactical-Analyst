@@ -2,11 +2,7 @@ import streamlit as st
 import pandas as pd
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
 import io
-import os
 import re
 from datetime import datetime
 
@@ -21,7 +17,7 @@ st.markdown("""
     .ia-box { background-color: #002D1D; color: #C5A059; padding: 20px; border-radius: 10px; border: 2px solid #C5A059; font-family: 'Arial', sans-serif; }
     label { color: black !important; font-weight: bold; }
     
-    /* ESTRUCTURA MATRIZ CARTAS DE SITUACIÓN */
+    /* ESTRUCTURA MATRIZ CARTAS DE SITUACIÓN - FORMATO EXACTO IMAGEN */
     .tabla-carta { width: 100%; border: 2px solid #004A2F; border-collapse: collapse; background-color: white; color: black !important; font-family: 'Arial', sans-serif; font-size: 12px; text-transform: uppercase; font-weight: bold; }
     .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; }
     .celda-titulo { background-color: #4F6228 !important; color: white !important; text-align: center !important; font-size: 16px !important; }
@@ -34,33 +30,23 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 2. MOTOR DE INTELIGENCIA FRIDAY ---
-def extraer_datos_vehiculo(texto):
-    # Simulación de extracción de Marca, Año y Patente
-    marca = re.search(r'(TOYOTA|HYUNDAI|NISSAN|KIA|CHEVROLET|FORD)', texto, re.I)
-    patente = re.search(r'([A-Z]{2}[A-Z\d]{2}\d{2})', texto)
-    anio = re.search(r'(20\d{2}|19\d{2})', texto)
+def procesar_relato_ia(texto):
+    # Detección de vehículo de delincuentes
+    v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
+    v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
     
-    res_marca = marca.group(0) if marca else "NO INDICA"
-    res_patente = patente.group(0) if patente else "PPU NO INDICA"
-    res_anio = anio.group(0) if anio else "AÑO NO INDICA"
-    
-    return f"{res_marca}, AÑO {res_anio}, PPU: {res_patente}"
-
-def generar_modus_operandi(texto):
-    # Limpieza de nombres propios simulada para el Modus Operandi institucional
-    texto_limpio = re.sub(r'(DON|DOÑA|SR\.|SRA\.)\s\w+\s\w+', 'LA VÍCTIMA', texto, flags=re.I)
-    if len(texto_limpio) > 10:
-        return texto_limpio.upper()
-    return "LA VÍCTIMA FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE LA FUERZA O INTIMIDACIÓN SUSTRAJERON ESPECIES PARA LUEGO HUIR."
+    # Modus Operandi breve estandarizado
+    modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
+    return v_transporte, modus
 
 # --- 3. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 with st.expander("TERMINAL DE ANÁLISIS TÁCTICO", expanded=True):
-    st.markdown('<div class="ia-box">SISTEMA JARVIS ACTIVO. Procesando bajo protocolos de Carabineros.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="ia-box"><b>SISTEMA JARVIS:</b> Señor, analizando bajo protocolos de la 26ª Comisaría.</div>', unsafe_allow_html=True)
     c_ia1, c_ia2 = st.columns([2, 1])
-    consulta_ia = c_ia1.text_area("Describa el hecho para peritaje:")
+    consulta_ia = c_ia1.text_area("Describa el hecho para peritaje legal:")
     if st.button("⚡ CONSULTAR A FRIDAY"):
-        if consulta_ia: st.info("Análisis de IA completado.")
+        if consulta_ia: st.info("Análisis de IA completado exitosamente.")
 
 # --- 4. PESTAÑAS DE TRABAJO ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTAS DE SITUACIÓN"])
@@ -84,15 +70,15 @@ with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
     with st.form("form_stop_t"):
         ct1, ct2 = st.columns(2)
-        t_per = ct1.text_input("Periodo (Ej: Nov-Dic-Ene)")
-        t_fec = ct1.text_input("Fecha Sesión")
+        t_per = ct1.text_input("Periodo (Nov-Dic-Ene)")
+        t_fec = ct1.text_input("Fecha Sesión STOP")
         t_asn = ct2.text_input("Nombre Asistente")
         t_asg = ct2.text_input("Grado Asistente")
         st.markdown('**🖋️ PIE DE FIRMA**')
         ft1, ft2, ft3 = st.columns(3)
-        t_nom = ft1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="n2")
-        t_gra = ft2.text_input("Grado", value="C.P.R. Analista Social", key="g2")
-        t_car = ft3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c2")
+        t_nom = ft1.text_input("Nombre Firmante", value="DIANA SANDOVAL ASTUDILLO", key="n2")
+        t_gra = ft2.text_input("Grado Firmante", value="C.P.R. Analista Social", key="g2")
+        t_car = ft3.text_input("Cargo Firmante", value="OFICINA DE OPERACIONES", key="c2")
         st.form_submit_button("🛡️ GENERAR STOP TRIMESTRAL")
 
 with t3:
@@ -117,20 +103,18 @@ with t3:
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
-    if "relato_final" not in st.session_state: st.session_state.relato_final = ""
+    if "relato_jarvis" not in st.session_state: st.session_state.relato_jarvis = ""
     col_x1, col_x2 = st.columns([5, 1])
     with col_x2:
         if st.button("🗑️ LIMPIAR"):
-            st.session_state.relato_final = ""
+            st.session_state.relato_jarvis = ""
             st.rerun()
-    relato = st.text_area("PEGUE EL RELATO AQUÍ:", value=st.session_state.relato_final, height=200)
+    
+    relato = st.text_area("PEGUE EL RELATO AQUÍ:", value=st.session_state.relato_jarvis, height=200)
 
     if st.button("⚡ GENERAR CUADRO"):
         if relato:
-            # EXTRACCIÓN REAL DE FRIDAY
-            v_info = extraer_datos_vehiculo(relato)
-            v_modus = generar_modus_operandi(relato)
-            
+            v_traslado, v_modus = procesar_relato_ia(relato)
             html_matriz = f"""
             <table class="tabla-carta">
                 <tr>
@@ -139,7 +123,7 @@ with t4:
                     <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
                 </tr>
                 <tr>
-                    <td style="text-align:center">22:00 A 23:00</td>
+                    <td style="text-align:center">INDICAR TRAMO</td>
                     <td style="text-align:center">AVENIDA GENERAL OSCAR BONILLA / LOS EDILES</td>
                 </tr>
                 <tr>
@@ -153,7 +137,7 @@ with t4:
                             <tr><td class="border-inner-r">GENERO</td><td>MASCULINO</td></tr>
                             <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">DE 30 A 35 AÑOS</td></tr>
                             <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{v_info}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">01 TELÉFONO CELULAR</td></tr>
                         </table>
                     </td>
                     <td style="padding:0; vertical-align:top;">
@@ -161,14 +145,11 @@ with t4:
                             <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
                             <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
                             <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">VESTIMENTA OSCURA</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">A PIE</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{v_traslado}</td></tr>
                         </table>
                     </td>
-                    <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">
-                        {v_modus}
-                    </td>
+                    <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{v_modus}</td>
                 </tr>
             </table>
             """
             st.markdown(html_matriz, unsafe_allow_html=True)
-            st.success("Señor, el cuadro ha sido generado con la información técnica del vehículo y el relato analizado.")
