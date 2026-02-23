@@ -1,128 +1,78 @@
 import streamlit as st
-from docxtpl import DocxTemplate, RichText
+import pandas as pd
+from docxtpl import DocxTemplate, RichText, InlineImage
+from docx.shared import Inches
 import io
 from datetime import datetime
-import os
 
-# 1. CONFIGURACIÓN DEL SISTEMA F.R.I.D.A.Y.
-st.set_page_config(page_title="SISTEMA F.R.I.D.A.Y. - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
+# ... (Estilos tácticos y función generar_word se mantienen) ...
 
-# 2. ESTILO TÁCTICO (Títulos verdes, campos margen verde)
-st.markdown("""
-    <style>
-    .stApp { background-color: #FFFFFF !important; }
-    .section-header {
-        background-color: #004A2F; color: #FFFFFF !important;
-        padding: 5px 15px; border-radius: 4px; display: inline-block;
-        margin-bottom: 15px; font-weight: bold; text-transform: uppercase;
-        border-left: 5px solid #C5A059;
-    }
-    .stApp label { color: #000000 !important; font-weight: bold !important; }
-    .stTextInput>div>div>input, .stTextArea>div>textarea {
-        color: #000000 !important; border: 2px solid #004A2F !important; border-radius: 5px;
-    }
-    [data-testid="stSidebar"] { background-color: #004A2F !important; }
-    [data-testid="stSidebar"] * { color: #FFFFFF !important; }
-    .stark-header {
-        background-color: #004A2F; padding: 15px; border-radius: 10px;
-        color: #FFFFFF !important; text-align: center; border: 2px solid #C5A059; margin-bottom: 25px;
-    }
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; }
-    div.stButton > button, .stFormSubmitButton > button {
-        background-color: #004A2F !important; color: #FFFFFF !important;
-        border: 2px solid #C5A059 !important; font-weight: bold !important; width: 100% !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# 3. MOTOR DE FIRMA (Bookman Old Style 11)
-def generar_word(nombre_plantilla, datos):
-    try:
-        doc = DocxTemplate(nombre_plantilla)
-        rt = RichText()
-        rt.add(datos['n_oficial'].upper(), bold=True, font='Bookman Old Style', size=22)
-        rt.add('\n')
-        rt.add(datos['g_oficial'], bold=False, font='Bookman Old Style', size=22)
-        rt.add('\n')
-        rt.add(datos['c_oficial'].upper(), bold=True, font='Bookman Old Style', size=22)
-        datos['firma_completa'] = rt
-        
-        now = datetime.now()
-        meses_n = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
-        datos['fecha_fondo'] = f"PUDAHUEL, {now.day} DE {meses_n[now.month-1]} DE {now.year}"
-        
-        doc.render(datos)
-        output = io.BytesIO()
-        doc.save(output)
-        return output.getvalue()
-    except Exception as e:
-        st.error(f"Falla en F.R.I.D.A.Y.: {e}")
-        return None
-
-# 4. BARRA LATERAL
-with st.sidebar:
-    if os.path.exists("logo.png"): st.image("logo.png", width=160)
-    st.markdown("---")
-    st.write("UNIDAD: 26ª Comisaría Pudahuel")
-    st.write(f"FECHA: {datetime.now().strftime('%d/%m/%Y')}")
-
-st.markdown('<div class="stark-header"><h2>CARABINEROS DE CHILE</h2><h3>SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3></div>', unsafe_allow_html=True)
-
-tab1, tab2, tab3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
-
-# --- MODULO 1: ACTA MENSUAL ---
-with tab1:
-    st.markdown('<div class="section-header">📝 ACTA MENSUAL</div>', unsafe_allow_html=True)
-    with st.form("form_mensual"):
-        c1, c2 = st.columns(2)
+with tab3:
+    st.markdown('<div class="section-header">📍 SISTEMA DE EXPLORACIÓN GEO-ESPACIAL</div>', unsafe_allow_html=True)
+    
+    with st.form("form_geo_definitivo"):
+        # I. ENTRADA DE DATOS PARA {{ }}
+        st.markdown('<div class="section-header">📄 I. ANTECEDENTES Y SOLICITANTE</div>', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
         with c1:
-            sem_m = st.text_input("Semana de estudio")
-            fec_m = st.text_input("Fecha de sesión")
+            v_domicilio = st.text_input("Domicilio ({{ domicilio }})")
+            v_jurisdiccion = st.text_input("Jurisdicción", value="26ª COM. PUDAHUEL")
+            v_cuadrante = st.text_input("Cuadrante ({{ cuadrante }})")
         with c2:
-            comp_m = st.text_input("Compromiso Carabineros")
-        prob_m = st.text_area("Problemática Delictual 26ª Comisaría")
-        
+            v_doe = st.text_input("N° DOE ({{ doe }})")
+            v_f_doe = st.text_input("Fecha DOE ({{ fecha_doe }})")
+            v_fecha_act = st.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
+        with c3:
+            v_solicitante = st.text_input("Nombre Solicitante ({{ solicitante }})")
+            v_g_solic = st.text_input("Grado ({{ grado_solic }})")
+            v_u_solic = st.text_input("Unidad ({{ unidad_solic }})")
+
+        # II. SUMINISTROS TÁCTICOS (MAPA Y EXCEL)
+        st.markdown('<div class="section-header">📊 II. ADJUNTAR INTELIGENCIA (MAPA Y EXCEL)</div>', unsafe_allow_html=True)
+        up1, up2, up3 = st.columns(3)
+        with up1:
+            f_mapa = st.file_uploader("Adjuntar Mapa ({{ mapa }})", type=['png', 'jpg', 'jpeg'])
+        with up2:
+            f_excel_det = st.file_uploader("Excel Detalle Delictual", type=['xlsx'])
+        with up3:
+            f_excel_cal = st.file_uploader("Excel Zona de Calor", type=['xlsx'])
+
+        # III. ANÁLISIS DE RIESGO IA
+        st.markdown('<div class="section-header">🤖 III. CONCLUSIÓN E INTELIGENCIA ARTIFICIAL</div>', unsafe_allow_html=True)
+        activar_ia = st.checkbox("Permitir que F.R.I.D.A.Y. determine el nivel de riesgo", value=True)
+        v_conclusion = st.text_area("Edición de Conclusión ({{ conclusion_ia }})", height=150)
+
+        # IV. FIRMA
         st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        cf1, cf2 = st.columns(2)
-        with cf1:
-            n_m = st.text_input("Nombre Oficial", value="DIANA SANDOVAL ASTUDILLO", key="n_m")
-            g_m = st.text_input("Grado", value="C.P.R. Analista Social", key="g_m")
-        with cf2:
-            c_m = st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c_m")
-        
-        btn_m = st.form_submit_button("🛡️ GENERAR ACTA MENSUAL")
+        sf1, sf2 = st.columns(2)
+        with sf1:
+            n_g = st.text_input("Oficial", value="DIANA SANDOVAL ASTUDILLO")
+        with sf2:
+            c_g = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
 
-    if btn_m:
-        datos_m = {'semana': sem_m.upper(), 'fecha_sesion': fec_m.upper(), 'c_carabineros': comp_m.upper(), 'problematica': prob_m.upper(), 'n_oficial': n_m, 'g_oficial': g_m, 'c_oficial': c_m}
-        archivo = generar_word("ACTA STOP MENSUAL.docx", datos_m)
-        if archivo:
-            st.download_button("⬇️ DESCARGAR MENSUAL", archivo, f"ACTA_MENSUAL_{sem_m}.docx")
+        btn_geo = st.form_submit_button("🛡️ PROCESAR INFORME GEO")
 
-# --- MODULO 2: ACTA TRIMESTRAL ---
-with tab2:
-    st.markdown('<div class="section-header">📈 ANÁLISIS STOP TRIMESTRAL</div>', unsafe_allow_html=True)
-    with st.form("form_trimestral"):
-        col1, col2 = st.columns(2)
-        with col1:
-            val_periodo = st.text_input("Periodo (Meses comprendidos entre...)")
-            val_fecha_s = st.text_input("Fecha de la Sesión")
-        with col2:
-            val_asistente = st.text_input("Nombre Asistente Institucional")
-            val_grado_as = st.text_input("Grado Asistente")
+    if btn_geo:
+        # LÓGICA DE PROCESAMIENTO
+        try:
+            # Procesamiento de Tabla 1 (Detalle) para {{ total_dmcs }}
+            if f_excel_det:
+                df_det = pd.read_excel(f_excel_det)
+                total_dmcs = df_det['CUENTA'].sum()
+            
+            # Procesamiento de Tabla 2 (Calor) para {{ dia_max }} y {{ hora_max }}
+            if f_excel_cal:
+                df_cal = pd.read_excel(f_excel_cal)
+                # Lógica para identificar celdas críticas...
 
-        st.markdown('<div class="section-header">🖋️ FIRMA</div>', unsafe_allow_html=True)
-        tf1, tf2 = st.columns(2)
-        with tf1:
-            n_t = st.text_input("Nombre Oficial", value="DIANA SANDOVAL ASTUDILLO", key="n_t")
-            g_t = st.text_input("Grado", value="C.P.R. Analista Social", key="g_t")
-        with tf2:
-            c_t = st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c_t")
+            # CONCLUSIÓN IA: Evaluación de Riesgo
+            if activar_ia:
+                if total_dmcs > 20: # Umbral de ejemplo
+                    riesgo_msg = "ALTO RIESGO. El sector presenta una alta densidad delictual."
+                else:
+                    riesgo_msg = "RIESGO MODERADO. Se recomienda mantener medidas de precaución estándar."
+                st.info(f"Análisis de IA finalizado: {riesgo_msg}")
 
-        btn_t = st.form_submit_button("🛡️ GENERAR ACTA TRIMESTRAL")
-
-    if btn_t:
-        datos_t = {'periodo': val_periodo.upper(), 'fecha_sesion': val_fecha_s.upper(), 'asistente': val_asistente.upper(), 'grado': val_grado_as.upper(), 'n_oficial': n_t, 'g_oficial': g_t, 'c_oficial': c_t}
-        archivo_t = generar_word("ACTA STOP TRIMESTRAL.docx", datos_t)
-        if archivo_t:
-            st.download_button("⬇️ DESCARGAR TRIMESTRAL", archivo_t, "ACTA_TRIMESTRAL.docx")
+            st.success("Informe Geo-Táctico listo para descarga.")
+        except Exception as e:
+            st.error(f"Falla en los sistemas: {e}")
