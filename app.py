@@ -2,128 +2,104 @@ import streamlit as st
 import pandas as pd
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
+import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
-# --- 1. ESTÉTICA F.R.I.D.A.Y. (BLINDADA) ---
+# --- 1. PROTOCOLO VISUAL F.R.I.D.A.Y. (BLINDADO) ---
 st.set_page_config(page_title="PROYECTO F.R.I.D.A.Y.", layout="wide")
 st.markdown("""
     <style>
     .stApp { background-color: #D1D8C4 !important; }
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; font-weight: bold !important; }
-    .section-header {
-        background-color: #004A2F !important; color: #FFFFFF !important;
-        padding: 10px 15px; border-radius: 5px; font-weight: bold;
-        text-transform: uppercase; margin-bottom: 15px; border-left: 8px solid #C5A059;
-    }
-    input, textarea, [data-baseweb="input"] {
-        background-color: #FFFFFF !important; color: #000000 !important;
-        border: 2px solid #004A2F !important; 
-    }
+    input, textarea, [data-baseweb="input"] { background-color: #FFFFFF !important; color: #000000 !important; }
+    .section-header { background-color: #004A2F !important; color: white; padding: 10px; border-radius: 5px; font-weight: bold; }
     label { color: #000000 !important; font-weight: bold !important; }
     </style>
     """, unsafe_allow_html=True)
 
 t1, t2, t3 = st.tabs(["📄 ACTA STOP MENSUAL", "📈 STOP TRIMESTRAL", "📍 INFORME GEO"])
 
-# --- PESTAÑA 1: STOP MENSUAL ---
-with t1:
-    st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
-    with st.form("f_m"):
-        c1, c2 = st.columns(2)
-        c1.text_input("Semana de estudio")
-        c1.text_input("Fecha de sesión")
-        c2.text_input("Compromiso Carabineros")
-        st.text_area("Problemática Delictual 26ª Comisaría")
-        st.markdown('<div class="section-header">🖋️ PIE DE FIRMA</div>', unsafe_allow_html=True)
-        f1, f2, f3 = st.columns(3)
-        f1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nm1")
-        f2.text_input("Grado", value="C.P.R. Analista Social", key="gm1")
-        f3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="cm1")
-        st.form_submit_button("🛡️ GENERAR ACTA")
-
-# --- PESTAÑA 2: STOP TRIMESTRAL ---
+# --- PESTAÑA 2: STOP TRIMESTRAL (RESTAURADA CON ASISTENTE) ---
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
-    with st.form("f_t"):
-        ct1, ct2 = st.columns(2)
-        ct1.text_input("Periodo ({{ periodo }})")
-        ct1.text_input("Fecha Sesión")
-        ct2.text_input("Nombre Asistente") 
-        ct2.text_input("Grado Asistente")
-        st.markdown('<div class="section-header">🖋️ PIE DE FIRMA</div>', unsafe_allow_html=True)
-        ft1, ft2, ft3 = st.columns(3)
-        ft1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nt1")
-        ft2.text_input("Grado", value="C.P.R. Analista Social", key="gt1")
-        ft3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ct1")
-        st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
+    with st.form("t_f"):
+        c1, c2 = st.columns(2)
+        c1.text_input("Periodo")
+        c2.text_input("Nombre Asistente") 
+        c2.text_input("Grado Asistente")
+        st.markdown('**PIE DE FIRMA**')
+        f1, f2, f3 = st.columns(3)
+        f1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nt")
+        f2.text_input("Grado", value="C.P.R. Analista Social", key="gt")
+        f3.text_input("Cargo", value="OFICINA DE OPERACIONES", key="ct")
+        st.form_submit_button("🛡️ GENERAR")
 
-# --- PESTAÑA 3: INFORME GEO ---
+# --- PESTAÑA 3: INFORME GEO (MÓDULO DE IMAGEN) ---
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO-ESPACIAL</div>', unsafe_allow_html=True)
-    with st.form("f_geo"):
+    with st.form("geo_img"):
         st.markdown('### I. ANTECEDENTES Y SOLICITANTE')
         g1, g2, g3 = st.columns(3)
-        v_dom = g1.text_input("Domicilio ({{ domicilio }})")
+        v_dom = g1.text_input("Domicilio")
         v_doe = g2.text_input("N° DOE")
-        v_fdoe = g2.text_input("Fecha DOE")
-        v_cua = g3.text_input("Cuadrante")
-        v_fact = g3.text_input("Fecha Actual", value=datetime.now().strftime('%d/%m/%Y'))
+        v_sol = g3.text_input("Nombre Solicitante")
         
-        st.markdown('### II. PERIODO Y DATOS DEL SOLICITANTE')
-        p1, p2, p3 = st.columns(3)
-        v_ini = p1.text_input("Inicio Periodo")
-        v_fin = p1.text_input("Fin Periodo")
-        v_sol = p2.text_input("Nombre Solicitante")
-        v_gsol = p2.text_input("Grado Solicitante")
-        v_unid = p3.text_input("Unidad Solicitante")
-
-        f_mapa = st.file_uploader("Subir Mapa SAIT", type=['png', 'jpg'])
-        f_excel = st.file_uploader("Subir Excel", type=['xlsx', 'csv'])
-
-        st.markdown('### III. PIE DE FIRMA RESPONSABLE')
+        st.markdown('### II. PIE DE FIRMA')
         rf1, rf2, rf3 = st.columns(3)
-        v_f_nom = rf1.text_input("Nombre Firma", value="DIANA SANDOVAL ASTUDILLO")
-        v_f_gra = rf2.text_input("Grado Firma", value="C.P.R. Analista Social")
-        v_f_car = rf3.text_input("Cargo Firma", value="OFICINA DE OPERACIONES")
+        v_f_nom = rf1.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO")
+        v_f_gra = rf2.text_input("Grado", value="C.P.R. Analista Social")
+        v_f_car = rf3.text_input("Cargo", value="OFICINA DE OPERACIONES")
 
-        btn_run = st.form_submit_button("🛡️ ANALIZAR CON F.R.I.D.A.Y.")
+        f_mapa = st.file_uploader("Subir Mapa", type=['png', 'jpg'])
+        f_excel = st.file_uploader("Subir Excel", type=['xlsx', 'csv'])
+        btn = st.form_submit_button("🛡️ GENERAR INFORME DEFINITIVO")
 
-    if btn_run and f_excel and f_mapa:
+    if btn and f_excel and f_mapa:
         try:
             df = pd.read_excel(f_excel) if f_excel.name.endswith('xlsx') else pd.read_csv(f_excel)
             
-            # --- INTELIGENCIA DE DATOS F.R.I.D.A.Y. ---
-            # Contamos ocurrencias de la columna 'DELITO'
-            conteo_delitos = df['DELITO'].value_counts().reset_index()
-            conteo_delitos.columns = ['DELITO', 'CUENTA']
-            
-            # Extraemos tendencias temporales automáticamente
-            dia_critico = df['DIA'].mode()[0]
-            tramo_critico = df['RANGO HORA'].mode()[0]
-            total_dmcs = len(df)
-            
-            # Conclusión elaborada dinámica
-            conclusion = (f"Tras el análisis geo-espacial, se determina un escenario de riesgo con {total_dmcs} delitos detectados. "
-                          f"La mayor concentración se registra los días {dia_critico} durante el tramo {tramo_critico}. "
-                          f"Se recomienda vigilancia focalizada en el sector de {v_dom}.")
+            # --- FUNCIÓN IA PARA CREAR TABLA-IMAGEN ---
+            def crear_tabla_img(dataframe, titulo_cols):
+                fig, ax = plt.subplots(figsize=(7, len(dataframe)*0.6 + 0.7))
+                ax.axis('off')
+                tbl = ax.table(cellText=dataframe.values, colLabels=titulo_cols, 
+                               loc='center', cellLoc='left', colColours=['#004A2F']*len(titulo_cols))
+                tbl.auto_set_font_size(False)
+                tbl.set_fontsize(9)
+                for c in range(len(titulo_cols)):
+                    tbl[0, c].get_text().set_color('white')
+                
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
+                buf.seek(0)
+                plt.close()
+                return buf
 
+            # Procesar datos
+            df_delitos = df['DELITO'].value_counts().reset_index()
+            df_delitos.columns = ['DELITO', 'CANTIDAD']
+            
+            df_horarios = df['RANGO HORA'].value_counts().reset_index()
+            df_horarios.columns = ['TRAMO HORARIO', 'CASOS']
+
+            img_delitos = crear_tabla_img(df_delitos, ['DELITO', 'CANTIDAD'])
+            img_horarios = crear_tabla_img(df_horarios, ['TRAMO HORARIO', 'CASOS'])
+
+            # --- RENDERIZADO FINAL ---
             doc = DocxTemplate("INFORME GEO.docx")
             context = {
-                'domicilio': v_dom, 'jurisdiccion': "26ª COM. PUDAHUEL", 'doe': v_doe, 'fecha_doe': v_fdoe,
-                'cuadrante': v_cua, 'fecha_actual': v_fact, 'solicitante': v_sol,
-                'grado_solic': v_gsol, 'unidad_solic': v_unid, 'periodo_inicio': v_ini,
-                'periodo_fin': v_fin, 'total_dmcs': total_dmcs, 'dia_max': dia_critico,
-                'hora_max': tramo_critico, 'conclusion_ia': conclusion,
-                'tabla_delitos': conteo_delitos.to_dict(orient='records'),
+                'domicilio': v_dom, 'doe': v_doe, 'solicitante': v_sol,
+                'total_dmcs': len(df),
+                'tabla': InlineImage(doc, img_delitos, width=Inches(5.0)),
+                'tabla_horarios': InlineImage(doc, img_horarios, width=Inches(4.5)),
                 'mapa': InlineImage(doc, f_mapa, width=Inches(5.5)),
-                'firma_nombre': v_f_nom, 'firma_grado': v_f_gra, 'firma_cargo': v_f_car
+                'firma_nombre': v_f_nom, 'firma_grado': v_f_gra, 'firma_cargo': v_f_car,
+                'dia_max': df['DIA'].mode()[0], 'hora_max': df['RANGO HORA'].mode()[0],
+                'conclusion_ia': f"Análisis finalizado con {len(df)} eventos registrados."
             }
             doc.render(context)
             output = io.BytesIO()
             doc.save(output)
-            st.success("Análisis F.R.I.D.A.Y. finalizado correctamente.")
-            st.download_button("📂 DESCARGAR INFORME", data=output.getvalue(), file_name="Informe_GEO.docx")
-        except Exception as e:
-            st.error(f"Fallo técnico: {e}")
+            st.success("Protocolo F.R.I.D.A.Y. ejecutado con éxito.")
+            st.download_button("📂 DESCARGAR INFORME SELLADO", data=output.getvalue(), file_name="Informe_Final_JARVIS.docx")
+        except Exception as e: st.error(f"Error en el núcleo: {e}")
