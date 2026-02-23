@@ -5,45 +5,38 @@ from datetime import datetime
 import os
 
 # 1. CONFIGURACIÓN DEL SISTEMA
-st.set_page_config(page_title="PROJECT JARVIS - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
+st.set_page_config(page_title="PROJECT FRIDAY - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
-# 2. INYECCIÓN DE ESTILO TÁCTICO (FUERZA BRUTA)
+# 2. INYECCIÓN DE ESTILO TÁCTICO
 st.markdown("""
     <style>
-    /* FONDO GENERAL BLANCO */
     .stApp { background-color: #FFFFFF !important; }
-
-    /* TODO EL TEXTO EN FONDO BLANCO A NEGRO (Headers, etiquetas, inputs) */
-    .stApp, .stApp p, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp span {
+    
+    /* TODO EL TEXTO EN FONDO BLANCO A NEGRO */
+    .stApp, .stApp p, .stApp label, .stApp h3, .stApp span {
         color: #000000 !important;
         font-weight: bold !important;
     }
 
-    /* BARRA LATERAL (Mantiene su estilo institucional) */
+    /* BARRA LATERAL VERDE */
     [data-testid="stSidebar"] { background-color: #004A2F !important; }
     [data-testid="stSidebar"] * { color: #FFFFFF !important; }
 
-    /* BOTONES VERDES CON LETRA BLANCA (REPARACIÓN CRÍTICA) */
+    /* BOTONES VERDES CON LETRA BLANCA */
     div.stButton > button, .stFormSubmitButton > button {
         background-color: #004A2F !important;
-        color: #FFFFFF !important; /* Letra blanca en botón */
+        color: #FFFFFF !important;
         border: 2px solid #C5A059 !important;
         font-weight: bold !important;
         width: 100% !important;
-        height: 3.5em !important;
         text-transform: uppercase;
     }
 
-    /* PESTAÑAS (TABS) */
-    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; }
-    
-    /* ENCABEZADO STARK */
     .stark-header {
         background-color: #004A2F;
         padding: 15px;
         border-radius: 10px;
-        color: #FFFFFF !important; /* Letra blanca en fondo verde */
+        color: #FFFFFF !important;
         text-align: center;
         border: 2px solid #C5A059;
         margin-bottom: 25px;
@@ -54,40 +47,34 @@ st.markdown("""
 
 # 3. BARRA LATERAL
 with st.sidebar:
-    # Intento de carga de logo local
     if os.path.exists("logo.png"):
         st.image("logo.png", width=160)
     else:
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logotipo_de_Carabineros_de_Chile.svg/640px-Logotipo_de_Carabineros_de_Chile.svg.png", width=140)
-    
     st.markdown("---")
-    st.markdown("#### **UNIDAD:**")
-    st.write("26ª Comisaría Pudahuel") 
+    st.write(f"UNIDAD: 26ª Comisaría Pudahuel")
     st.write(f"FECHA: {datetime.now().strftime('%d/%m/%Y')}")
 
 # 4. ENCABEZADO
 st.markdown('<div class="stark-header"><h2>CARABINEROS DE CHILE</h2><h3>SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3></div>', unsafe_allow_html=True)
 
-# 5. MOTOR DE GENERACIÓN JARVIS
+# 5. MOTOR DE FIRMA FRIDAY (BOOKMAN OLD STYLE 11 - CENTRADO)
 def generar_word(nombre_plantilla, datos):
     try:
         doc = DocxTemplate(nombre_plantilla)
         
-        # PROTOCOLO DE FIRMA (IMAGEN 25fb57)
-        # 1. Opción RichText (Para mantener negritas)
+        # PROTOCOLO DE FIRMA: Negrita-Normal-Negrita, Bookman Old Style, Tamaño 11
         rt = RichText()
-        rt.add(datos['n_oficial'].upper(), bold=True)
+        # Nombre en Negrita
+        rt.add(datos['n_oficial'].upper(), bold=True, font='Bookman Old Style', size=22) # size 22 equivale a 11pt
         rt.add('\n')
-        rt.add(datos['g_oficial'], bold=False)
+        # Grado en Normal
+        rt.add(datos['g_oficial'], bold=False, font='Bookman Old Style', size=22)
         rt.add('\n')
-        rt.add(datos['c_oficial'].upper(), bold=True)
+        # Cargo en Negrita
+        rt.add(datos['c_oficial'].upper(), bold=True, font='Bookman Old Style', size=22)
         
-        # 2. Opción Texto Plano (Si el RichText falla en su Word)
-        firma_texto = f"{datos['n_oficial'].upper()}\n{datos['g_oficial']}\n{datos['c_oficial'].upper()}"
-        
-        # Inyectamos ambas para seguridad
         datos['firma_completa'] = rt
-        datos['firma_simple'] = firma_texto
         
         now = datetime.now()
         meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
@@ -140,5 +127,5 @@ with tab1:
         
         archivo_word = generar_word("ACTA STOP MENSUAL.docx", datos_finales)
         if archivo_word:
-            st.success("Documento generado con éxito.")
+            st.success("Documento generado con la nueva firma centrada.")
             st.download_button("⬇️ DESCARGAR WORD", archivo_word, f"ACTA_{semana}.docx")
