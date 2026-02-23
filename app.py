@@ -4,47 +4,57 @@ import io
 from datetime import datetime
 import os
 
-# 1. CONFIGURACIÓN DEL SISTEMA JARVIS
+# 1. CONFIGURACIÓN DEL SISTEMA
 st.set_page_config(page_title="PROJECT JARVIS - 26ª Com. Pudahuel", page_icon="🟢", layout="wide")
 
-# 2. INYECCIÓN DE ESTILO (CSS)
+# 2. INYECCIÓN DE ESTILO TÁCTICO (FUERZA BRUTA)
 st.markdown("""
     <style>
+    /* FONDO GENERAL BLANCO */
     .stApp { background-color: #FFFFFF !important; }
-    [data-testid="stSidebar"] { background-color: #004A2F !important; }
-    [data-testid="stSidebar"] * { color: #FFFFFF !important; font-weight: bold !important; }
 
-    /* ETIQUETAS EN NEGRO PARA RESALTAR EN FONDO BLANCO */
-    .stApp label {
+    /* TODO EL TEXTO EN FONDO BLANCO A NEGRO (Headers, etiquetas, inputs) */
+    .stApp, .stApp p, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp span {
         color: #000000 !important;
         font-weight: bold !important;
-        font-size: 1.1rem !important;
     }
 
-    /* BOTONES VERDES */
+    /* BARRA LATERAL (Mantiene su estilo institucional) */
+    [data-testid="stSidebar"] { background-color: #004A2F !important; }
+    [data-testid="stSidebar"] * { color: #FFFFFF !important; }
+
+    /* BOTONES VERDES CON LETRA BLANCA (REPARACIÓN CRÍTICA) */
     div.stButton > button, .stFormSubmitButton > button {
         background-color: #004A2F !important;
-        color: #FFFFFF !important;
+        color: #FFFFFF !important; /* Letra blanca en botón */
         border: 2px solid #C5A059 !important;
         font-weight: bold !important;
         width: 100% !important;
+        height: 3.5em !important;
         text-transform: uppercase;
     }
 
+    /* PESTAÑAS (TABS) */
+    .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
+    .stTabs [data-baseweb="tab"] { color: #FFFFFF !important; }
+    
+    /* ENCABEZADO STARK */
     .stark-header {
         background-color: #004A2F;
         padding: 15px;
         border-radius: 10px;
-        color: #FFFFFF;
+        color: #FFFFFF !important; /* Letra blanca en fondo verde */
         text-align: center;
         border: 2px solid #C5A059;
         margin-bottom: 25px;
     }
+    .stark-header h2, .stark-header h3 { color: #FFFFFF !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. BARRA LATERAL (Solo para información de Unidad)
+# 3. BARRA LATERAL
 with st.sidebar:
+    # Intento de carga de logo local
     if os.path.exists("logo.png"):
         st.image("logo.png", width=160)
     else:
@@ -53,17 +63,18 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("#### **UNIDAD:**")
     st.write("26ª Comisaría Pudahuel") 
-    st.markdown(f"#### **FECHA:** {datetime.now().strftime('%d/%m/%Y')}")
+    st.write(f"FECHA: {datetime.now().strftime('%d/%m/%Y')}")
 
 # 4. ENCABEZADO
 st.markdown('<div class="stark-header"><h2>CARABINEROS DE CHILE</h2><h3>SISTEMA F.R.I.D.A.Y. | PREFECTURA OCCIDENTE</h3></div>', unsafe_allow_html=True)
 
-# 5. FUNCION DE GENERACIÓN DE WORD
+# 5. MOTOR DE GENERACIÓN JARVIS
 def generar_word(nombre_plantilla, datos):
     try:
         doc = DocxTemplate(nombre_plantilla)
         
-        # PROTOCOLO DE FIRMA (IMAGEN 25fb57): Negrita-Normal-Negrita
+        # PROTOCOLO DE FIRMA (IMAGEN 25fb57)
+        # 1. Opción RichText (Para mantener negritas)
         rt = RichText()
         rt.add(datos['n_oficial'].upper(), bold=True)
         rt.add('\n')
@@ -71,9 +82,13 @@ def generar_word(nombre_plantilla, datos):
         rt.add('\n')
         rt.add(datos['c_oficial'].upper(), bold=True)
         
-        datos['firma_completa'] = rt
+        # 2. Opción Texto Plano (Si el RichText falla en su Word)
+        firma_texto = f"{datos['n_oficial'].upper()}\n{datos['g_oficial']}\n{datos['c_oficial'].upper()}"
         
-        # Fecha fondo para el pie del documento
+        # Inyectamos ambas para seguridad
+        datos['firma_completa'] = rt
+        datos['firma_simple'] = firma_texto
+        
         now = datetime.now()
         meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
         datos['fecha_fondo'] = f"PUDAHUEL, {now.day} DE {meses[now.month-1].upper()} DE {now.year}"
@@ -83,7 +98,7 @@ def generar_word(nombre_plantilla, datos):
         doc.save(output)
         return output.getvalue()
     except Exception as e:
-        st.error(f"Error en motor JARVIS: {e}")
+        st.error(f"Error en renderizado: {e}")
         return None
 
 # 6. PESTAÑAS
@@ -102,7 +117,7 @@ with tab1:
         problema = st.text_area("Problemática Delictual 26ª Comisaría")
         
         st.markdown("---")
-        st.markdown("### 🖋️ CONFIGURACIÓN DE FIRMA (PIE DE PÁGINA)")
+        st.markdown("### 🖋️ CONFIGURACIÓN DE FIRMA")
         cf1, cf2 = st.columns(2)
         with cf1:
             nom = st.text_input("Nombre del Oficial", value="DIANA SANDOVAL ASTUDILLO")
@@ -110,10 +125,9 @@ with tab1:
         with cf2:
             car = st.text_input("Cargo", value="OFICINA DE OPERACIONES")
             
-        submit = st.form_submit_button("🛡️ PROCESAR Y GENERAR DOCUMENTO")
+        submit = st.form_submit_button("🛡️ PROCESAR ACTA")
 
     if submit:
-        # Validación y Mayúsculas
         datos_finales = {
             'semana': semana.upper(),
             'fecha_sesion': fecha_s.upper(),
@@ -126,5 +140,5 @@ with tab1:
         
         archivo_word = generar_word("ACTA STOP MENSUAL.docx", datos_finales)
         if archivo_word:
-            st.success("Firma procesada correctamente.")
-            st.download_button("⬇️ DESCARGAR ACTA", archivo_word, f"ACTA_{semana}.docx")
+            st.success("Documento generado con éxito.")
+            st.download_button("⬇️ DESCARGAR WORD", archivo_word, f"ACTA_{semana}.docx")
