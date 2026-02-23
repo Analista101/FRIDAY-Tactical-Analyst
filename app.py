@@ -3,7 +3,7 @@ import pandas as pd
 import re
 from datetime import datetime
 
-# --- 1. CONFIGURACIÓN VISUAL JARVIS (INTERFAZ TÁCTICA) ---
+# --- 1. CONFIGURACIÓN VISUAL JARVIS ---
 st.set_page_config(page_title="SISTEMA JARVIS - COMANDO CENTRAL", layout="wide")
 st.markdown("""
     <style>
@@ -14,7 +14,6 @@ st.markdown("""
     .ia-box { background-color: #002D1D; color: #C5A059; padding: 20px; border-radius: 10px; border: 2px solid #C5A059; font-family: 'Arial', sans-serif; }
     label { color: black !important; font-weight: bold; }
     
-    /* MATRIZ CARTAS DE SITUACIÓN - FORMATO SOLICITADO */
     .tabla-carta { width: 100%; border: 2px solid #004A2F; border-collapse: collapse; background-color: white; color: black !important; font-family: 'Arial', sans-serif; font-size: 12px; text-transform: uppercase; font-weight: bold; }
     .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; }
     .celda-titulo { background-color: #4F6228 !important; color: white !important; text-align: center !important; font-size: 16px !important; }
@@ -26,26 +25,25 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. FUNCIONES DE INTELIGENCIA FRIDAY ---
+# --- 2. LÓGICA DE SESIÓN (BOTÓN LIMPIAR) ---
+if "relato_input" not in st.session_state:
+    st.session_state.relato_input = ""
+
+def borrar_texto():
+    st.session_state.relato_input = ""
+    # El rerun fuerza que el widget tome el nuevo valor de sesión
+    st.rerun()
+
+# --- 3. FUNCIONES DE INTELIGENCIA ---
 def procesar_relato_ia(texto):
-    # Detectar vehículo de delincuentes (Medio de desplazamiento)
     v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
     v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
-    
-    # Modus Operandi Breve Estandarizado (Su ejemplo exacto)
     modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
     return v_transporte, modus
 
-# --- 3. COMANDO CENTRAL IA FRIDAY ---
+# --- 4. CUERPO PRINCIPAL ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-with st.expander("TERMINAL DE ANÁLISIS TÁCTICO", expanded=True):
-    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Esperando entrada de datos, señor.</div>', unsafe_allow_html=True)
-    c_ia1, c_ia2 = st.columns([2, 1])
-    consulta_ia = c_ia1.text_area("Describa el hecho para peritaje legal:")
-    if st.button("⚡ CONSULTAR A FRIDAY"):
-        if consulta_ia: st.info("Análisis de IA completado.")
 
-# --- 4. PESTAÑAS OPERATIVAS (SIN RECORTES) ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTAS DE SITUACIÓN"])
 
 with t1:
@@ -58,24 +56,29 @@ with t1:
         m_pro = st.text_area("Problemática Delictual 26ª Comisaría")
         st.markdown('**🖋️ PIE DE FIRMA**')
         f1, f2, f3 = st.columns(3)
-        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="n1")
-        st.text_input("Grado", value="C.P.R. Analista Social", key="g1")
-        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c1")
+        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nom1")
+        st.text_input("Grado", value="C.P.R. Analista Social", key="grad1")
+        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="carg1")
         st.form_submit_button("🛡️ GENERAR ACTA")
 
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
-    with st.form("form_trimestral"):
+    with st.form("form_trim"):
         ct1, ct2 = st.columns(2)
         st.text_input("Periodo (Ej: Nov-Dic-Ene)")
         st.text_input("Fecha Sesión STOP")
         st.text_input("Nombre Asistente")
         st.text_input("Grado Asistente")
+        st.markdown('**🖋️ PIE DE FIRMA TRIMESTRAL**')
+        ft1, ft2, ft3 = st.columns(3)
+        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="nom2")
+        st.text_input("Grado", value="C.P.R. Analista Social", key="grad2")
+        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="carg2")
         st.form_submit_button("🛡️ GENERAR STOP TRIMESTRAL")
 
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: CLONACIÓN NIVEL PREFECTURA</div>', unsafe_allow_html=True)
-    with st.form("form_geo_full"):
+    with st.form("form_geo"):
         col1, col2, col3 = st.columns(3)
         col1.text_input("DOE N°", value="247205577")
         col1.text_input("Fecha DOE", value="05/02/2026")
@@ -89,31 +92,22 @@ with t3:
         cp1, cp2 = st.columns(2)
         cp1.text_input("Desde (Periodo)", value="05 de noviembre del año 2025")
         cp1.text_input("Hasta (Periodo)", value="05 de febrero del año 2026")
-        cp2.file_uploader("Mapa SAIT", type=['png', 'jpg'])
-        cp2.file_uploader("Excel Delitos", type=['xlsx', 'csv'])
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
     
-    # PROTOCOLO DE LIMPIEZA TOTAL
-    if "relato_jarvis" not in st.session_state:
-        st.session_state.relato_jarvis = ""
-
-    def limpiar_todo():
-        st.session_state.relato_jarvis = ""
-        st.rerun()
-
-    c_btn1, c_btn2 = st.columns([5, 1])
-    with c_btn2:
-        st.button("🗑️ LIMPIAR TERMINAL", on_click=limpiar_todo)
+    col_x, col_y = st.columns([5, 1])
+    with col_y:
+        # BOTÓN QUE AHORA SÍ BORRA EL TEXTAREA
+        st.button("🗑️ LIMPIAR", on_click=borrar_texto)
     
-    relato = st.text_area("PEGUE EL RELATO AQUÍ:", value=st.session_state.relato_jarvis, height=200)
-    st.session_state.relato_jarvis = relato # Sincronización
+    # El widget está atado a st.session_state.relato_input
+    relato_actual = st.text_area("PEGUE EL RELATO AQUÍ:", key="relato_input", height=200)
 
     if st.button("⚡ GENERAR CUADRO"):
-        if relato:
-            v_traslado, v_modus = procesar_relato_ia(relato)
+        if relato_actual:
+            v_traslado, v_modus = procesar_relato_ia(relato_actual)
             html_matriz = f"""
             <table class="tabla-carta">
                 <tr>
