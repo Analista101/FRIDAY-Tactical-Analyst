@@ -1,5 +1,5 @@
 streamlit
-docxtpl
 pandas
 openpyxl
+docxtpl
 python-docx
