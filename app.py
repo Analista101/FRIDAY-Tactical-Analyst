@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import re
 
-# --- 1. CONFIGURACIÓN VISUAL FRIDAY ---
-st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
+# --- 1. CONFIGURACIÓN VISUAL JARVIS ---
+st.set_page_config(page_title="SISTEMA JARVIS - COMANDO CENTRAL", layout="wide")
 st.markdown("""
     <style>
     .stApp { background-color: #D1D8C4 !important; }
@@ -30,17 +30,14 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (RECALIBRADO DE PRECISIÓN) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (EXTRACCIÓN DINÁMICA) ---
 def procesar_relato_ia(texto):
-    # Tipificación exacta del parte
     tipo_match = re.search(r'Codigo Delito\s?:\s?\d+\s?([^:\n\r]+)', texto, re.I)
     tipificacion = tipo_match.group(1).strip().upper() if tipo_match else "ROBO POR SORPRESA"
-
-    # Dirección exacta e intersecciones
+    
     dir_match = re.search(r'Dirección\s?:\s?([^\n\r]+)', texto, re.I)
     lugar = dir_match.group(1).strip().upper() if dir_match else "VIA PUBLICA"
-
-    # Tramo Horario basado en HORA DEL DELITO (Redondeo)
+    
     h_delito = re.search(r'Hora del Delito\s?:\s?(\d{1,2})[:.](\d{2})', texto, re.I)
     if h_delito:
         h = int(h_delito.group(1))
@@ -48,12 +45,10 @@ def procesar_relato_ia(texto):
     else:
         tramo_hora = "INDICAR TRAMO"
 
-    # Género y Edad
     genero = "FEMENINO" if "FEMENINO" in texto.upper() else "MASCULINO" if "MASCULINO" in texto.upper() else "NO INDICA"
     edad_match = re.search(r'(\d{2})\s?(AÑOS|Aï¿½OS)', texto, re.I)
     edad = f"DE {edad_match.group(1)} AÑOS" if edad_match else "NO INDICA"
 
-    # Especie Sustraída (Vehículos vs Otros)
     es_vehiculo = any(x in texto.upper() for x in ["VEHICULO", "AUTOMOVIL", "CAMIONETA", "PPU"])
     if es_vehiculo:
         v_info = re.search(r'(MARCA|MODELO|PPU)\s?:?\s?([^,.\n]+)', texto, re.I)
@@ -61,11 +56,9 @@ def procesar_relato_ia(texto):
     else:
         especie = "01 TELÉFONO CELULAR"
 
-    # Medio de Desplazamiento
     v_desp = re.search(r'DESPLAZABA EN (UN|UNA)\s?([^,.]+)', texto, re.I)
     v_transporte = v_desp.group(2).strip().upper() if v_desp else "A PIE / NO INDICA"
 
-    # Modus Operandi (Sin datos personales/avalúos)
     huida = re.search(r'HUYO EN DIRECCION ([^.]+)', texto, re.I)
     dir_huida = f" PARA LUEGO ESCAPAR EN DIRECCIÓN {huida.group(1).strip().upper()}." if huida else "."
     modus = f"LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR UN SUJETO, QUIEN MEDIANTE EL USO DE SORPRESA PROCEDIÓ A SUSTRAERLE SU EQUIPO TELEFÓNICO{dir_huida}"
@@ -80,7 +73,7 @@ with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
     if st.button("⚡ CONSULTAR A FRIDAY"):
         if consulta_ia: st.info("SISTEMA: Análisis de IA Friday completado.")
 
-# --- 5. PESTAÑAS (RESTAURACIÓN TOTAL) ---
+# --- 5. PESTAÑAS (RESTAURACIÓN TOTAL DE DATOS) ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
 
 with t1:
@@ -117,13 +110,21 @@ with t3:
         col1, col2, col3 = st.columns(3)
         col1.text_input("DOE N°", value="247205577")
         col1.text_input("Fecha DOE", value="20-02-2026")
+        col1.text_input("Fecha Informe", value="24 de febrero de 2026")
         col2.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
         col2.text_input("Grado Solicitante", value="CABO 1RO.")
+        col2.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
+        col3.text_input("Domicilio", value="Corona Sueca Nro. 8556")
+        col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
         col3.text_input("Cuadrante", value="231")
-        col3.text_input("Unidad", value="26A. COM. PUDAHUEL")
         st.markdown("---")
-        st.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_up")
-        st.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'], key="excel_up")
+        cf1, cf2 = st.columns(2)
+        cf1.text_input("Desde (Rango)", value="05-11-2025")
+        cf2.text_input("Hasta (Rango)", value="24-02-2026")
+        st.markdown("---")
+        c_map, c_xls = st.columns(2)
+        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_up")
+        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'], key="excel_up")
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
