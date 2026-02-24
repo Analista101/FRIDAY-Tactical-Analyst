@@ -24,7 +24,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. LÓGICA DE SESIÓN AISLADA ---
+# --- 2. LÓGICA DE SESIÓN (SOLO PESTAÑA 4) ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
@@ -48,7 +48,7 @@ def procesar_relato_ia(texto):
     modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
     return v_transporte, modus, tramo_hora
 
-# --- 4. COMANDO CENTRAL IA FRIDAY ---
+# --- 4. COMANDO CENTRAL IA FRIDAY (SISTEMA INTEGRAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
     st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, el análisis pericial está listo.</div>', unsafe_allow_html=True)
@@ -105,51 +105,53 @@ with t3:
         st.text_input("Hasta", value="24-02-2026")
         st.markdown("---")
         c_map, c_xls = st.columns(2)
-        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'])
-        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'])
+        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_up")
+        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'], key="excel_up")
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
-    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
-    c_der = st.columns([5, 1])[1]
-    c_der.button("🗑️ LIMPIAR", on_click=limpiar_solo_carta)
+    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROCESAMIENTO FORMULARIO)</div>', unsafe_allow_html=True)
     
-    # USO DE VALUE PARA ASEGURAR QUE ST RECOJA EL CAMBIO
-    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", 
-                            height=200, 
-                            key=f"input_carta_{st.session_state.key_carta}")
+    # Botón Limpiar con Key-Cycling
+    if st.button("🗑️ LIMPIAR TODO EL RELATO"):
+        limpiar_solo_carta()
+        st.rerun()
 
-    if st.button("⚡ GENERAR CUADRO"):
-        if relato_in:
-            # ELIMINAMOS CUALQUIER CACHÉ ANTERIOR
-            st.cache_data.clear()
-            # PROCESAMOS ESTRICTAMENTE EL TEXTO RECIÉN CAPTURADO
-            v_traslado, v_modus, v_tramo = procesar_relato_ia(relato_in)
-            
-            html_matriz = f"""
-            <table class="tabla-carta">
-                <tr><td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
-                <tr><td style="text-align:center">{v_tramo}</td><td style="text-align:center">AVENIDA GENERAL OSCAR BONILLA / LOS EDILES</td></tr>
-                <tr><td class="celda-header-perfil">PERFIL VÍCTIMA</td><td class="celda-header-perfil">PERFIL DELINCUENTE</td><td class="celda-header-perfil">MODUS OPERANDI</td></tr>
-                <tr>
-                    <td style="padding:0; vertical-align:top;">
-                        <table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">GENERO</td><td>MASCULINO</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">DE 30 A 35 AÑOS</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">01 TELÉFONO CELULAR</td></tr>
-                        </table>
-                    </td>
-                    <td style="padding:0; vertical-align:top;">
-                        <table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">VESTIMENTA OSCURA</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{v_traslado}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{v_modus}</td>
-                </tr>
-            </table>
-            """
-            st.markdown(html_matriz, unsafe_allow_html=True)
+    # FORMULARIO PARA EVITAR RECIRCULACIÓN DE DATOS VIEJOS
+    with st.form("peritaje_carta"):
+        relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", 
+                                height=200, 
+                                key=f"area_relato_{st.session_state.key_carta}")
+        
+        ejecutar = st.form_submit_button("⚡ GENERAR CUADRO DE SITUACIÓN")
+        
+        if ejecutar:
+            if relato_in:
+                v_traslado, v_modus, v_tramo = procesar_relato_ia(relato_in)
+                html_matriz = f"""
+                <table class="tabla-carta">
+                    <tr><td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
+                    <tr><td style="text-align:center">{v_tramo}</td><td style="text-align:center">AVENIDA GENERAL OSCAR BONILLA / LOS EDILES</td></tr>
+                    <tr><td class="celda-header-perfil">PERFIL VÍCTIMA</td><td class="celda-header-perfil">PERFIL DELINCUENTE</td><td class="celda-header-perfil">MODUS OPERANDI</td></tr>
+                    <tr>
+                        <td style="padding:0; vertical-align:top;">
+                            <table class="mini-tabla" style="width:100%">
+                                <tr><td class="border-inner-r">GENERO</td><td>MASCULINO</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">DE 30 A 35 AÑOS</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">01 TELÉFONO CELULAR</td></tr>
+                            </table>
+                        </td>
+                        <td style="padding:0; vertical-align:top;">
+                            <table class="mini-tabla" style="width:100%">
+                                <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">VESTIMENTA OSCURA</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{v_traslado}</td></tr>
+                            </table>
+                        </td>
+                        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{v_modus}</td>
+                    </tr>
+                </table>
+                """
+                st.markdown(html_matriz, unsafe_allow_html=True)
