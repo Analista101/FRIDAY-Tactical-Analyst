@@ -24,18 +24,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. LÓGICA DE SESIÓN (SOLO PESTAÑA 4) ---
+# --- 2. LÓGICA DE SESIÓN AISLADA ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (RECALIBRADO) ---
 def procesar_relato_ia(texto):
+    # Detección de vehículo
     v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
     v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
     
+    # Lógica de tramo horario: Redondeo exacto (13:15 -> 13:00 A 14:00)
     h_match = re.search(r'(\d{1,2})[:.](\d{2})', texto)
     if h_match:
         h = int(h_match.group(1))
@@ -46,7 +48,7 @@ def procesar_relato_ia(texto):
     modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
     return v_transporte, modus, tramo_hora
 
-# --- 4. COMANDO CENTRAL IA FRIDAY (RESTAURADO) ---
+# --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
     st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, el análisis pericial está listo.</div>', unsafe_allow_html=True)
@@ -101,7 +103,6 @@ with t3:
         col3.text_input("Cuadrante", value="231")
         st.text_input("Desde", value="05-11-2025")
         st.text_input("Hasta", value="24-02-2026")
-        
         st.markdown("---")
         c_map, c_xls = st.columns(2)
         c_map.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'])
@@ -113,11 +114,18 @@ with t4:
     c_der = st.columns([5, 1])[1]
     c_der.button("🗑️ LIMPIAR", on_click=limpiar_solo_carta)
     
-    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=200, key=f"input_carta_{st.session_state.key_carta}")
+    # USO DE VALUE PARA ASEGURAR QUE ST RECOJA EL CAMBIO
+    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", 
+                            height=200, 
+                            key=f"input_carta_{st.session_state.key_carta}")
 
     if st.button("⚡ GENERAR CUADRO"):
         if relato_in:
+            # ELIMINAMOS CUALQUIER CACHÉ ANTERIOR
+            st.cache_data.clear()
+            # PROCESAMOS ESTRICTAMENTE EL TEXTO RECIÉN CAPTURADO
             v_traslado, v_modus, v_tramo = procesar_relato_ia(relato_in)
+            
             html_matriz = f"""
             <table class="tabla-carta">
                 <tr><td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
