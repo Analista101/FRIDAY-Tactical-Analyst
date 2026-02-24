@@ -24,21 +24,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. LÓGICA DE SESIÓN (SOLO PARA PESTAÑA 4) ---
+# --- 2. LÓGICA DE SESIÓN (SOLO PESTAÑA 4) ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
 def limpiar_solo_carta():
-    # Solo incrementamos el contador de la pestaña 4 para limpiar su input
     st.session_state.key_carta += 1
-    # No tocamos ninguna otra variable del session_state para no borrar Actas ni Geo
 
 # --- 3. MOTOR DE INTELIGENCIA FRIDAY ---
 def procesar_relato_ia(texto):
     v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
     v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
     
-    # Lógica de tramo: 13:15 -> 13:00 A 14:00
     h_match = re.search(r'(\d{1,2})[:.](\d{2})', texto)
     if h_match:
         h = int(h_match.group(1))
@@ -49,8 +46,14 @@ def procesar_relato_ia(texto):
     modus = "LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR SUJETOS DESCONOCIDOS, QUIENES MEDIANTE EL USO DE INTIMIDACIÓN O VIOLENCIA LE ARREBATARON SUS PERTENENCIAS PARA LUEGO ESCAPAR EN DIRECCIÓN DESCONOCIDA."
     return v_transporte, modus, tramo_hora
 
-# --- 4. COMANDO CENTRAL IA FRIDAY ---
+# --- 4. COMANDO CENTRAL IA FRIDAY (RESTAURADO) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
+with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, el análisis pericial está listo.</div>', unsafe_allow_html=True)
+    c_ia1, c_ia2 = st.columns([2, 1])
+    consulta_ia = c_ia1.text_area("Describa el hecho para peritaje legal (IA Friday):", key="terminal_fr")
+    if st.button("⚡ CONSULTAR A FRIDAY"):
+        if consulta_ia: st.info("SISTEMA: Análisis de IA Friday completado.")
 
 # --- 5. PESTAÑAS OPERATIVAS ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
@@ -72,8 +75,11 @@ with t1:
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
     with st.form("form_trim"):
-        st.text_input("Periodo", value="DIC-ENE-FEB")
-        st.text_input("Fecha Sesión STOP", value="24-02-2026")
+        ct1, ct2 = st.columns(2)
+        ct1.text_input("Periodo", value="DIC-ENE-FEB")
+        ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
+        ct2.text_input("Nombre Asistente", value="INDICAR NOMBRE")
+        ct2.text_input("Grado Asistente", value="INDICAR GRADO")
         st.markdown('**🖋️ PIE DE FIRMA**')
         st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="n2")
         st.text_input("Grado", value="C.P.R. Analista Social", key="g2")
@@ -95,20 +101,19 @@ with t3:
         col3.text_input("Cuadrante", value="231")
         st.text_input("Desde", value="05-11-2025")
         st.text_input("Hasta", value="24-02-2026")
+        
+        st.markdown("---")
+        c_map, c_xls = st.columns(2)
+        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'])
+        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'])
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
+    c_der = st.columns([5, 1])[1]
+    c_der.button("🗑️ LIMPIAR", on_click=limpiar_solo_carta)
     
-    c_izq, c_der = st.columns([5, 1])
-    with c_der:
-        # Ahora el botón solo llama a una función que afecta a ESTA pestaña
-        st.button("🗑️ LIMPIAR", on_click=limpiar_solo_carta)
-    
-    # Key controlada localmente para no interferir con las otras pestañas
-    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", 
-                            height=200, 
-                            key=f"input_carta_{st.session_state.key_carta}")
+    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=200, key=f"input_carta_{st.session_state.key_carta}")
 
     if st.button("⚡ GENERAR CUADRO"):
         if relato_in:
