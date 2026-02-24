@@ -24,29 +24,25 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. LÓGICA DE SESIÓN (PROTECCIÓN CONTRA DATOS ANTIGUOS) ---
-if "key_control" not in st.session_state:
-    st.session_state.key_control = 0
+# --- 2. LÓGICA DE SESIÓN (SOLO PARA PESTAÑA 4) ---
+if "key_carta" not in st.session_state:
+    st.session_state.key_carta = 0
 
-def limpiar_sistema_total():
-    st.session_state.key_control += 1
-    # Forzamos la eliminación de datos previos en el búfer
-    for key in list(st.session_state.keys()):
-        if "resultado_" in key:
-            del st.session_state[key]
-    st.rerun()
+def limpiar_solo_carta():
+    # Solo incrementamos el contador de la pestaña 4 para limpiar su input
+    st.session_state.key_carta += 1
+    # No tocamos ninguna otra variable del session_state para no borrar Actas ni Geo
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (RECALIBRADO) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY ---
 def procesar_relato_ia(texto):
-    # Detección de vehículo (Medio de desplazamiento)
     v_match = re.search(r'(EN UN|A BORDO DE|MOVILIZABAN EN|VEHÍCULO)\s?([^,.]+)', texto, re.I)
     v_transporte = v_match.group(2).strip().upper() if v_match else "VEHÍCULO NO IDENTIFICADO"
     
-    # LÓGICA DE TRAMO HORARIO (Ej: 13:15 -> 13:00 A 14:00)
+    # Lógica de tramo: 13:15 -> 13:00 A 14:00
     h_match = re.search(r'(\d{1,2})[:.](\d{2})', texto)
     if h_match:
-        hora_base = int(h_match.group(1))
-        tramo_hora = f"{hora_base:02d}:00 A {(hora_base + 1):02d}:00 HRS"
+        h = int(h_match.group(1))
+        tramo_hora = f"{h:02d}:00 A {(h+1)%24:02d}:00 HRS"
     else:
         tramo_hora = "INDICAR TRAMO"
     
@@ -56,18 +52,32 @@ def procesar_relato_ia(texto):
 # --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
-# --- 5. PESTAÑAS ---
+# --- 5. PESTAÑAS OPERATIVAS ---
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
+
+with t1:
+    st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
+    with st.form("form_acta"):
+        c1, c2 = st.columns(2)
+        c1.text_input("Semana de estudio", value="SEMANA 08")
+        c1.text_input("Fecha de sesión", value="24-02-2026")
+        c2.text_input("Compromiso Carabineros", value="INCREMENTAR PATRULLAJES")
+        st.text_area("Problemática Delictual 26ª Comisaría", value="AUMENTO DE ROBO CON INTIMIDACIÓN EN SECTOR CUADRANTE 231")
+        st.markdown('**🖋️ PIE DE FIRMA**')
+        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="n1")
+        st.text_input("Grado", value="C.P.R. Analista Social", key="g1")
+        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c1")
+        st.form_submit_button("🛡️ GENERAR ACTA")
 
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
     with st.form("form_trim"):
-        st.text_input("Periodo (Ej: Nov-Dic-Ene)")
-        st.text_input("Fecha Sesión STOP")
-        st.markdown('**🖋️ PIE DE FIRMA TRIMESTRAL**')
-        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="f_nom")
-        st.text_input("Grado", value="C.P.R. Analista Social", key="f_grad")
-        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="f_carg")
+        st.text_input("Periodo", value="DIC-ENE-FEB")
+        st.text_input("Fecha Sesión STOP", value="24-02-2026")
+        st.markdown('**🖋️ PIE DE FIRMA**')
+        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO", key="n2")
+        st.text_input("Grado", value="C.P.R. Analista Social", key="g2")
+        st.text_input("Cargo", value="OFICINA DE OPERACIONES", key="c2")
         st.form_submit_button("🛡️ GENERAR")
 
 with t3:
@@ -76,34 +86,33 @@ with t3:
         col1, col2, col3 = st.columns(3)
         col1.text_input("DOE N°", value="247205577")
         col1.text_input("Fecha DOE", value="20-02-2026")
+        col1.text_input("Fecha Informe", value="24 de febrero de 2026")
         col2.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
+        col2.text_input("Grado Solicitante", value="CABO 1RO.")
+        col2.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
+        col3.text_input("Domicilio", value="Corona Sueca Nro. 8556")
+        col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
         col3.text_input("Cuadrante", value="231")
-        st.markdown("---")
-        c_map, c_xls = st.columns(2)
-        c_map.file_uploader("📂 ADJUNTAR MAPA SAIT", type=['png', 'jpg'])
-        c_xls.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx'])
-        st.form_submit_button("🛡️ EJECUTAR")
+        st.text_input("Desde", value="05-11-2025")
+        st.text_input("Hasta", value="24-02-2026")
+        st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ COLUMNAS)</div>', unsafe_allow_html=True)
     
     c_izq, c_der = st.columns([5, 1])
     with c_der:
-        # BOTÓN LIMPIAR TOTAL
-        st.button("🗑️ LIMPIAR", on_click=limpiar_sistema_total)
+        # Ahora el botón solo llama a una función que afecta a ESTA pestaña
+        st.button("🗑️ LIMPIAR", on_click=limpiar_solo_carta)
     
-    # Key dinámica para forzar vacío
-    relato_actual = st.text_area("PEGUE EL RELATO AQUÍ:", 
-                                height=200, 
-                                key=f"input_relato_{st.session_state.key_control}")
+    # Key controlada localmente para no interferir con las otras pestañas
+    relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", 
+                            height=200, 
+                            key=f"input_carta_{st.session_state.key_carta}")
 
     if st.button("⚡ GENERAR CUADRO"):
-        if relato_actual:
-            v_traslado, v_modus, v_tramo = procesar_relato_ia(relato_actual)
-            
-            # Guardamos el resultado con una key única del proceso actual
-            st.session_state[f"resultado_{st.session_state.key_control}"] = True
-            
+        if relato_in:
+            v_traslado, v_modus, v_tramo = procesar_relato_ia(relato_in)
             html_matriz = f"""
             <table class="tabla-carta">
                 <tr><td rowspan="2" class="celda-titulo" style="width:40%">ROBO CON INTIMIDACIÓN</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
