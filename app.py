@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import re
+from datetime import datetime
 
-# --- 1. CONFIGURACIÓN VISUAL JARVIS ---
-st.set_page_config(page_title="SISTEMA JARVIS - COMANDO CENTRAL", layout="wide")
+# --- 1. CONFIGURACIÓN VISUAL FRIDAY ---
+st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
 st.markdown("""
     <style>
     .stApp { background-color: #D1D8C4 !important; }
@@ -30,13 +31,14 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS SEMÁNTICO CORREGIDO) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS DE CONTEXTO AVANZADO) ---
 def procesar_relato_ia(texto):
     texto_u = texto.upper()
+    año_actual = 2026 # Configurado según el tiempo del sistema FRIDAY
     
-    # 1. Análisis de Delito
-    tipo_match = re.search(r'(?:CODIGO DELITO|00\d+)\s?:?\s?([^:\n\r]+)', texto_u)
-    tipificacion = tipo_match.group(1).strip() if tipo_match else "ROBO POR SORPRESA"
+   # 1. Título Abreviado (Limpieza de artículos legales)
+    tipo_match = re.search(r'(?:00\d+|DELITO)\s?:?\s?([^0-9\n\r]+)', texto_u)
+    tipificacion = tipo_match.group(1).split("ART.")[0].strip() if tipo_match else "ROBO POR SORPRESA"
     
     # 2. Tramo Horario
     h_delito = re.search(r'(\d{1,2})[:.](\d{2})', texto_u)
@@ -46,35 +48,32 @@ def procesar_relato_ia(texto):
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 4. Rango Etario (IA: Tramos de 5 años) [NUEVO]
-    edad_match = re.search(r'(\d{1,2})\s?(?:AÑOS|Aï¿½OS)', texto_u)
-    if edad_match:
-        e = int(edad_match.group(1))
-        rango_etario = f"DE {(e//5)*5} A {((e//5)*5)+5} AÑOS"
+    # 3. Cálculo de Edad por Fecha de Nacimiento
+    # Busca patrones tipo 08-09-2006 o 08/09/2006
+    fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
+    if fecha_nac:
+        año_nac = int(fecha_nac.group(3))
+        edad_calculada = año_actual - año_nac
+        rango_etario = f"DE {(edad_calculada//5)*5} A {((edad_calculada//5)*5)+5} AÑOS"
     else:
         rango_etario = "NO INDICA"
 
-    # 5. Lógica de Especies (IA: Solo vehículos se detallan)
-    es_vehiculo = any(x in texto_u for x in ["VEHICULO", "PPU", "PATENTE", "MOTOCICLETA", "CAMIONETA"])
-    if es_vehiculo:
-        v_info = re.search(r'(?:MARCA|MODELO|PPU)\s?:?\s?([^,.\n]+)', texto_u)
-        especie = f"VEHÍCULO {v_info.group(1).strip()}" if v_info else "VEHÍCULO SUSTRAÍDO"
-    else:
-        especie = "01 TELÉFONO CELULAR"
+    # 4. Lógica de Especies (Restricción solicitada)
+    # Solo si el texto sugiere que el OBJETO sustraído es un vehículo (no el medio de huida)
+    es_veh_sustraido = "PPU" in texto_u and "SUSTRAERLE SU VEHICULO" in texto_u
+    especie = "01 TELÉFONO CELULAR" if not es_veh_sustraido else "VEHÍCULO SUSTRAÍDO"
 
-    # 6. Perfil Delincuente y Modus Operandi
-    es_moto = any(x in texto_u for x in ["MOTOCICLETA", "MOTO", "DOS RUEDAS"])
-    vt = "MOTOCICLETA" if es_moto else "A PIE / NO INDICA"
+    # 5. Descripción del Medio de Desplazamiento (Detallado)
+    # Buscamos la descripción del vehículo en el que se movilizaban
+    medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON) EN (?:UN|UNA)\s?([^,.]+)', texto_u)
+    vt = medio_match.group(1).strip() if medio_match else "A PIE / NO INDICA"
     
-    sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
+   # 6. sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
     # FRIDAY analiza vestimenta para el Modus Operandi
     vest = "CON VESTIMENTA NEGRA" if "NEGRO" in texto_u else "CON VESTIMENTA OSCURA"
-    
-    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos} QUE SE DESPLAZABAN{' EN UNA MOTOCICLETA' if es_moto else ' A PIE'}. UNO DE ELLOS, {vest}, PROCEDIÓ A SUSTRAERLE SU EQUIPO MÓVIL PARA LUEGO ESCAPAR."
+    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos} QUE SE DESPLAZABAN EN {vt}. UNO DE ELLOS PROCEDIÓ A SUSTRAERLE SU EQUIPO MÓVIL PARA LUEGO ESCAPAR DEL LUGAR."
 
-    # Retornamos exactamente 8 valores para evitar el ValueError
-    return tipificacion, tramo_hora, lugar, "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
-
+    return tipificacion, tramo_hora, "VIA PUBLICA", "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
 
 # --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
