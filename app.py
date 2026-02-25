@@ -36,8 +36,7 @@ def procesar_relato_ia(texto):
     texto_u = texto.upper()
     año_actual = 2026 # Configurado según el tiempo del sistema FRIDAY
     
-# 1. Título Abreviado (IA: Extrae solo el nombre del delito)
-    # Busca el nombre después del código numérico y detiene antes de "ART."
+    # 1. Título Abreviado (IA: Extrae solo el nombre del delito)
     tipo_match = re.search(r'(?:00\d+|DELITO)\s?:?\s?([^0-9\n\r]+)', texto_u)
     if tipo_match:
         tipificacion = tipo_match.group(1).split("ART.")[0].strip()
@@ -48,29 +47,28 @@ def procesar_relato_ia(texto):
     h_delito = re.search(r'(\d{1,2})[:.](\d{2})', texto_u)
     tramo_hora = f"{int(h_delito.group(1)):02d}:00 A {(int(h_delito.group(1))+1)%24:02d}:00 HRS" if h_delito else "INDICAR TRAMO"
     
-    # 3. Lugar (Extracción de dirección si existe)
+    # 3. Lugar
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-# 4. Cálculo de Edad (IA: De Fecha de Nacimiento a Tramo de 5 años)
+    # 4. Cálculo de Edad (IA: De Fecha de Nacimiento a Tramo de 5 años)
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
-        calculo_edad = year_friday - int(fecha_nac.group(3))
-        # Lógica de tramos: 19 -> 15 a 20 | 26 -> 25 a 30
+        calculo_edad = año_actual - int(fecha_nac.group(3))
         lim_inf = (calculo_edad // 5) * 5
         rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
     else:
         rango_etario = "NO INDICA"
 
- # 5. Discriminación de Especies (Solo detalla si es Robo de Vehículo)
+    # 5. Discriminación de Especies (Solo detalla si es Robo de Vehículo)
     es_vehiculo = any(x in texto_u for x in ["PPU", "PATENTE", "CHASIS"]) and "VEHICULO" in texto_u
     especie = "01 TELÉFONO CELULAR" if not es_vehiculo else "VEHÍCULO SUSTRAÍDO"
 
- # 6. Descripción Detallada del Desplazamiento
+    # 6. Descripción Detallada del Desplazamiento
     medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON) EN (?:UN|UNA)\s?([^,.]+)', texto_u)
     vt = medio_match.group(1).strip() if medio_match else "A PIE / NO INDICA"
     
-   # 7. Análisis de Sujetos y Modus Operandi (IA Narrativa)
+    # 7. Análisis de Sujetos y Modus Operandi
     cant_sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS ", " 2 ", "PAREJA"]) else "UN SUJETO"
     modus = f"LA VÍCTIMA FUE ABORDADA POR {cant_sujetos} QUE SE DESPLAZABAN EN {vt}. MEDIANTE EL USO DE LA SORPRESA, PROCEDIERON A LA SUBSTRACCIÓN DE SU EQUIPO MÓVIL, ESCAPANDO LUEGO DEL LUGAR."
 
