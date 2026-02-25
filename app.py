@@ -30,40 +30,52 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (EXTRACCIÓN DINÁMICA) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS SEMÁNTICO) ---
 def procesar_relato_ia(texto):
-    tipo_match = re.search(r'Codigo Delito\s?:\s?\d+\s?([^:\n\r]+)', texto, re.I)
-    tipificacion = tipo_match.group(1).strip().upper() if tipo_match else "ROBO POR SORPRESA"
+    texto_u = texto.upper()
     
-    dir_match = re.search(r'Dirección\s?:\s?([^\n\r]+)', texto, re.I)
-    lugar = dir_match.group(1).strip().upper() if dir_match else "VIA PUBLICA"
+    # 1. Análisis de Delito (Interpretación semántica del código o descripción)
+    tipo_match = re.search(r'(?:CODIGO DELITO|00\d+)\s?:?\s?([^:\n\r]+)', texto_u)
+    tipificacion = tipo_match.group(1).strip() if tipo_match else "ROBO POR SORPRESA"
     
-    h_delito = re.search(r'Hora del Delito\s?:\s?(\d{1,2})[:.](\d{2})', texto, re.I)
+    # 2. Tramo Horario (Cálculo lógico de ventana de 1 hora)
+    h_delito = re.search(r'(\d{1,2})[:.](\d{2})', texto_u)
     if h_delito:
         h = int(h_delito.group(1))
         tramo_hora = f"{h:02d}:00 A {(h+1)%24:02d}:00 HRS"
     else:
         tramo_hora = "INDICAR TRAMO"
 
-    genero = "FEMENINO" if "FEMENINO" in texto.upper() else "MASCULINO" if "MASCULINO" in texto.upper() else "NO INDICA"
-    edad_match = re.search(r'(\d{2})\s?(AÑOS|Aï¿½OS)', texto, re.I)
-    edad = f"DE {edad_match.group(1)} AÑOS" if edad_match else "NO INDICA"
+    # 3. Rango Etario (Interpretación matemática: Tramos de 5 años)
+    edad_match = re.search(r'(\d{1,2})\s?(?:AÑOS|Aï¿½OS|AÑOS DE EDAD)', texto_u)
+    if edad_match:
+        e = int(edad_match.group(1))
+        rango_etario = f"DE {(e//5)*5} A {((e//5)*5)+5} AÑOS"
+    else:
+        rango_etario = "NO INDICA"
 
-    es_vehiculo = any(x in texto.upper() for x in ["VEHICULO", "AUTOMOVIL", "CAMIONETA", "PPU"])
+    # 4. Lógica de Especies Inteligente (Filtro por naturaleza del objeto)
+    # FRIDAY identifica si el objeto sustraído es un vehículo por contexto, no solo por palabra
+    es_vehiculo = any(x in texto_u for x in ["VEHICULO", "PPU", "PATENTE", "CHASIS", "CAMIONETA", "AUTOMOVIL"])
     if es_vehiculo:
-        v_info = re.search(r'(MARCA|MODELO|PPU)\s?:?\s?([^,.\n]+)', texto, re.I)
-        especie = f"VEHÍCULO {v_info.group(2).strip().upper()}" if v_info else "VEHÍCULO SUSTRAÍDO"
+        v_info = re.search(r'(?:MARCA|MODELO|PPU)\s?:?\s?([^,.\n]+)', texto_u)
+        especie = f"VEHÍCULO {v_info.group(1).strip()}" if v_info else "VEHÍCULO SUSTRAÍDO"
     else:
         especie = "01 TELÉFONO CELULAR"
 
-    v_desp = re.search(r'DESPLAZABA EN (UN|UNA)\s?([^,.]+)', texto, re.I)
-    v_transporte = v_desp.group(2).strip().upper() if v_desp else "A PIE / NO INDICA"
-
-    huida = re.search(r'HUYO EN DIRECCION ([^.]+)', texto, re.I)
-    dir_huida = f" PARA LUEGO ESCAPAR EN DIRECCIÓN {huida.group(1).strip().upper()}." if huida else "."
-    modus = f"LA VÍCTIMA TRANSITABA POR LA VÍA PÚBLICA CUANDO FUE ABORDADA POR UN SUJETO, QUIEN MEDIANTE EL USO DE SORPRESA PROCEDIÓ A SUSTRAERLE SU EQUIPO TELEFÓNICO{dir_huida}"
+    # 5. Análisis Táctico de Sujetos y Medios
+    es_moto = any(x in texto_u for x in ["MOTOCICLETA", "MOTO", "DOS RUEDAS", "BIKER"])
+    vt = "MOTOCICLETA" if es_moto else "A PIE / NO INDICA"
     
-    return tipificacion, tramo_hora, lugar, genero, edad, especie, v_transporte, modus
+    sujetos_count = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
+    vestimenta = "VESTIMENTA OSCURA"
+    if "NEGRO" in texto_u or "OSCURA" in texto_u: vestimenta = "VESTIMENTA NEGRA"
+
+    # 6. Construcción Narrativa del Modus Operandi
+    transporte_desc = " EN UNA MOTOCICLETA" if es_moto else " A PIE"
+    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos_count} QUE SE DESPLAZABAN{transporte_desc}. MEDIANTE EL USO DE LA SORPRESA, PROCEDIERON A LA SUBSTRACCIÓN DE SU EQUIPO MÓVIL, ESCAPANDO EN DIRECCIÓN DESCONOCIDA."
+
+    return tipificacion, tramo_hora, "VIA PUBLICA", "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus, vestimenta
 
 # --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
