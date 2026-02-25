@@ -36,14 +36,18 @@ def procesar_relato_ia(texto):
     texto_u = texto.upper()
     an_actual = 2026 
     
-    # 1. Título Abreviado (IA: Limpia códigos y artículos legales)
-    tipo_match = re.search(r'(?:00\d+|DELITO)\s?:?\s?([^0-9\n\r]+)', texto_u)
+    # 1. Título (IA: Busca específicamente el Código o Nombre del Delito)
+    # Evita capturar "FECHA DENUNCIA" buscando el patrón del código penal (00804, 00801, etc)
+    tipo_match = re.search(r'(?:00\d{3}|CODIGO DELITO)\s?[:\s]*([^ART\n\r]+)', texto_u)
     if tipo_match:
-        tipificacion = re.split(r'ART\.|INC\.', tipo_match.group(1))[0].strip()
+        tipificacion = tipo_match.group(1).replace(":", "").strip()
     else:
-        tipificacion = "ROBO POR SORPRESA"
+        # Búsqueda secundaria por palabras clave si no hay código
+        if "ROBO POR SORPRESA" in texto_u: tipificacion = "ROBO POR SORPRESA"
+        elif "ROBO CON INTIMIDACION" in texto_u: tipificacion = "ROBO CON INTIMIDACIÓN"
+        else: tipificacion = "DELITO NO IDENTIFICADO"
     
-    # 2. Tramo Horario (IA: Busca específicamente la HORA DEL DELITO, no de denuncia)
+    # 2. Tramo Horario (Prioriza HORA DEL DELITO)
     h_delito = re.search(r'HORA DEL DELITO\s?:\s?(\d{1,2})', texto_u)
     if h_delito:
         h = int(h_delito.group(1))
@@ -51,31 +55,31 @@ def procesar_relato_ia(texto):
     else:
         tramo_hora = "INDICAR TRAMO"
     
-    # 3. Lugar (Dirección del suceso)
+    # 3. Lugar
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 4. Cálculo de Edad (IA: De Nacimiento a Tramo de 5 años)
+    # 4. Cálculo de Edad (Corrección: Tramo exacto de 5 años)
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
         edad = an_actual - int(fecha_nac.group(3))
+        # Lógica de tramos: 15-20, 20-25, 25-30...
         lim_inf = (edad // 5) * 5
         rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
     else:
         rango_etario = "NO INDICA"
 
-    # 5. Discriminación de Especies (IA: Solo vehículos si hay PPU/Patente)
+    # 5. Especies
     es_vehiculo = any(x in texto_u for x in ["PPU", "PATENTE", "CHASIS"]) and "VEHICULO" in texto_u
     especie = "01 TELÉFONO CELULAR" if not es_vehiculo else "VEHÍCULO SUSTRAÍDO"
 
-    # 6. Descripción del Medio de Desplazamiento (IA: Extrae descripción física)
+    # 6. Medio de Desplazamiento
     medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON|ESCAPARON) EN (?:UN|UNA|LA)\s?([^,.]+)', texto_u)
     vt = medio_match.group(1).strip() if medio_match else "A PIE / NO INDICA"
     
-    # 7. Análisis de Sujetos y Modus Operandi (Redacción Inteligente)
+    # 7. Modus Operandi
     es_plural = any(x in texto_u for x in ["DOS ", " 2 ", "SUJETOS", "INDIVIDUOS"])
     cant_sujetos = "DOS INDIVIDUOS" if es_plural else "UN SUJETO"
-    
     vest_ia = "CON VESTIMENTA OSCURA"
     if "COMPLETAMENTE DE NEGRO" in texto_u: vest_ia = "VESTIA COMPLETAMENTE DE NEGRO"
 
