@@ -55,7 +55,7 @@ def procesar_relato_ia(texto):
 # 4. Cálculo de Edad (IA: De Fecha de Nacimiento a Tramo de 5 años)
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
-        calculo_edad = year_jarvis - int(fecha_nac.group(3))
+        calculo_edad = year_friday - int(fecha_nac.group(3))
         # Lógica de tramos: 19 -> 15 a 20 | 26 -> 25 a 30
         lim_inf = (calculo_edad // 5) * 5
         rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
