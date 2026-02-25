@@ -52,13 +52,14 @@ def procesar_relato_ia(texto):
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-  # 4. Cálculo de Edad por Nacimiento (IA: Análisis de fecha)
+# 4. Cálculo de Edad (IA: De Fecha de Nacimiento a Tramo de 5 años)
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
-        edad = an_actual - int(fecha_nac.group(3))
-        rango_etario = f"DE {(edad//5)*5} A {((edad//5)*5)+5} AÑOS"
+        calculo_edad = year_jarvis - int(fecha_nac.group(3))
+        # Lógica de tramos: 19 -> 15 a 20 | 26 -> 25 a 30
+        lim_inf = (calculo_edad // 5) * 5
+        rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
     else:
-        rango_etario = "NO INDICA"
         rango_etario = "NO INDICA"
 
  # 5. Discriminación de Especies (Solo detalla si es Robo de Vehículo)
