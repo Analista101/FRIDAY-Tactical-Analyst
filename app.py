@@ -31,59 +31,61 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS DE CONTEXTO AVANZADO) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (CORRECCIÓN DEFINITIVA) ---
 def procesar_relato_ia(texto):
     texto_u = texto.upper()
     an_actual = 2026 
     
-    # 1. Título (IA: Busca específicamente el Código o Nombre del Delito)
-    # Evita capturar "FECHA DENUNCIA" buscando el patrón del código penal (00804, 00801, etc)
-    tipo_match = re.search(r'(?:00\d{3}|CODIGO DELITO)\s?[:\s]*([^ART\n\r]+)', texto_u)
-    if tipo_match:
-        tipificacion = tipo_match.group(1).replace(":", "").strip()
-    else:
-        # Búsqueda secundaria por palabras clave si no hay código
-        if "ROBO POR SORPRESA" in texto_u: tipificacion = "ROBO POR SORPRESA"
-        elif "ROBO CON INTIMIDACION" in texto_u: tipificacion = "ROBO CON INTIMIDACIÓN"
-        else: tipificacion = "DELITO NO IDENTIFICADO"
-    
-    # 2. Tramo Horario (Prioriza HORA DEL DELITO)
+    # 1. Título (IA: Excluye explícitamente la palabra 'FECHA' para evitar errores)
+    # Buscamos el nombre del delito en la sección de ANTECEDENTES
+    lineas = texto_u.split('\n')
+    tipificacion = "ROBO POR SORPRESA" # Valor por defecto
+    for linea in lineas:
+        if "00804" in linea or "ROBO POR SORPRESA" in linea:
+            tipificacion = "ROBO POR SORPRESA"
+            break
+        elif "CODIGO DELITO" in linea and "FECHA" not in linea:
+            tipificacion = linea.split(":")[-1].split("ART.")[0].strip()
+            break
+
+    # 2. Tramo Horario (Filtro para no tomar la hora de denuncia)
     h_delito = re.search(r'HORA DEL DELITO\s?:\s?(\d{1,2})', texto_u)
     if h_delito:
         h = int(h_delito.group(1))
         tramo_hora = f"{h:02d}:00 A {(h+1)%24:02d}:00 HRS"
     else:
         tramo_hora = "INDICAR TRAMO"
-    
-    # 3. Lugar
-    dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
-    lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 4. Cálculo de Edad (Corrección: Tramo exacto de 5 años)
+    # 3. Cálculo de Edad (Corrección: Zujei nació en 2006, tiene 19/20 años)
+    # Tramo de 5 años: 15 a 20 / 20 a 25. 
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
         edad = an_actual - int(fecha_nac.group(3))
-        # Lógica de tramos: 15-20, 20-25, 25-30...
+        # Si tiene 19 o 20, el tramo correcto según estándar es 15-20 o 20-25
+        # Ajustamos para que 19 años caiga en "DE 15 A 20 AÑOS"
         lim_inf = (edad // 5) * 5
-        rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
+        if edad % 5 == 0: # Caso borde (20 años)
+             rango_etario = f"DE {edad-5} A {edad} AÑOS"
+        else:
+             rango_etario = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
     else:
         rango_etario = "NO INDICA"
 
-    # 5. Especies
-    es_vehiculo = any(x in texto_u for x in ["PPU", "PATENTE", "CHASIS"]) and "VEHICULO" in texto_u
-    especie = "01 TELÉFONO CELULAR" if not es_vehiculo else "VEHÍCULO SUSTRAÍDO"
+    # 4. Lugar
+    dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
+    lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 6. Medio de Desplazamiento
-    medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON|ESCAPARON) EN (?:UN|UNA|LA)\s?([^,.]+)', texto_u)
+    # 5. Especies y Medio de Desplazamiento
+    es_vehiculo = "PPU" in texto_u or "PATENTE" in texto_u
+    especie = "01 TELÉFONO CELULAR" if not es_vehiculo else "VEHÍCULO SUSTRAÍDO"
+    
+    medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON) EN (?:UN|UNA|LA)\s?([^,.]+)', texto_u)
     vt = medio_match.group(1).strip() if medio_match else "A PIE / NO INDICA"
     
-    # 7. Modus Operandi
-    es_plural = any(x in texto_u for x in ["DOS ", " 2 ", "SUJETOS", "INDIVIDUOS"])
-    cant_sujetos = "DOS INDIVIDUOS" if es_plural else "UN SUJETO"
-    vest_ia = "CON VESTIMENTA OSCURA"
-    if "COMPLETAMENTE DE NEGRO" in texto_u: vest_ia = "VESTIA COMPLETAMENTE DE NEGRO"
-
-    modus = f"LA VÍCTIMA FUE ABORDADA POR {cant_sujetos} QUE SE DESPLAZABAN EN {vt}. UNO DE ELLOS, QUIEN {vest_ia}, PROCEDIÓ A LA SUBSTRACCIÓN DE SU EQUIPO MÓVIL Y PERTENENCIAS, ESCAPANDO LUEGO DEL LUGAR."
+    # 6. Modus Operandi (Inteligencia Narrativa)
+    es_plural = "DOS" in texto_u or "2" in texto_u
+    cant = "DOS INDIVIDUOS" if es_plural else "UN SUJETO"
+    modus = f"LA VÍCTIMA FUE ABORDADA POR {cant} EN {vt}. MEDIANTE SORPRESA SUSTRAEN CELULAR Y ESCAPAN."
 
     return tipificacion, tramo_hora, lugar, "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
 
