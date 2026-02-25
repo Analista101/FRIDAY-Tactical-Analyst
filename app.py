@@ -30,52 +30,51 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS SEMÁNTICO) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (ANÁLISIS SEMÁNTICO CORREGIDO) ---
 def procesar_relato_ia(texto):
     texto_u = texto.upper()
     
-    # 1. Análisis de Delito (Interpretación semántica del código o descripción)
+    # 1. Análisis de Delito
     tipo_match = re.search(r'(?:CODIGO DELITO|00\d+)\s?:?\s?([^:\n\r]+)', texto_u)
     tipificacion = tipo_match.group(1).strip() if tipo_match else "ROBO POR SORPRESA"
     
-    # 2. Tramo Horario (Cálculo lógico de ventana de 1 hora)
+    # 2. Tramo Horario
     h_delito = re.search(r'(\d{1,2})[:.](\d{2})', texto_u)
-    if h_delito:
-        h = int(h_delito.group(1))
-        tramo_hora = f"{h:02d}:00 A {(h+1)%24:02d}:00 HRS"
-    else:
-        tramo_hora = "INDICAR TRAMO"
+    tramo_hora = f"{int(h_delito.group(1)):02d}:00 A {(int(h_delito.group(1))+1)%24:02d}:00 HRS" if h_delito else "INDICAR TRAMO"
+    
+    # 3. Lugar (Extracción de dirección si existe)
+    dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
+    lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 3. Rango Etario (Interpretación matemática: Tramos de 5 años)
-    edad_match = re.search(r'(\d{1,2})\s?(?:AÑOS|Aï¿½OS|AÑOS DE EDAD)', texto_u)
+    # 4. Rango Etario (IA: Tramos de 5 años) [NUEVO]
+    edad_match = re.search(r'(\d{1,2})\s?(?:AÑOS|Aï¿½OS)', texto_u)
     if edad_match:
         e = int(edad_match.group(1))
         rango_etario = f"DE {(e//5)*5} A {((e//5)*5)+5} AÑOS"
     else:
         rango_etario = "NO INDICA"
 
-    # 4. Lógica de Especies Inteligente (Filtro por naturaleza del objeto)
-    # FRIDAY identifica si el objeto sustraído es un vehículo por contexto, no solo por palabra
-    es_vehiculo = any(x in texto_u for x in ["VEHICULO", "PPU", "PATENTE", "CHASIS", "CAMIONETA", "AUTOMOVIL"])
+    # 5. Lógica de Especies (IA: Solo vehículos se detallan)
+    es_vehiculo = any(x in texto_u for x in ["VEHICULO", "PPU", "PATENTE", "MOTOCICLETA", "CAMIONETA"])
     if es_vehiculo:
         v_info = re.search(r'(?:MARCA|MODELO|PPU)\s?:?\s?([^,.\n]+)', texto_u)
         especie = f"VEHÍCULO {v_info.group(1).strip()}" if v_info else "VEHÍCULO SUSTRAÍDO"
     else:
         especie = "01 TELÉFONO CELULAR"
 
-    # 5. Análisis Táctico de Sujetos y Medios
-    es_moto = any(x in texto_u for x in ["MOTOCICLETA", "MOTO", "DOS RUEDAS", "BIKER"])
+    # 6. Perfil Delincuente y Modus Operandi
+    es_moto = any(x in texto_u for x in ["MOTOCICLETA", "MOTO", "DOS RUEDAS"])
     vt = "MOTOCICLETA" if es_moto else "A PIE / NO INDICA"
     
-    sujetos_count = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
-    vestimenta = "VESTIMENTA OSCURA"
-    if "NEGRO" in texto_u or "OSCURA" in texto_u: vestimenta = "VESTIMENTA NEGRA"
+    sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
+    # FRIDAY analiza vestimenta para el Modus Operandi
+    vest = "CON VESTIMENTA NEGRA" if "NEGRO" in texto_u else "CON VESTIMENTA OSCURA"
+    
+    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos} QUE SE DESPLAZABAN{' EN UNA MOTOCICLETA' if es_moto else ' A PIE'}. UNO DE ELLOS, {vest}, PROCEDIÓ A SUSTRAERLE SU EQUIPO MÓVIL PARA LUEGO ESCAPAR."
 
-    # 6. Construcción Narrativa del Modus Operandi
-    transporte_desc = " EN UNA MOTOCICLETA" if es_moto else " A PIE"
-    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos_count} QUE SE DESPLAZABAN{transporte_desc}. MEDIANTE EL USO DE LA SORPRESA, PROCEDIERON A LA SUBSTRACCIÓN DE SU EQUIPO MÓVIL, ESCAPANDO EN DIRECCIÓN DESCONOCIDA."
+    # Retornamos exactamente 8 valores para evitar el ValueError
+    return tipificacion, tramo_hora, lugar, "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
 
-    return tipificacion, tramo_hora, "VIA PUBLICA", "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus, vestimenta
 
 # --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
@@ -140,16 +139,18 @@ with t3:
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
-    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
-    if st.button("🗑️ LIMPIAR RELATO"):
+       st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
+       if st.button("🗑️ LIMPIAR RELATO"):
         limpiar_solo_carta()
         st.rerun()
 
-    with st.form("form_carta"):
+       with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=200, key=f"txt_{st.session_state.key_carta}")
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
+                # La llamada ahora coincide perfectamente con los 8 retornos
                 tip, tr, lu, ge, ed, es, vt, mo = procesar_relato_ia(relato_in)
+                
                 html = f"""
                 <table class="tabla-carta">
                     <tr><td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
