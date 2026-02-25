@@ -36,9 +36,13 @@ def procesar_relato_ia(texto):
     texto_u = texto.upper()
     año_actual = 2026 # Configurado según el tiempo del sistema FRIDAY
     
-   # 1. Título Abreviado (Limpieza de artículos legales)
+# 1. Título Abreviado (IA: Extrae solo el nombre del delito)
+    # Busca el nombre después del código numérico y detiene antes de "ART."
     tipo_match = re.search(r'(?:00\d+|DELITO)\s?:?\s?([^0-9\n\r]+)', texto_u)
-    tipificacion = tipo_match.group(1).split("ART.")[0].strip() if tipo_match else "ROBO POR SORPRESA"
+    if tipo_match:
+        tipificacion = tipo_match.group(1).split("ART.")[0].strip()
+    else:
+        tipificacion = "ROBO POR SORPRESA"
     
     # 2. Tramo Horario
     h_delito = re.search(r'(\d{1,2})[:.](\d{2})', texto_u)
@@ -48,32 +52,28 @@ def procesar_relato_ia(texto):
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar = dir_match.group(1).strip() if dir_match else "VIA PUBLICA"
 
-    # 3. Cálculo de Edad por Fecha de Nacimiento
-    # Busca patrones tipo 08-09-2006 o 08/09/2006
+  # 4. Cálculo de Edad por Nacimiento (IA: Análisis de fecha)
     fecha_nac = re.search(r'NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if fecha_nac:
-        año_nac = int(fecha_nac.group(3))
-        edad_calculada = año_actual - año_nac
-        rango_etario = f"DE {(edad_calculada//5)*5} A {((edad_calculada//5)*5)+5} AÑOS"
+        edad = an_actual - int(fecha_nac.group(3))
+        rango_etario = f"DE {(edad//5)*5} A {((edad//5)*5)+5} AÑOS"
     else:
         rango_etario = "NO INDICA"
+        rango_etario = "NO INDICA"
 
-    # 4. Lógica de Especies (Restricción solicitada)
-    # Solo si el texto sugiere que el OBJETO sustraído es un vehículo (no el medio de huida)
-    es_veh_sustraido = "PPU" in texto_u and "SUSTRAERLE SU VEHICULO" in texto_u
-    especie = "01 TELÉFONO CELULAR" if not es_veh_sustraido else "VEHÍCULO SUSTRAÍDO"
+ # 5. Discriminación de Especies (Solo detalla si es Robo de Vehículo)
+    es_vehiculo = any(x in texto_u for x in ["PPU", "PATENTE", "CHASIS"]) and "VEHICULO" in texto_u
+    especie = "01 TELÉFONO CELULAR" if not es_vehiculo else "VEHÍCULO SUSTRAÍDO"
 
-    # 5. Descripción del Medio de Desplazamiento (Detallado)
-    # Buscamos la descripción del vehículo en el que se movilizaban
+ # 6. Descripción Detallada del Desplazamiento
     medio_match = re.search(r'(?:MOVILIZABAN|DESPLAZABAN|HUYERON) EN (?:UN|UNA)\s?([^,.]+)', texto_u)
     vt = medio_match.group(1).strip() if medio_match else "A PIE / NO INDICA"
     
-   # 6. sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS", "PAREJA", "2"]) else "UN SUJETO"
-    # FRIDAY analiza vestimenta para el Modus Operandi
-    vest = "CON VESTIMENTA NEGRA" if "NEGRO" in texto_u else "CON VESTIMENTA OSCURA"
-    modus = f"LA VÍCTIMA FUE ABORDADA POR {sujetos} QUE SE DESPLAZABAN EN {vt}. UNO DE ELLOS PROCEDIÓ A SUSTRAERLE SU EQUIPO MÓVIL PARA LUEGO ESCAPAR DEL LUGAR."
+   # 7. Análisis de Sujetos y Modus Operandi (IA Narrativa)
+    cant_sujetos = "DOS INDIVIDUOS" if any(x in texto_u for x in ["DOS ", " 2 ", "PAREJA"]) else "UN SUJETO"
+    modus = f"LA VÍCTIMA FUE ABORDADA POR {cant_sujetos} QUE SE DESPLAZABAN EN {vt}. MEDIANTE EL USO DE LA SORPRESA, PROCEDIERON A LA SUBSTRACCIÓN DE SU EQUIPO MÓVIL, ESCAPANDO LUEGO DEL LUGAR."
 
-    return tipificacion, tramo_hora, "VIA PUBLICA", "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
+    return tipificacion, tramo_hora, lugar, "FEMENINO" if "FEMENINO" in texto_u else "MASCULINO", rango_etario, especie, vt, modus
 
 # --- 4. COMANDO CENTRAL IA FRIDAY ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
@@ -138,16 +138,16 @@ with t3:
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
-       st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
-       if st.button("🗑️ LIMPIAR RELATO"):
+    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
+    if st.button("🗑️ LIMPIAR RELATO"):
         limpiar_solo_carta()
         st.rerun()
 
-       with st.form("form_carta"):
+    with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=200, key=f"txt_{st.session_state.key_carta}")
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
-                # La llamada ahora coincide perfectamente con los 8 retornos
+                # Ejecución de IA FRIDAY
                 tip, tr, lu, ge, ed, es, vt, mo = procesar_relato_ia(relato_in)
                 
                 html = f"""
