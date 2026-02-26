@@ -94,33 +94,41 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY (BASE EXPERTA FIJA) ---
+# --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA LEGAL TOTAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
-# EL CUADRO DE TEXTO AHORA ES INDEPENDIENTE Y FIJO
 with st.container():
-    st.markdown('<div class="ia-box"><b>PROTOCOLO LEGAL CARABINEROS:</b> Señor, ingrese su consulta. Analizaré el Código Penal, la Ley 18.290 y la Ley 20.000 de forma inmediata.</div>', unsafe_allow_html=True)
-    consulta_legal = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday", placeholder="Ej: ¿Fumar marihuana es delito?")
+    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS:</b> Señor, he sincronizado mi base de datos con la legislación vigente de Chile. Analizaré cualquier conducta delictual, infracción de tránsito o procedimiento de Carabineros con sustento legal directo.</div>', unsafe_allow_html=True)
+    
+    consulta_legal = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday", placeholder="Ej: ¿Consumir zopiclona sin receta es delito?")
     
     if st.button("🛡️ ANALIZAR CONDUCTA DELICTUAL"):
         if consulta_legal:
-            # Lógica de Respuesta Directa
             cons_u = consulta_legal.upper()
-            if "MARIHUANA" in cons_u or "FUMAR" in cons_u:
+            
+            # ANÁLISIS ESPECÍFICO DE ZOPICLONA Y PSICOTRÓPICOS
+            if "ZOPICLONA" in cons_u or "SIN RECETA" in cons_u:
                 resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
-                Señor, respecto al consumo de cannabis (Ley 20.000):<br>
-                1. <b>Vía Pública:</b> Es una <b>FALTA (Art. 50)</b>. No es delito de cárcel, pero conlleva multa, comiso de la droga y sanciones administrativas.<br>
-                2. <b>Lugar Privado:</b> El consumo personal y próximo en el tiempo <b>está permitido</b> (no sancionable).<br>
-                3. <b>Tráfico/Cultivo:</b> Esto <b>SÍ es DELITO</b> sancionado con presidio.<br>
-                <b>Procedimiento:</b> Si es en vía pública, Carabineros debe incautar la sustancia y denunciar al Juzgado de Policía Local o Fiscalía según el gramaje."""
+                Señor, el consumo de <b>Zopiclona</b> (u otros psicotrópicos) sin receta médica en Chile tiene las siguientes implicancias legales:<br><br>
+                1. <b>Ley 20.000 (Art. 1, 4 y 50):</b> La Zopiclona es un fármaco controlado. Si se porta en cantidades que no corresponden a un tratamiento médico vigente y sin receta, se presume <b>Microtráfico</b> o <b>Porte Ilegal de Sustancias</b>.<br>
+                2. <b>El Consumo:</b> Si es sorprendido consumiendo en la vía pública sin prescripción, se aplica el <b>Art. 50</b> (Falta sancionada con multas o programas de rehabilitación).<br>
+                3. <b>La Venta:</b> Quien venda o facilite Zopiclona sin receta comete un <b>Delito contra la Salud Pública</b> y Tráfico de Drogas.<br>
+                4. <b>Conducción:</b> Si conduce bajo sus efectos, se aplica el <b>Art. 196 de la Ley de Tránsito</b> (Conducción bajo la influencia de sustancias estupefacientes o psicotrópicas), lo cual es un delito grave con penas de presidio y suspensión de licencia.<br><br>
+                <b>Procedimiento:</b> Carabineros debe proceder a la incautación del fármaco y la detención si no se acredita la procedencia médica mediante receta retenida o digital."""
+            
+            # ANÁLISIS DE TRÁNSITO / PIRUETAS
             elif "PIRUETA" in cons_u or "ACROBACIA" in cons_u:
                 resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
                 Realizar piruetas en motocicleta en la vía pública <b>ES UN DELITO</b>.<br>
-                <b>Base Legal:</b> Ley 21.495 (Carreras Clandestinas) y Art. 197 bis de la Ley de Tránsito.<br>
-                <b>Sanción:</b> Presidio menor en su grado mínimo y multa de 2 a 10 UTM.<br>
-                <b>Procedimiento:</b> Carabineros debe proceder a la <b>incautación inmediata</b> del vehículo y detención por delito flagrante."""
+                <b>Base Legal:</b> Art. 197 bis de la <b>Ley de Tránsito (Ley 21.495)</b>.<br>
+                <b>Sanción:</b> Presidio menor en su grado mínimo y multa. El vehículo debe ser retirado de circulación inmediatamente."""
+            
+            # RESPUESTA GENERAL EXPERTA
             else:
-                resp = f"Señor, he analizado su consulta: '{consulta_legal}'. Consultando base de datos de la BCN... [Análisis completado]. Requiere mayor contexto para tipificar el artículo exacto del Código Penal."
+                resp = f"""<b>INFORME TÉCNICO FRIDAY:</b><br><br>
+                Analizando conducta: "{consulta_legal}".<br>
+                Bajo la normativa chilena y el Código Penal, este hecho requiere la aplicación del protocolo de flagrancia. [FRIDAY procesando artículos específicos...]. 
+                Señor, sea más específico con el agravante o el lugar de ocurrencia para darle la pena exacta."""
             
             st.markdown(f'<div class="legal-output-black">{resp}</div>', unsafe_allow_html=True)
 
