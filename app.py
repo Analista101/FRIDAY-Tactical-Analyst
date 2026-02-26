@@ -82,13 +82,14 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY ---
+# --- 3. TERMINAL DE COMANDO FRIDAY (BASE EXPERTA LEGAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
-    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, los sistemas están listos para el peritaje.</div>', unsafe_allow_html=True)
-    consulta_ia = st.text_area("Describa el hecho para peritaje legal (IA Friday):", key="terminal_fr")
-    if st.button("⚡ CONSULTAR A FRIDAY"):
-        if consulta_ia: st.info("SISTEMA: Análisis de IA Friday completado. Puede proceder a la Carta de Situación.")
+with st.expander("🛡️ TERMINAL DE ASESORÍA LEGAL Y DOCTRINARIA (IA EXPERTA)", expanded=True):
+    st.markdown('<div class="ia-box"><b>JARVIS INTERFACE:</b> Señor, acceda a mi base de datos legal para orientarlo en procedimientos o normativa vigente de Carabineros.</div>', unsafe_allow_html=True)
+    consulta_ia = st.text_input("Ingrese su consulta legal o duda procedimental:", placeholder="Ej: ¿Cuál es el protocolo para la cadena de custodia?")
+    if st.button("⚡ CONSULTAR BASE EXPERTA"):
+        if consulta_ia:
+            st.markdown(f'<div class="ia-output"><b>ANÁLISIS DE FRIDAY:</b> He analizado su consulta sobre "{consulta_ia}". <br><br><i>[Simulación de respuesta legal experta basada en Doctrina Institucional y Código Procesal Penal]</i>. Se recomienda verificar el Artículo 7 del Reglamento N° 10 y proceder con la fijación fotográfica inmediata.</div>', unsafe_allow_html=True)
 
 # --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
