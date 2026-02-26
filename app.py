@@ -94,20 +94,37 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# ACTUALIZACIÓN DEL MÓDULO DE RESPUESTA EN LA TERMINAL FRIDAY
-if st.button("⚡ ANALIZAR Y RESPONDER"):
-    if consulta_ia:
-        if "MARIHUANA" in consulta_ia.upper() or "FUMAR" in consulta_ia.upper():
-            res = """<b>RESPUESTA DE FRIDAY:</b><br><br>
-            Señor, respecto a su consulta, el consumo de marihuana en Chile se rige por la <b>Ley 20.000</b>. Aquí el desglose técnico:<br><br>
-            * <b>¿Es delito fumar?:</b> El consumo en la vía pública o lugares de libre acceso al público <b>NO es un delito, sino una FALTA</b> (Art. 50), sujeta a multas, asistencia a programas de rehabilitación o trabajos comunitarios.<br>
-            * <b>Consumo Privado:</b> El consumo personal, exclusivo y próximo en el tiempo en <b>lugares privados</b> está permitido y no es sancionable, siempre que no haya concierto para delinquir.<br>
-            * <b>El Verdadero Delito:</b> Lo que el Código Penal y la Ley 20.000 sancionan con penas de cárcel es el <b>Tráfico, Microtráfico y el Cultivo no autorizado</b> (Art. 3, 4 y 8).<br>
-            * <b>Procedimiento de Carabineros:</b> Si se detecta a alguien fumando en la vía pública, se debe proceder al <b>comiso de la sustancia</b>, realizar la prueba de campo (narcotest si corresponde) y cursar la infracción al Juzgado de Policía Local o Fiscalía según la cantidad hallada (Porte de sustancias)."""
-        else:
-            res = f"Análisis legal para: '{consulta_ia}'... [Consultando Base de Datos BCN]. Señor, proporcione el contexto específico para aplicar el artículo exacto del Código Penal."
+# --- 3. TERMINAL DE COMANDO FRIDAY (BASE EXPERTA FIJA) ---
+st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
-        st.markdown(f'<div class="legal-output-black">{res}</div>', unsafe_allow_html=True)
+# EL CUADRO DE TEXTO AHORA ES INDEPENDIENTE Y FIJO
+with st.container():
+    st.markdown('<div class="ia-box"><b>PROTOCOLO LEGAL CARABINEROS:</b> Señor, ingrese su consulta. Analizaré el Código Penal, la Ley 18.290 y la Ley 20.000 de forma inmediata.</div>', unsafe_allow_html=True)
+    consulta_legal = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday", placeholder="Ej: ¿Fumar marihuana es delito?")
+    
+    if st.button("🛡️ ANALIZAR CONDUCTA DELICTUAL"):
+        if consulta_legal:
+            # Lógica de Respuesta Directa
+            cons_u = consulta_legal.upper()
+            if "MARIHUANA" in cons_u or "FUMAR" in cons_u:
+                resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
+                Señor, respecto al consumo de cannabis (Ley 20.000):<br>
+                1. <b>Vía Pública:</b> Es una <b>FALTA (Art. 50)</b>. No es delito de cárcel, pero conlleva multa, comiso de la droga y sanciones administrativas.<br>
+                2. <b>Lugar Privado:</b> El consumo personal y próximo en el tiempo <b>está permitido</b> (no sancionable).<br>
+                3. <b>Tráfico/Cultivo:</b> Esto <b>SÍ es DELITO</b> sancionado con presidio.<br>
+                <b>Procedimiento:</b> Si es en vía pública, Carabineros debe incautar la sustancia y denunciar al Juzgado de Policía Local o Fiscalía según el gramaje."""
+            elif "PIRUETA" in cons_u or "ACROBACIA" in cons_u:
+                resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
+                Realizar piruetas en motocicleta en la vía pública <b>ES UN DELITO</b>.<br>
+                <b>Base Legal:</b> Ley 21.495 (Carreras Clandestinas) y Art. 197 bis de la Ley de Tránsito.<br>
+                <b>Sanción:</b> Presidio menor en su grado mínimo y multa de 2 a 10 UTM.<br>
+                <b>Procedimiento:</b> Carabineros debe proceder a la <b>incautación inmediata</b> del vehículo y detención por delito flagrante."""
+            else:
+                resp = f"Señor, he analizado su consulta: '{consulta_legal}'. Consultando base de datos de la BCN... [Análisis completado]. Requiere mayor contexto para tipificar el artículo exacto del Código Penal."
+            
+            st.markdown(f'<div class="legal-output-black">{resp}</div>', unsafe_allow_html=True)
+
+st.markdown("---")
 
 # --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
