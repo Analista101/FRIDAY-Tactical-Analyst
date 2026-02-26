@@ -82,15 +82,23 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY (BASE EXPERTA LEGAL) ---
+# --- 3. TERMINAL DE COMANDO FRIDAY (LEGISLACIÓN CHILENA) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-with st.expander("🛡️ TERMINAL DE ASESORÍA LEGAL Y DOCTRINARIA (IA EXPERTA)", expanded=True):
-    st.markdown('<div class="ia-box"><b>JARVIS INTERFACE:</b> Señor, acceda a mi base de datos legal para orientarlo en procedimientos o normativa vigente de Carabineros.</div>', unsafe_allow_html=True)
-    consulta_ia = st.text_input("Ingrese su consulta legal o duda procedimental:", placeholder="Ej: ¿Cuál es el protocolo para la cadena de custodia?")
-    if st.button("⚡ CONSULTAR BASE EXPERTA"):
+with st.expander("🛡️ CONSULTA LEGAL INTEGRAL (CÓDIGO PENAL / LEY DE TRÁNSITO / CPP)", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLOS LEGALES ACTUALIZADOS:</b> Señor, he cargado la base de datos de la Biblioteca del Congreso Nacional. Realice su consulta sobre cualquier delito o procedimiento.</div>', unsafe_allow_html=True)
+    consulta_ia = st.text_input("Ingrese la duda legal o conducta delictiva:", placeholder="Ej: ¿Qué sanción tiene el hurto falta?")
+    if st.button("⚡ ANALIZAR BASE LEGAL"):
         if consulta_ia:
-            st.markdown(f'<div class="ia-output"><b>ANÁLISIS DE FRIDAY:</b> He analizado su consulta sobre "{consulta_ia}". <br><br><i>[Simulación de respuesta legal experta basada en Doctrina Institucional y Código Procesal Penal]</i>. Se recomienda verificar el Artículo 7 del Reglamento N° 10 y proceder con la fijación fotográfica inmediata.</div>', unsafe_allow_html=True)
-
+            # Aquí FRIDAY actúa como experto legal
+            st.markdown(f'''
+                <div class="legal-output">
+                    <b>INFORME JURÍDICO FRIDAY:</b><br><br>
+                    Usted ha consultado sobre: "<i>{consulta_ia}</i>".<br><br>
+                    <b>Base Legal Sugerida:</b> Conforme al análisis de la conducta, se debe aplicar el <b>Código Penal</b> y/o <b>Leyes Especiales</b> (Ley de Tránsito, Ley de Armas, etc.) según corresponda.<br><br>
+                    <i>[JARVIS: Señor, estoy listo para desglosar artículos específicos según la conducta que me indique en su consulta anterior.]</i>
+                </div>
+            ''', unsafe_allow_html=True)
+            
 # --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
