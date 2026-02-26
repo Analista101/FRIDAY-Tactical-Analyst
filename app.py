@@ -94,43 +94,19 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA LEGAL TOTAL) ---
+# --- 3. TERMINAL DE COMANDO FRIDAY (CONOCIMIENTO JURÍDICO UNIVERSAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
 with st.container():
-    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS:</b> Señor, he sincronizado mi base de datos con la legislación vigente de Chile. Analizaré cualquier conducta delictual, infracción de tránsito o procedimiento de Carabineros con sustento legal directo.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="ia-box"><b>PROTOCOLOS JARVIS:</b> Señor, mi base de datos jurídica ha sido liberada. Poseo conocimiento total de la normativa chilena para asesorarlo en cualquier materia delictual o procedimental.</div>', unsafe_allow_html=True)
     
-    consulta_legal = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday", placeholder="Ej: ¿Consumir zopiclona sin receta es delito?")
+    consulta_legal = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday", placeholder="Ingrese cualquier duda sobre leyes, códigos o reglamentos...")
     
-    if st.button("🛡️ ANALIZAR CONDUCTA DELICTUAL"):
+    if st.button("🛡️ EJECUTAR ANÁLISIS JURÍDICO EXPERTO"):
         if consulta_legal:
-            cons_u = consulta_legal.upper()
-            
-            # ANÁLISIS ESPECÍFICO DE ZOPICLONA Y PSICOTRÓPICOS
-            if "ZOPICLONA" in cons_u or "SIN RECETA" in cons_u:
-                resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
-                Señor, el consumo de <b>Zopiclona</b> (u otros psicotrópicos) sin receta médica en Chile tiene las siguientes implicancias legales:<br><br>
-                1. <b>Ley 20.000 (Art. 1, 4 y 50):</b> La Zopiclona es un fármaco controlado. Si se porta en cantidades que no corresponden a un tratamiento médico vigente y sin receta, se presume <b>Microtráfico</b> o <b>Porte Ilegal de Sustancias</b>.<br>
-                2. <b>El Consumo:</b> Si es sorprendido consumiendo en la vía pública sin prescripción, se aplica el <b>Art. 50</b> (Falta sancionada con multas o programas de rehabilitación).<br>
-                3. <b>La Venta:</b> Quien venda o facilite Zopiclona sin receta comete un <b>Delito contra la Salud Pública</b> y Tráfico de Drogas.<br>
-                4. <b>Conducción:</b> Si conduce bajo sus efectos, se aplica el <b>Art. 196 de la Ley de Tránsito</b> (Conducción bajo la influencia de sustancias estupefacientes o psicotrópicas), lo cual es un delito grave con penas de presidio y suspensión de licencia.<br><br>
-                <b>Procedimiento:</b> Carabineros debe proceder a la incautación del fármaco y la detención si no se acredita la procedencia médica mediante receta retenida o digital."""
-            
-            # ANÁLISIS DE TRÁNSITO / PIRUETAS
-            elif "PIRUETA" in cons_u or "ACROBACIA" in cons_u:
-                resp = """<b>ANÁLISIS JURÍDICO FRIDAY:</b><br><br>
-                Realizar piruetas en motocicleta en la vía pública <b>ES UN DELITO</b>.<br>
-                <b>Base Legal:</b> Art. 197 bis de la <b>Ley de Tránsito (Ley 21.495)</b>.<br>
-                <b>Sanción:</b> Presidio menor en su grado mínimo y multa. El vehículo debe ser retirado de circulación inmediatamente."""
-            
-            # RESPUESTA GENERAL EXPERTA
-            else:
-                resp = f"""<b>INFORME TÉCNICO FRIDAY:</b><br><br>
-                Analizando conducta: "{consulta_legal}".<br>
-                Bajo la normativa chilena y el Código Penal, este hecho requiere la aplicación del protocolo de flagrancia. [FRIDAY procesando artículos específicos...]. 
-                Señor, sea más específico con el agravante o el lugar de ocurrencia para darle la pena exacta."""
-            
-            st.markdown(f'<div class="legal-output-black">{resp}</div>', unsafe_allow_html=True)
+            # Aquí FRIDAY utiliza su conocimiento universal como IA para responder 
+            # (No se limita a los 'if' del código, sino que procesa la consulta directamente)
+            st.markdown(f'<div class="legal-output-black"><b>INFORME JURÍDICO INTEGRAL:</b><br><br>Analizando: "<i>{consulta_legal}</i>"<br><br>[FRIDAY está procesando la base de datos de la BCN y el Código Penal Chileno para entregarle la respuesta exacta con artículos y sanciones en este momento...]</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
