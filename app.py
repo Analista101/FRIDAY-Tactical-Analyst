@@ -30,7 +30,7 @@ if "key_carta" not in st.session_state:
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
 
-# --- 3. MOTOR DE INTELIGENCIA FRIDAY (CORRECCIÓN DE LUGARES Y PERFILES) ---
+# --- 3. MOTOR DE INTELIGENCIA FRIDAY (RANGO ETARIO 5 AÑOS) ---
 def procesar_relato_ia(texto):
     texto_u = texto.upper().replace("Aï¿½OS", "AÑOS").replace("N°", "NRO")
     an_actual = 2026 
@@ -45,60 +45,46 @@ def procesar_relato_ia(texto):
 
     # 3. Lugar de Ocurrencia (Dirección Exacta)
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
-    lugar_ocurrencia = dir_match.group(1).strip() if dir_match else "INDICAR DIRECCIÓN"
+    lugar_ocurrencia = dir_match.group(1).strip() if dir_match else "RUTA 68"
 
-    # 4. Perfil Víctima (Datos del Afectado)
-    # Género
+    # 4. Perfil Víctima
     gen_vic = "MASCULINO" if "SEXO : MASCULINO" in texto_u or "SR. " in texto_u else "FEMENINO"
-    # Edad (Cálculo real desde fecha de nacimiento del afectado)
-    edad_vic = "NO INDICA"
+    
+    # Rango Etario Dinámico (Bloques de 5 años)
+    edad_rango = "NO INDICA"
     f_nac_vic = re.search(r'FECHA NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
     if f_nac_vic:
-        edad_vic = f"DE {an_actual - int(f_nac_vic.group(3))} AÑOS"
+        edad = an_actual - int(f_nac_vic.group(3))
+        lim_inf = (edad // 5) * 5
+        edad_rango = f"DE {lim_inf} A {lim_inf + 5} AÑOS"
     
-    # Tipo de Lugar (Recinto)
     tipo_lugar = "VIA PUBLICA"
-    if "SERVICENTRO" in texto_u or "ESTACION DE SERVICIO" in texto_u: tipo_lugar = "SERVICENTRO"
+    if any(x in texto_u for x in ["SERVICENTRO", "ESTACION DE SERVICIO", "SHELL", "COPEC"]): tipo_lugar = "SERVICENTRO"
     elif "DOMICILIO" in texto_u: tipo_lugar = "DOMICILIO PARTICULAR"
 
-    # Especie (Limpieza)
-    especies = []
-    if "CELULAR" in texto_u: especies.append("01 TELEFONO CELULAR")
-    if "MALETA" in texto_u: especies.append("01 MALETA")
-    if "BOLSO" in texto_u: especies.append("01 BOLSO")
-    if "MOCHILA" in texto_u: especies.append("01 MOCHILA")
-    if "VEHICULO" in texto_u and "ROBO DE VEHICULO" in tipificacion: especies.append("01 VEHICULO")
-    especie_sust = " / ".join(especies) if especies else "ACCESORIOS VARIOS"
+    # Especie (Filtro Inteligente)
+    items = []
+    if "CELULAR" in texto_u: items.append("01 TELEFONO CELULAR")
+    if "MALETA" in texto_u: items.append("01 MALETA")
+    if "BOLSO" in texto_u: items.append("01 BOLSO")
+    if "MOCHILA" in texto_u: items.append("01 MOCHILA")
+    especie_sust = " / ".join(items) if items else "ACCESORIOS VARIOS"
 
     # 5. Perfil Delincuente
-    # Género Victimario
-    if "DESCENDIO UN SUJETO" in texto_u or "UN HOMBRE" in texto_u: gen_del = "MASCULINO"
-    elif "UNA MUJER" in texto_u: gen_del = "FEMENINO"
-    else: gen_del = "NO INDICA"
-
-    # Edad Delincuente
-    edad_del = "NO INDICA"
-    detenido_nac = re.search(r'DETENIDO[\s\S]*?NACIMIENTO\s?:\s?(\d{2})[-/](\d{2})[-/](\d{4})', texto_u)
-    if detenido_nac: edad_del = f"{an_actual - int(detenido_nac.group(3))} AÑOS"
-
-    # Características Físicas
-    caract = "NO INDICA"
-    if "VESTIMENTA OSCURA" in texto_u: caract = "VESTIMENTA OSCURA"
-    elif "POLERA" in texto_u: caract = "VESTIMENTA INFORMAL"
-
-    # Medio Desplazamiento
+    gen_del = "MASCULINO" if any(x in texto_u for x in ["SUJETO", "INDIVIDUO", "HOMBRE"]) else "NO INDICA"
+    edad_del = "NO INDICA" # Solo si hay detención
+    caract = "VESTIMENTA OSCURA" if "OSCURA" in texto_u else "NO INDICA"
+    
     medio = "NO INDICA"
-    m_match = re.search(r'VEHICULO MARCA\s?(\w+)', texto_u)
-    if m_match and "VICTIMA" not in texto_u[m_match.start()-20:m_match.start()]:
-        medio = f"01 VEHICULO {m_match.group(1)}"
-    elif "A PIE" in texto_u: medio = "A PIE"
+    v_match = re.search(r'VEHICULO MARCA\s?(\w+)', texto_u)
+    if v_match: medio = f"01 VEHICULO {v_match.group(1)}"
 
-    # 6. Modus Operandi (MAYÚSCULAS Y ANÓNIMO)
+    # 6. Modus Operandi
     modus = f"VICTIMA DEJO ESTACIONADO SU VEHICULO EN {tipo_lugar}, MOMENTOS EN QUE {gen_del} QUE SE DESPLAZABA EN {medio} QUIEBRA VENTANAL Y SUSTRAE {especie_sust} PARA LUEGO DARSE A LA FUGA."
     
-    return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_vic, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
+    return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 4. INTERFAZ (PESTAÑAS INTACTAS) ---
+# --- 4. INTERFAZ (DATOS RESTAURADOS) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
@@ -106,19 +92,35 @@ t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORM
 with t1:
     st.markdown('<div class="section-header">📝 ACTA STOP MENSUAL</div>', unsafe_allow_html=True)
     with st.form("form_acta"):
-        st.text_input("Semana de estudio", value="SEMANA 08")
+        c1, c2 = st.columns(2)
+        c1.text_input("Semana de estudio", value="SEMANA 08")
+        c1.text_input("Fecha de sesión", value="24-02-2026")
+        c2.text_input("Compromiso Carabineros", value="INCREMENTAR PATRULLAJES")
+        st.text_area("Problemática Delictual 26ª Comisaría", value="AUMENTO DE ROBO CON INTIMIDACIÓN EN SECTOR CUADRANTE 231")
+        st.text_input("Nombre", value="DIANA SANDOVAL ASTUDILLO")
+        st.text_input("Grado", value="C.P.R. Analista Social")
+        st.text_input("Cargo", value="OFICINA DE OPERACIONES")
         st.form_submit_button("🛡️ GENERAR ACTA")
 
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
     with st.form("form_trim"):
-        st.text_input("Periodo", value="DIC-ENE-FEB")
+        ct1, ct2 = st.columns(2)
+        ct1.text_input("Periodo", value="DIC-ENE-FEB")
+        ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
+        st.text_input("Analista", value="DIANA SANDOVAL ASTUDILLO")
         st.form_submit_button("🛡️ GENERAR")
 
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: CLONACIÓN NIVEL PREFECTURA</div>', unsafe_allow_html=True)
     with st.form("form_geo"):
-        st.text_input("DOE N°", value="247205577")
+        col1, col2, col3 = st.columns(3)
+        col1.text_input("DOE N°", value="247205577")
+        col1.text_input("Fecha Informe", value="24 de febrero de 2026")
+        col2.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
+        col2.text_input("Grado Solicitante", value="CABO 1RO.")
+        col3.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
+        col3.text_input("Cuadrante", value="231")
         st.form_submit_button("🛡️ EJECUTAR CLONACIÓN")
 
 with t4:
