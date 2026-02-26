@@ -127,9 +127,11 @@ with t3:
         col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
         col3.text_input("Cuadrante", value="231")
         st.markdown("---")
-        st.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'])
+        cg1, cg2 = st.columns(2)
+        cg1.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_geo")
+        cg2.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx', 'csv'], key="excel_geo")
         st.form_submit_button("🛡️ EJECUTAR INFORME GEO")
-
+        
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     if st.button("🗑️ LIMPIAR RELATO"):
