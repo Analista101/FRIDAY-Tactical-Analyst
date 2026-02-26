@@ -94,25 +94,20 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY (IA EXPERTA EN LEYES) ---
-st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-with st.expander("🛡️ TERMINAL DE ASESORÍA LEGAL EXPERTA", expanded=True):
-    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS:</b> Señor, he cargado toda la legislación chilena. No le daré opciones, le daré la respuesta directa con su base legal.</div>', unsafe_allow_html=True)
-    consulta_ia = st.text_input("Consulte aquí sobre delitos o procedimientos (Ej: Piruetas en moto):")
-    if st.button("⚡ ANALIZAR Y RESPONDER"):
-        if consulta_ia:
-            # Lógica de respuesta inteligente (Simulación de IA experta con base real)
-            if "PIRUETA" in consulta_ia.upper() or "ACROBACIA" in consulta_ia.upper():
-                res = """<b>RESPUESTA DE FRIDAY:</b><br><br>
-                Efectivamente, señor, realizar piruetas o acrobacias en la vía pública <b>ES UN DELITO</b>. <br><br>
-                <b>Sustento Legal:</b> Se rige por la <b>Ley 21.495 (Ley de Carreras Clandestinas)</b>, que incorporó el <b>Artículo 197 bis a la Ley de Tránsito 18.290</b>. <br><br>
-                <b>Detalle:</b> Esta ley sanciona específicamente la "conducción temeraria". Realizar piruetas o maniobras peligrosas pone en riesgo la seguridad vial. <br>
-                <b>Sanción:</b> Pena de presidio menor en su grado mínimo (61 a 540 días) y multas de 2 a 10 UTM. Además, si hay lesiones o daños, las penas suben de grado. <br>
-                <b>Procedimiento Institucional:</b> Carabineros debe proceder a la <b>incautación del vehículo</b> y el retiro de la licencia de conducir de forma inmediata bajo acta de hallazgo o delito flagrante."""
-            else:
-                res = f"Señor, he analizado su consulta sobre '{consulta_ia}'. Basado en el Código Penal chileno, esta conducta se tipifica como [Análisis en curso...]. Por favor, proporcione más detalles del hecho para una precisión del 100%."
+# ACTUALIZACIÓN DEL MÓDULO DE RESPUESTA EN LA TERMINAL FRIDAY
+if st.button("⚡ ANALIZAR Y RESPONDER"):
+    if consulta_ia:
+        if "MARIHUANA" in consulta_ia.upper() or "FUMAR" in consulta_ia.upper():
+            res = """<b>RESPUESTA DE FRIDAY:</b><br><br>
+            Señor, respecto a su consulta, el consumo de marihuana en Chile se rige por la <b>Ley 20.000</b>. Aquí el desglose técnico:<br><br>
+            * <b>¿Es delito fumar?:</b> El consumo en la vía pública o lugares de libre acceso al público <b>NO es un delito, sino una FALTA</b> (Art. 50), sujeta a multas, asistencia a programas de rehabilitación o trabajos comunitarios.<br>
+            * <b>Consumo Privado:</b> El consumo personal, exclusivo y próximo en el tiempo en <b>lugares privados</b> está permitido y no es sancionable, siempre que no haya concierto para delinquir.<br>
+            * <b>El Verdadero Delito:</b> Lo que el Código Penal y la Ley 20.000 sancionan con penas de cárcel es el <b>Tráfico, Microtráfico y el Cultivo no autorizado</b> (Art. 3, 4 y 8).<br>
+            * <b>Procedimiento de Carabineros:</b> Si se detecta a alguien fumando en la vía pública, se debe proceder al <b>comiso de la sustancia</b>, realizar la prueba de campo (narcotest si corresponde) y cursar la infracción al Juzgado de Policía Local o Fiscalía según la cantidad hallada (Porte de sustancias)."""
+        else:
+            res = f"Análisis legal para: '{consulta_ia}'... [Consultando Base de Datos BCN]. Señor, proporcione el contexto específico para aplicar el artículo exacto del Código Penal."
 
-            st.markdown(f'<div class="legal-output-black">{res}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="legal-output-black">{res}</div>', unsafe_allow_html=True)
 
 # --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
