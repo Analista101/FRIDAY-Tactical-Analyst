@@ -82,7 +82,15 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. INTERFAZ ---
+# --- 3. TERMINAL DE COMANDO FRIDAY ---
+st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
+with st.expander("TERMINAL DE ANÁLISIS TÁCTICO FRIDAY", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS ACTIVADO:</b> Señor, los sistemas están listos para el peritaje.</div>', unsafe_allow_html=True)
+    consulta_ia = st.text_area("Describa el hecho para peritaje legal (IA Friday):", key="terminal_fr")
+    if st.button("⚡ CONSULTAR A FRIDAY"):
+        if consulta_ia: st.info("SISTEMA: Análisis de IA Friday completado. Puede proceder a la Carta de Situación.")
+
+# --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
