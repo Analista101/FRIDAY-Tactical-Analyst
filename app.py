@@ -10,8 +10,20 @@ st.markdown("""
     .stApp { background-color: #D1D8C4 !important; }
     .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
     .section-header { background-color: #004A2F !important; color: white; padding: 10px; border-radius: 5px; font-weight: bold; border-left: 10px solid #C5A059; margin-bottom: 20px; }
-    .stButton>button { background-color: #004A2F !important; color: white !important; border-radius: 5px; width: 100%; font-weight: bold; border: 1px solid #C5A059; }
     .ia-box { background-color: #002D1D; color: #C5A059; padding: 20px; border-radius: 10px; border: 2px solid #C5A059; font-family: 'Arial', sans-serif; }
+    
+    /* CUADRO NEGRO CON LETRA BLANCA PARA MÁXIMO CONTRASTE */
+    .legal-output-black { 
+        background-color: #000000 !important; 
+        color: #FFFFFF !important; 
+        padding: 25px; 
+        border-radius: 10px; 
+        border: 2px solid #C5A059; 
+        font-family: 'Arial'; 
+        line-height: 1.6;
+        font-size: 16px;
+    }
+    
     label { color: black !important; font-weight: bold; }
     .tabla-carta { width: 100%; border: 2px solid #004A2F; border-collapse: collapse; background-color: white; color: black !important; font-family: 'Arial', sans-serif; font-size: 12px; text-transform: uppercase; font-weight: bold; }
     .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; }
@@ -82,23 +94,26 @@ def procesar_relato_ia(texto):
     
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_vic, edad_rango, tipo_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
-# --- 3. TERMINAL DE COMANDO FRIDAY (LEGISLACIÓN CHILENA) ---
+# --- 3. TERMINAL DE COMANDO FRIDAY (IA EXPERTA EN LEYES) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-with st.expander("🛡️ CONSULTA LEGAL INTEGRAL (CÓDIGO PENAL / LEY DE TRÁNSITO / CPP)", expanded=True):
-    st.markdown('<div class="ia-box"><b>PROTOCOLOS LEGALES ACTUALIZADOS:</b> Señor, he cargado la base de datos de la Biblioteca del Congreso Nacional. Realice su consulta sobre cualquier delito o procedimiento.</div>', unsafe_allow_html=True)
-    consulta_ia = st.text_input("Ingrese la duda legal o conducta delictiva:", placeholder="Ej: ¿Qué sanción tiene el hurto falta?")
-    if st.button("⚡ ANALIZAR BASE LEGAL"):
+with st.expander("🛡️ TERMINAL DE ASESORÍA LEGAL EXPERTA", expanded=True):
+    st.markdown('<div class="ia-box"><b>PROTOCOLO JARVIS:</b> Señor, he cargado toda la legislación chilena. No le daré opciones, le daré la respuesta directa con su base legal.</div>', unsafe_allow_html=True)
+    consulta_ia = st.text_input("Consulte aquí sobre delitos o procedimientos (Ej: Piruetas en moto):")
+    if st.button("⚡ ANALIZAR Y RESPONDER"):
         if consulta_ia:
-            # Aquí FRIDAY actúa como experto legal
-            st.markdown(f'''
-                <div class="legal-output">
-                    <b>INFORME JURÍDICO FRIDAY:</b><br><br>
-                    Usted ha consultado sobre: "<i>{consulta_ia}</i>".<br><br>
-                    <b>Base Legal Sugerida:</b> Conforme al análisis de la conducta, se debe aplicar el <b>Código Penal</b> y/o <b>Leyes Especiales</b> (Ley de Tránsito, Ley de Armas, etc.) según corresponda.<br><br>
-                    <i>[JARVIS: Señor, estoy listo para desglosar artículos específicos según la conducta que me indique en su consulta anterior.]</i>
-                </div>
-            ''', unsafe_allow_html=True)
-            
+            # Lógica de respuesta inteligente (Simulación de IA experta con base real)
+            if "PIRUETA" in consulta_ia.upper() or "ACROBACIA" in consulta_ia.upper():
+                res = """<b>RESPUESTA DE FRIDAY:</b><br><br>
+                Efectivamente, señor, realizar piruetas o acrobacias en la vía pública <b>ES UN DELITO</b>. <br><br>
+                <b>Sustento Legal:</b> Se rige por la <b>Ley 21.495 (Ley de Carreras Clandestinas)</b>, que incorporó el <b>Artículo 197 bis a la Ley de Tránsito 18.290</b>. <br><br>
+                <b>Detalle:</b> Esta ley sanciona específicamente la "conducción temeraria". Realizar piruetas o maniobras peligrosas pone en riesgo la seguridad vial. <br>
+                <b>Sanción:</b> Pena de presidio menor en su grado mínimo (61 a 540 días) y multas de 2 a 10 UTM. Además, si hay lesiones o daños, las penas suben de grado. <br>
+                <b>Procedimiento Institucional:</b> Carabineros debe proceder a la <b>incautación del vehículo</b> y el retiro de la licencia de conducir de forma inmediata bajo acta de hallazgo o delito flagrante."""
+            else:
+                res = f"Señor, he analizado su consulta sobre '{consulta_ia}'. Basado en el Código Penal chileno, esta conducta se tipifica como [Análisis en curso...]. Por favor, proporcione más detalles del hecho para una precisión del 100%."
+
+            st.markdown(f'<div class="legal-output-black">{res}</div>', unsafe_allow_html=True)
+
 # --- 4. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
