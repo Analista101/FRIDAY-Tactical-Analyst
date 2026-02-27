@@ -83,9 +83,9 @@ def procesar_relato_ia(texto):
     especie_sust = " / ".join(items) if items else "ACCESORIOS VARIOS"
 
      # Extraer datos del vehículo del delincuente si existen
-    marca_vehiculo = extract_value(texto_u, r'MARCA\s+(\w+)') or "NO ESPECIFICA"
-    modelo_vehiculo = extract_value(texto_u, r'MODELO\s+(\w+)') or "NO ESPECIFICA"
-    patente_vehiculo = extract_value(texto_u, r'PATENTE\s+(\w+)') or "NO ESPECIFICA"
+    marca_vehiculo = extract_value(texto_u, r'MARCA\s+(\w+)') or "NO INDICA"
+    modelo_vehiculo = extract_value(texto_u, r'MODELO\s+(\w+)') or "NO INDICA"
+    patente_vehiculo = extract_value(texto_u, r'PATENTE\s+(\w+)') or "NO INDICA"
     medio = "NO INDICA"
 
     # PERFIL DELINCUENTE
