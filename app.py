@@ -88,23 +88,25 @@ def procesar_relato_ia(texto):
     caract = "VESTIMENTA OSCURA" if "OSCURA" in texto_u else "NO INDICA"
     medio = "VEHICULO PARTICULAR" if "VEHICULO PARTICULAR" in texto_u else "A PIE"
 
-# --- LÓGICA DE DETECCIÓN DE ACCIONES (FRIDAY ADAPTATIVO) ---
-    # Detectar estado de la víctima
-    estado_vic = "TRANSITANDO" # Por defecto
-    if any(x in texto_u for x in ["SENTADO", "SENTADA"]): estado_vic = "SENTADA/O"
-    elif any(x in texto_u for x in ["CAMINANDO", "PIE"]): estado_vic = "CAMINANDO"
-    elif any(x in texto_u for x in ["DURMIENDO", "PERNOCTANDO"]): estado_vic = "DURMIENDO"
-    elif any(x in texto_u for x in ["CONDUCIENDO", "MANEJANDO", "VEHICULO"]): estado_vic = "CONDUCIENDO"
+# --- LÓGICA DE DETECCIÓN DE ACCIONES (OPCIONES DINÁMICAS) ---
+    # 1. Determinar Estado de la Víctima
+    if any(x in texto_u for x in ["SENTADO", "SENTADA"]): estado_v = "SENTADA/O"
+    elif any(x in texto_u for x in ["CAMINANDO", "PIE", "INFANTE"]): estado_v = "CAMINANDO"
+    elif any(x in texto_u for x in ["DURMIENDO", "PERNOCTANDO"]): estado_v = "DURMIENDO"
+    elif any(x in texto_u for x in ["CONDUCIENDO", "MANEJANDO", "VOLANTE"]): estado_v = "CONDUCIENDO"
+    else: estado_v = "TRANSITANDO"
 
-    # Detectar acción del delincuente
-    accion_del = "SUSTRAE ESPECIES" # Por defecto
-    if "FORCEJEA" in texto_u: accion_del = "FORCEJEA CON LA VÍCTIMA"
-    elif "INTENTA" in texto_u: accion_del = "INTENTA SUSTRAER ESPECIES"
-    elif "LOGRA" in texto_u: accion_del = "LOGRA SU COMETIDO"
+    # 2. Determinar Acción del Victimario
+    if "FORCEJEA" in texto_u: accion_v = "FORCEJEA CON LA VÍCTIMA"
+    elif "INTENTA" in texto_u: accion_v = "INTENTA SUSTRAER ESPECIES"
+    elif any(x in texto_u for x in ["LOGRA", "CONSIGUE"]): accion_v = "LOGRA SU COMETIDO"
+    else: accion_v = "SUSTRAE ESPECIES"
 
-    # Construcción final del Modus Operandi
-    modus_del = f"VÍCTIMA SE ENCONTRABA {estado_vic} EN {lugar_ocurrencia_lugar}, MOMENTOS EN QUE {gen_del} SE ACERCA Y {accion_del}, QUIEN SE DESPLAZABA EN {medio} PARA LUEGO DARSE A LA FUGA."
-    return tipificacion, tramo_hora, lugar_ocurrencia, gen_afectado, edad_rango, lugar_ocurrencia_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
+    # 3. Construcción del Modus Operandi (Asegurando nombres de variables correctos)
+    mo_final = f"VÍCTIMA SE ENCONTRABA {estado_v} EN {lugar_ocurrencia_lugar}, MOMENTOS EN QUE {gen_del} SE ACERCA Y {accion_v}, QUIEN SE DESPLAZABA EN {medio} PARA LUEGO DARSE A LA FUGA."
+    
+    # --- RETORNO DE DATOS A LA CARTA DE SITUACIÓN ---
+    return tipificacion, tramo_hora, lugar_ocurrencia, gen_afectado, edad_rango, lugar_ocurrencia_lugar, especie_sust, gen_del, edad_del, caract, medio, mo_final.upper()
 
 # --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA JURÍDICA TOTAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
