@@ -61,7 +61,7 @@ def procesar_relato_ia(texto):
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar_ocurrencia = dir_match.group(1).strip() if dir_match else "RUTA 68"
 
-    # PERFIL VÍCTIMA
+    # PERFIL VÍCTIMA (PRIMER AFECTADO)
     if re.search(r'SEXO\s?:\s?MASCULINO', texto_u) or "SR. " in texto_u:
         gv = "MASCULINO"
     elif re.search(r'SEXO\s?:\s?FEMENINO', texto_u) or "SRA. " in texto_u:
@@ -91,7 +91,6 @@ def procesar_relato_ia(texto):
     if "TELEFONO" in texto_especies or "CELULAR" in texto_especies:
         marca_tel = extract_value(texto_especies, r'MARCA\s+([A-Z]+)') or "HUAWEI"
         items.append(f"01 TELEFONO CELULAR {marca_tel}")
-    if "BOLSO" in texto_especies: items.append("01 BOLSO CON PRENDAS")
     
     if "VEHICULO" in texto_u:
         marca_v = extract_value(texto_u, r'MARCA\s+([A-Z]+)') or "NO INDICADA"
@@ -124,17 +123,8 @@ def procesar_relato_ia(texto):
 
     return tipificacion, tramo_hora, lugar_ocurrencia, gv, ev, tl, esp, gd, ed, cd, md, mo.upper()
 
-# --- 3. INTERFAZ COMANDO CENTRAL ---
+# --- 3. INTERFAZ ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-
-with st.container():
-    st.markdown('<div class="ia-box"><b>PROTOCOLOS JARVIS:</b> Señor, he restaurado todos los campos. La integridad del Acta Trimestral e Informe GEO está al 100%.</div>', unsafe_allow_html=True)
-    consulta = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday")
-    if st.button("🛡️ EJECUTAR ANÁLISIS JURÍDICO"):
-        if consulta:
-            st.markdown(f'<div class="legal-output-black"><b>INFORME JURÍDICO:</b> Análisis procesado para "{consulta}". Consultando base de datos legal chilena...</div>', unsafe_allow_html=True)
-
-st.markdown("---")
 
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
 
@@ -152,16 +142,24 @@ with t1:
         st.form_submit_button("🛡️ GENERAR ACTA")
 
 with t2:
-    st.markdown('<div class="section-header">📈 STOP TRIMESTRAL</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📈 STOP TRIMESTRAL: COMPROMISOS Y ACUERDOS</div>', unsafe_allow_html=True)
     with st.form("form_trim"):
         ct1, ct2 = st.columns(2)
-        ct1.text_input("Periodo", value="DIC-ENE-FEB")
+        ct1.text_input("Periodo Trimestral", value="DIC-ENE-FEB")
         ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
-        ct2.text_input("Nombre Asistente", value="INDICAR NOMBRE")
-        ct2.text_input("Grado Asistente", value="INDICAR GRADO")
-        st.markdown('**🖋️ PIE DE FIRMA**')
-        st.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
-        st.text_input("Grado Analista", value="C.P.R. Analista Social")
+        ct2.text_input("Unidad / Repartición", value="26ª COMISARÍA PUDAHUEL")
+        ct2.text_input("Nivel de Cumplimiento (%)", value="100%")
+        
+        st.text_area("Compromisos Adquiridos", value="1. Aumento de patrullajes preventivos.\n2. Focalización de delitos en Cuadrante 231.")
+
+        st.markdown('---')
+        st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
+        f1, f2 = st.columns(2)
+        f1.text_input("Nombre Asistente", value="INDICAR NOMBRE")
+        f1.text_input("Grado Asistente", value="INDICAR GRADO")
+        f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
+        f2.text_input("Grado Analista", value="C.P.R. Analista Social")
+        
         st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
 
 with t3:
