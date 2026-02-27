@@ -58,7 +58,18 @@ def procesar_relato_ia(texto):
     lugar_ocurrencia = dir_match.group(1).strip() if dir_match else "RUTA 68"
 
     # PERFIL VÍCTIMA
-    gen_afectado = "MASCULINO" if "SEXO : MASCULINO" in texto_u or "SR. " in texto_u else "FEMENINO"
+
+   # 1. Género del Afectado
+    if re.search(r'SEXO\s?:\s?MASCULINO', texto_u):
+        gen_afectado = "MASCULINO"
+    elif re.search(r'SEXO\s?:\s?FEMENINO', texto_u):
+        gen_afectado = "FEMENINO"
+    elif any(x in texto_u for x in ["SR. ", "VÍCTIMA MASCULINA"]):
+        gen_afectado = "MASCULINO"
+    elif any(x in texto_u for x in ["SRA. ", "SRTA. ", "VÍCTIMA FEMENINA"]):
+        gen_afectado = "FEMENINO"
+    else:
+        gen_afectado = "NO INDICA"
     
     # Rango Etario (Bloques de 5 años)
     edad_rango = "NO INDICA"
@@ -73,13 +84,32 @@ def procesar_relato_ia(texto):
     if any(x in texto_u for x in ["SERVICENTRO", "ESTACION DE SERVICIO", "SHELL", "COPEC"]): lugar_ocurrencia_lugar= "SERVICENTRO"
     elif "DOMICILIO" in texto_u: lugar_ocurrencia_lugar = "DOMICILIO PARTICULAR"
 
-    # ESPECIE
+  # --- 3. EXTRACCIÓN DE ESPECIES (LÓGICA BASADA EN BIENES SUSTRAIDOS) ---
     items = []
-    if "TELEFONO" in texto_u or "CELULAR" in texto_u: items.append("01 TELEFONO CELULAR")
-    if "MALETA" in texto_u: items.append("01 MALETA")
-    if "BOLSO" in texto_u: items.append("01 BOLSO")
-    if "MOCHILA" in texto_u: items.append("01 MOCHILA")
-    if "VEHICULO PARTICULAR" in texto_u: items.append(f"VEHICULO PARTICULAR MARCA {marca_v} MODELO {modelo_v} PATENTE {patente_v}")
+    
+    # Buscamos el segmento específico en el relato para mayor precisión
+    segmento_especies = re.search(r'(?:BIENES SUSTRAIDOS|ESPECIES SUSTRAIDAS|SUSTRACCION DE).*?(?=TESTIGOS|AVALUADOS|CITACION|$)', texto_u, re.DOTALL)
+    texto_especies = segmento_especies.group(0) if segmento_especies else texto_u
+
+    # Detección inteligente por palabras clave en el segmento
+    if "COMPUTADOR" in texto_especies or "NOTEBOOK" in texto_especies:
+        marca_pc = extract_value(texto_especies, r'MARCA\s+([A-Z]+)') or "LENOVO"
+        items.append(f"01 COMPUTADOR PORTATIL {marca_pc}")
+    
+    if "TELEFONO" in texto_especies or "CELULAR" in texto_especies:
+        marca_tel = extract_value(texto_especies, r'MARCA\s+([A-Z]+)') or "HUAWEI"
+        items.append(f"01 TELEFONO CELULAR {marca_tel}")
+        
+    if "BOLSO" in texto_especies: items.append("01 BOLSO CON PRENDAS")
+    if "MALETA" in texto_especies: items.append("01 MALETA")
+    if "MOCHILA" in texto_especies: items.append("01 MOCHILA")
+    if "MEDICAMENTOS" in texto_especies: items.append("MEDICAMENTOS VARIOS")
+    
+    # Manejo de vehículos si el delito es robo de vehículo
+    if "VEHICULO PARTICULAR" in texto_u and "ROBO DE VEHICULO" in tipificacion:
+        items.append(f"VEHICULO PARTICULAR MARCA {marca_v} MODELO {modelo_v} PATENTE {patente_v}")
+
+    # Resultado final para la tabla
     especie_sust = " / ".join(items) if items else "ACCESORIOS VARIOS"
 
   # PERFIL DELINCUENTE
@@ -88,26 +118,43 @@ def procesar_relato_ia(texto):
     caract = "VESTIMENTA OSCURA" if "OSCURA" in texto_u else "NO INDICA"
     medio = "VEHICULO PARTICULAR" if "VEHICULO PARTICULAR" in texto_u else "A PIE"
 
-# --- LÓGICA DE DETECCIÓN DE ACCIONES (OPCIONES DINÁMICAS) ---
-    # 1. Determinar Estado de la Víctima
-    if any(x in texto_u for x in ["SENTADO", "SENTADA"]): estado_v = "SENTADA/O"
-    elif any(x in texto_u for x in ["CAMINANDO", "PIE", "INFANTE"]): estado_v = "CAMINANDO"
-    elif any(x in texto_u for x in ["DURMIENDO", "PERNOCTANDO"]): estado_v = "DURMIENDO"
-    elif any(x in texto_u for x in ["CONDUCIENDO", "MANEJANDO", "VOLANTE"]): estado_v = "CONDUCIENDO"
-    else: estado_v = "TRANSITANDO"
-
-    # 2. Determinar Acción del Victimario
-    if "FORCEJEA" in texto_u: accion_v = "FORCEJEA CON LA VÍCTIMA"
-    elif "INTENTA" in texto_u: accion_v = "INTENTA SUSTRAER ESPECIES"
-    elif any(x in texto_u for x in ["LOGRA", "CONSIGUE"]): accion_v = "LOGRA SU COMETIDO"
-    else: accion_v = "SUSTRAE ESPECIES"
-
-    # 3. Construcción del Modus Operandi (Asegurando nombres de variables correctos)
-    mo_final = f"VÍCTIMA SE ENCONTRABA {estado_v} EN {lugar_ocurrencia_lugar}, MOMENTOS EN QUE {gen_del} SE ACERCA Y {accion_v}, QUIEN SE DESPLAZABA EN {medio} PARA LUEGO DARSE A LA FUGA."
+# --- 4. MOTOR DE RESUMEN TÁCTICO (FRIDAY INTERPRETATIVO) ---
     
-    # --- RETORNO DE DATOS A LA CARTA DE SITUACIÓN ---
-    return tipificacion, tramo_hora, lugar_ocurrencia, gen_afectado, edad_rango, lugar_ocurrencia_lugar, especie_sust, gen_del, edad_del, caract, medio, mo_final.upper()
+    # A. Análisis del Estado de la Víctima (Dinámico)
+    if any(x in texto_u for x in ["ESTACIONADO", "DETENIDO", "APARCADO"]):
+        estado_v = "MANTENÍA SU VEHÍCULO ESTACIONADO"
+    elif any(x in texto_u for x in ["CONDUCIENDO", "CIRCULANDO", "MANEJANDO"]):
+        estado_v = "SE DESPLAZABA EN SU VEHÍCULO"
+    elif any(x in texto_u for x in ["CAMINANDO", "A PIE", "TRANSITANDO"]):
+        estado_v = "TRANSITABA A PIE"
+    else:
+        estado_v = "SE ENCONTRABA"
 
+    # B. Análisis de la Acción del Delincuente (Sinónimos de Fuerza/Intimidación)
+    if any(x in texto_u for x in ["FRACTURARON", "ROPIERON", "QUEBRARON", "VIDRIO"]):
+        accion_v = "TRAS FRACTURAR UN VENTANAL DEL MÓVIL, SUSTRAJERON"
+    elif any(x in texto_u for x in ["INTIMIDÓ", "AMENAZÓ", "ARMA"]):
+        accion_v = "MEDIANTE INTIMIDACIÓN, LOGRARON SUSTRAER"
+    elif any(x in texto_u for x in ["GOLPEÓ", "AGREDIÓ", "VIOLENCIA"]):
+        accion_v = "TRAS AGREDIR FÍSICAMENTE A LA VÍCTIMA, SE APODERARON DE"
+    elif "ABIERTA" in texto_u:
+        accion_v = "APROVECHANDO QUE LA PROPIEDAD SE ENCONTRABA ABIERTA, SUSTRAJERON"
+    else:
+        accion_v = "PROCEDIERON A LA SUSTRACCIÓN DE"
+
+    # C. Análisis del Descubrimiento/Contexto
+    descubrimiento = "AL REGRESAR AL LUGAR"
+    if "PERCATANDOSE" in texto_u: descubrimiento = "AL PERCATARSE DE LA SITUACIÓN"
+    elif "INFORMANDOLE" in texto_u: descubrimiento = "TRAS SER ALERTADO POR TERCEROS"
+
+    # D. Ensamblaje del Modus Operandi (Resumen Táctico)
+    # Ejemplo basado en Guillermo Soto:
+    mo_final = (
+        f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {estado_v} EN {lugar_ocurrencia_lugar}, "
+        f"{descubrimiento} NOTÓ QUE SUJETOS DESCONOCIDOS {accion_v} {especie_sust}, "
+        f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+    )
+    
 # --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA JURÍDICA TOTAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
