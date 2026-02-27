@@ -75,27 +75,35 @@ def procesar_relato_ia(texto):
 
     # ESPECIE
     items = []
-    if "TELEFONO" in texto_u and "CELULAR" in texto_u: items.append("01 TELEFONO CELULAR")
+    if "TELEFONO" in texto_u or "CELULAR" in texto_u: items.append("01 TELEFONO CELULAR")
     if "MALETA" in texto_u: items.append("01 MALETA")
     if "BOLSO" in texto_u: items.append("01 BOLSO")
     if "MOCHILA" in texto_u: items.append("01 MOCHILA")
-    if "VEHICULO PARTICULAR" in texto_u: items.append("VEHICULO PARTICULAR MARCA {marca_vehiculo} MODELO {modelo_vehiculo} PATENTE {patente_vehiculo})")
+    if "VEHICULO PARTICULAR" in texto_u: items.append(f"VEHICULO PARTICULAR MARCA {marca_v} MODELO {modelo_v} PATENTE {patente_v}")
     especie_sust = " / ".join(items) if items else "ACCESORIOS VARIOS"
 
-     # Extraer datos del vehículo del delincuente si existen
-    marca_vehiculo = extract_value(texto_u, r'MARCA\s+(\w+)') or "NO INDICA"
-    modelo_vehiculo = extract_value(texto_u, r'MODELO\s+(\w+)') or "NO INDICA"
-    patente_vehiculo = extract_value(texto_u, r'PATENTE\s+(\w+)') or "NO INDICA"
-    medio = "NO INDICA"
-
-    # PERFIL DELINCUENTE
+  # PERFIL DELINCUENTE
     gen_del = "MASCULINO" if any(x in texto_u for x in ["SUJETO", "INDIVIDUO", "HOMBRE"]) else "NO INDICA"
     edad_del = "NO INDICA"
     caract = "VESTIMENTA OSCURA" if "OSCURA" in texto_u else "NO INDICA"
-    
-    medio = "VEHICULO PARTICULAR" if "VEHICULO PARTICULAR" in texto_u else "A PIE"  
+    medio = "VEHICULO PARTICULAR" if "VEHICULO PARTICULAR" in texto_u else "A PIE"
 
-    modus_del= f"VICTIMA ESTABA {SENTADA|CAMINANDO|TRANSITANDO|DURMIENDO|CONDUCIENDO|MANEJANDO} EN {lugar_ocurrencia_lugar}, MOMENTOS EN QUE {gen_del} se acerca y {INTENTA|LOGRA|SUSTRAE|FORCEJEA} QUIEN SE DESPLAZABA EN {medio_del} PARA LUEGO DARSE A LA FUGA."    
+# --- LÓGICA DE DETECCIÓN DE ACCIONES (FRIDAY ADAPTATIVO) ---
+    # Detectar estado de la víctima
+    estado_vic = "TRANSITANDO" # Por defecto
+    if any(x in texto_u for x in ["SENTADO", "SENTADA"]): estado_vic = "SENTADA/O"
+    elif any(x in texto_u for x in ["CAMINANDO", "PIE"]): estado_vic = "CAMINANDO"
+    elif any(x in texto_u for x in ["DURMIENDO", "PERNOCTANDO"]): estado_vic = "DURMIENDO"
+    elif any(x in texto_u for x in ["CONDUCIENDO", "MANEJANDO", "VEHICULO"]): estado_vic = "CONDUCIENDO"
+
+    # Detectar acción del delincuente
+    accion_del = "SUSTRAE ESPECIES" # Por defecto
+    if "FORCEJEA" in texto_u: accion_del = "FORCEJEA CON LA VÍCTIMA"
+    elif "INTENTA" in texto_u: accion_del = "INTENTA SUSTRAER ESPECIES"
+    elif "LOGRA" in texto_u: accion_del = "LOGRA SU COMETIDO"
+
+    # Construcción final del Modus Operandi
+    modus_del = f"VÍCTIMA SE ENCONTRABA {estado_vic} EN {lugar_ocurrencia_lugar}, MOMENTOS EN QUE {gen_del} SE ACERCA Y {accion_del}, QUIEN SE DESPLAZABA EN {medio} PARA LUEGO DARSE A LA FUGA."
     return tipificacion, tramo_hora, lugar_ocurrencia, gen_afectado, edad_rango, lugar_ocurrencia_lugar, especie_sust, gen_del, edad_del, caract, medio, modus.upper()
 
 # --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA JURÍDICA TOTAL) ---
