@@ -3,6 +3,12 @@ import pandas as pd
 import re
 from datetime import datetime
 
+# --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
+def extract_value(text, pattern):
+    """Extrae valores específicos usando regex para FRIDAY."""
+    match = re.search(pattern, text, re.IGNORECASE)
+    return match.group(1).strip() if match else None
+
 # --- 1. CONFIGURACIÓN VISUAL FRIDAY ---
 st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
 st.markdown("""
@@ -154,7 +160,7 @@ def procesar_relato_ia(texto):
         f"{descubrimiento} NOTÓ QUE SUJETOS DESCONOCIDOS {accion_v} {especie_sust}, "
         f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
     )
-    
+
 # --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA JURÍDICA TOTAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
