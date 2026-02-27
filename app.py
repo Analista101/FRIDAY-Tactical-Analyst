@@ -63,16 +63,10 @@ def procesar_relato_ia(texto):
     dir_match = re.search(r'DIRECCIÓN\s?:\s?([^\n\r]+)', texto_u)
     lugar_ocurrencia = dir_match.group(1).strip() if dir_match else "RUTA 68"
 
-    # PERFIL VÍCTIMA
-
-   # 1. Género del Afectado
-    if re.search(r'SEXO\s?:\s?MASCULINO', texto_u):
+    # PERFIL VÍCTIMA (PRIMER AFECTADO)
+    if re.search(r'SEXO\s?:\s?MASCULINO', texto_u) or "SR. " in texto_u:
         gen_afectado = "MASCULINO"
-    elif re.search(r'SEXO\s?:\s?FEMENINO', texto_u):
-        gen_afectado = "FEMENINO"
-    elif any(x in texto_u for x in ["SR. ", "VÍCTIMA MASCULINA"]):
-        gen_afectado = "MASCULINO"
-    elif any(x in texto_u for x in ["SRA. ", "SRTA. ", "VÍCTIMA FEMENINA"]):
+    elif re.search(r'SEXO\s?:\s?FEMENINO', texto_u) or "SRA. " in texto_u:
         gen_afectado = "FEMENINO"
     else:
         gen_afectado = "NO INDICA"
@@ -87,17 +81,16 @@ def procesar_relato_ia(texto):
     
     # TIPO DE LUGAR
     lugar_ocurrencia_lugar = "VIA PUBLICA"
-    if any(x in texto_u for x in ["SERVICENTRO", "ESTACION DE SERVICIO", "SHELL", "COPEC"]): lugar_ocurrencia_lugar= "SERVICENTRO"
-    elif "DOMICILIO" in texto_u: lugar_ocurrencia_lugar = "DOMICILIO PARTICULAR"
+    if any(x in texto_u for x in ["SERVICENTRO", "ESTACION DE SERVICIO", "SHELL", "COPEC"]): 
+        lugar_ocurrencia_lugar = "SERVICENTRO"
+    elif "DOMICILIO" in texto_u: 
+        lugar_ocurrencia_lugar = "DOMICILIO PARTICULAR"
 
-  # --- 3. EXTRACCIÓN DE ESPECIES (LÓGICA BASADA EN BIENES SUSTRAIDOS) ---
+    # --- 3. EXTRACCIÓN DE ESPECIES (LÓGICA BASADA EN BIENES SUSTRAIDOS) ---
     items = []
-    
-    # Buscamos el segmento específico en el relato para mayor precisión
     segmento_especies = re.search(r'(?:BIENES SUSTRAIDOS|ESPECIES SUSTRAIDAS|SUSTRACCION DE).*?(?=TESTIGOS|AVALUADOS|CITACION|$)', texto_u, re.DOTALL)
     texto_especies = segmento_especies.group(0) if segmento_especies else texto_u
 
-    # Detección inteligente por palabras clave en el segmento
     if "COMPUTADOR" in texto_especies or "NOTEBOOK" in texto_especies:
         marca_pc = extract_value(texto_especies, r'MARCA\s+([A-Z]+)') or "LENOVO"
         items.append(f"01 COMPUTADOR PORTATIL {marca_pc}")
@@ -111,23 +104,22 @@ def procesar_relato_ia(texto):
     if "MOCHILA" in texto_especies: items.append("01 MOCHILA")
     if "MEDICAMENTOS" in texto_especies: items.append("MEDICAMENTOS VARIOS")
     
-    # Manejo de vehículos si el delito es robo de vehículo
-    if "VEHICULO PARTICULAR" in texto_u and "ROBO DE VEHICULO" in tipificacion:
-        items.append(f"VEHICULO PARTICULAR MARCA {marca_v} MODELO {modelo_v} PATENTE {patente_v}")
+    if "VEHICULO" in texto_u:
+        marca_v = extract_value(texto_u, r'MARCA\s+([A-Z]+)') or "NO INDICADA"
+        patente_v = extract_value(texto_u, r'PATENTE\s+([A-Z0-9\-]+)') or "S/P"
+        if "ROBO DE VEHICULO" in tipificacion:
+            items.append(f"VEHICULO PARTICULAR MARCA {marca_v} PATENTE {patente_v}")
 
-    # Resultado final para la tabla
     especie_sust = " / ".join(items) if items else "ACCESORIOS VARIOS"
 
-  # PERFIL DELINCUENTE
+    # PERFIL DELINCUENTE
     gen_del = "MASCULINO" if any(x in texto_u for x in ["SUJETO", "INDIVIDUO", "HOMBRE"]) else "NO INDICA"
     edad_del = "NO INDICA"
     caract = "VESTIMENTA OSCURA" if "OSCURA" in texto_u else "NO INDICA"
-    medio = "VEHICULO PARTICULAR" if "VEHICULO PARTICULAR" in texto_u else "A PIE"
+    medio = "VEHICULO" if "VEHICULO" in texto_u and "A PIE" not in texto_u else "A PIE"
 
-# --- 4. MOTOR DE RESUMEN TÁCTICO (FRIDAY INTERPRETATIVO) ---
-    
-    # A. Análisis del Estado de la Víctima (Dinámico)
-    if any(x in texto_u for x in ["ESTACIONADO", "DETENIDO", "APARCADO"]):
+    # --- 4. MOTOR DE RESUMEN TÁCTICO (FRIDAY INTERPRETATIVO) ---
+    if any(x in texto_u for x in ["ESTACIONADO", "DETENIDO", "APARCADO", "DEJO SU"]):
         estado_v = "MANTENÍA SU VEHÍCULO ESTACIONADO"
     elif any(x in texto_u for x in ["CONDUCIENDO", "CIRCULANDO", "MANEJANDO"]):
         estado_v = "SE DESPLAZABA EN SU VEHÍCULO"
@@ -136,30 +128,26 @@ def procesar_relato_ia(texto):
     else:
         estado_v = "SE ENCONTRABA"
 
-    # B. Análisis de la Acción del Delincuente (Sinónimos de Fuerza/Intimidación)
     if any(x in texto_u for x in ["FRACTURARON", "ROPIERON", "QUEBRARON", "VIDRIO"]):
         accion_v = "TRAS FRACTURAR UN VENTANAL DEL MÓVIL, SUSTRAJERON"
     elif any(x in texto_u for x in ["INTIMIDÓ", "AMENAZÓ", "ARMA"]):
         accion_v = "MEDIANTE INTIMIDACIÓN, LOGRARON SUSTRAER"
     elif any(x in texto_u for x in ["GOLPEÓ", "AGREDIÓ", "VIOLENCIA"]):
         accion_v = "TRAS AGREDIR FÍSICAMENTE A LA VÍCTIMA, SE APODERARON DE"
-    elif "ABIERTA" in texto_u:
-        accion_v = "APROVECHANDO QUE LA PROPIEDAD SE ENCONTRABA ABIERTA, SUSTRAJERON"
     else:
         accion_v = "PROCEDIERON A LA SUSTRACCIÓN DE"
 
-    # C. Análisis del Descubrimiento/Contexto
     descubrimiento = "AL REGRESAR AL LUGAR"
     if "PERCATANDOSE" in texto_u: descubrimiento = "AL PERCATARSE DE LA SITUACIÓN"
     elif "INFORMANDOLE" in texto_u: descubrimiento = "TRAS SER ALERTADO POR TERCEROS"
 
-    # D. Ensamblaje del Modus Operandi (Resumen Táctico)
-    # Ejemplo basado en Guillermo Soto:
     mo_final = (
         f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {estado_v} EN {lugar_ocurrencia_lugar}, "
         f"{descubrimiento} NOTÓ QUE SUJETOS DESCONOCIDOS {accion_v} {especie_sust}, "
-        f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+        f"PARA POSTERIORMENTE DARSE A LA FUGA."
     )
+
+    return tipificacion, tramo_hora, lugar_ocurrencia, gen_afectado, edad_rango, lugar_ocurrencia_lugar, especie_sust, gen_del, edad_del, caract, medio, mo_final.upper()
 
 # --- 3. TERMINAL DE COMANDO FRIDAY (INTELIGENCIA JURÍDICA TOTAL) ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
@@ -167,39 +155,29 @@ st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIG
 with st.container():
     st.markdown('<div class="ia-box"><b>PROTOCOLOS JARVIS:</b> Señor, la base de datos legal está totalmente integrada. No habrá más respuestas incompletas. Pregunte lo que necesite.</div>', unsafe_allow_html=True)
     
-    # Campo de entrada de texto
     consulta = st.text_input("CONSULTA LEGAL / PROCEDIMENTAL:", key="cmd_friday")
     
     if st.button("🛡️ EJECUTAR ANÁLISIS JURÍDICO EXPERTO"):
         if consulta:
-            # Lógica de respuesta basada en conocimiento jurídico real (Chile)
             c = consulta.upper()
-            
             if "ATROPELLA" in c and "ANIMAL" in c:
                 res = """<b>INFORME JURÍDICO DIRECTO:</b><br><br>
                 Efectivamente, señor, esto constituye <b>DELITO</b> en Chile bajo dos aristas legales:<br><br>
-                1. <b>LEY 21.020 (Ley Cholito) / ART. 291 BIS CÓDIGO PENAL:</b> El abandono de un animal herido tras un atropello es considerado <b>Crueldad o Maltrato Animal</b>. Si no se presta auxilio, se presume la intención de abandono.<br>
-                2. <b>PENALIDAD:</b> Presidio menor en su grado mínimo a medio (61 días a 3 años) y multa de 2 a 30 UTM, además de la inhabilidad perpetua para la tenencia de animales.<br>
-                3. <b>LEY DE TRÁNSITO (ART. 183):</b> Obliga a detener la marcha y dar cuenta a la autoridad ante cualquier accidente con daños. La fuga agrava la falta.<br><br>
-                <b>PROCEDIMIENTO CARABINEROS:</b> Detención inmediata si hay flagrancia o denuncia de oficio al Ministerio Público."""
-            
+                1. <b>LEY 21.020 (Ley Cholito) / ART. 291 BIS CÓDIGO PENAL:</b> El abandono de un animal herido tras un atropello es considerado <b>Crueldad o Maltrato Animal</b>.<br>
+                2. <b>PENALIDAD:</b> Presidio menor en su grado mínimo a medio y multa, además de la inhabilidad perpetua para tenencia.<br>
+                3. <b>LEY DE TRÁNSITO (ART. 183):</b> Obliga a detener la marcha y dar cuenta a la autoridad."""
             elif "ZOPICLONA" in c:
                 res = """<b>INFORME JURÍDICO DIRECTO:</b><br><br>
-                La Zopiclona es una sustancia controlada por la <b>Ley 20.000 (Ley de Drogas)</b>.<br><br>
-                1. <b>SIN RECETA:</b> Su porte sin prescripción médica se sanciona como <b>Microtráfico (Art. 4)</b> o falta de <b>Consumo/Porte (Art. 50)</b> según la cantidad.<br>
-                2. <b>CONDUCCIÓN:</b> Si el sujeto conduce bajo sus efectos, comete el delito del <b>Art. 196 de la Ley 18.290</b> (Presidio y suspensión de licencia)."""
-            
+                Sustancia controlada por la <b>Ley 20.000</b>.<br><br>
+                1. <b>SIN RECETA:</b> Sancionado como Microtráfico o falta de Consumo/Porte según cantidad.<br>
+                2. <b>CONDUCCIÓN:</b> Delito del Art. 196 de la Ley 18.290."""
             else:
-                # FRIDAY genera respuesta jurídica real para cualquier otro caso
-                res = f"<b>INFORME JURÍDICO DIRECTO:</b><br><br>Señor, respecto a '{consulta}', he verificado el Código Penal y la jurisprudencia de Carabineros. Este acto se tipifica bajo la normativa vigente de seguridad pública. [FRIDAY: Indique el agravante para calcular la pena exacta en la escala de grados]."
-
+                res = f"<b>INFORME JURÍDICO DIRECTO:</b><br><br>Señor, respecto a '{consulta}', he verificado la normativa vigente de seguridad pública según el Código Penal."
             st.markdown(f'<div class="legal-output-black">{res}</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
 # --- 4. INTERFAZ ---
-st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
-
 t1, t2, t3, t4 = st.tabs(["📄 ACTA STOP", "📈 STOP TRIMESTRAL", "📍 INFORME GEO", "📋 CARTA DE SITUACIÓN"])
 
 with t1:
@@ -223,7 +201,6 @@ with t2:
         ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
         ct2.text_input("Nombre Asistente", value="INDICAR NOMBRE")
         ct2.text_input("Grado Asistente", value="INDICAR GRADO")
-        st.markdown('**🖋️ PIE DE FIRMA**')
         st.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
         st.text_input("Grado Analista", value="C.P.R. Analista Social")
         st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
@@ -241,10 +218,7 @@ with t3:
         col3.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
         col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
         col3.text_input("Cuadrante", value="231")
-        st.markdown("---")
-        cg1, cg2 = st.columns(2)
-        cg1.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_geo")
-        cg2.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx', 'csv'], key="excel_geo")
+        st.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_geo")
         st.form_submit_button("🛡️ EJECUTAR INFORME GEO")
         
 with t4:
