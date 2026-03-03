@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from docxtpl import DocxTemplate
 import io
+from docx.shared import Mm
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
@@ -191,14 +192,33 @@ with t3:
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
     if submit_geo:
+        if not mapa_img or not excel_geo:
+            st.error("❌ FRIDAY requiere el Mapa SAIT y el Excel para la conclusión de IA.")
+            return
+
         try:
-            # 1. Cargar la plantilla física (Debes tener el archivo INFORME GEO.docx en la misma carpeta)
-            doc = DocxTemplate("INFORME GEO.docx")
+            # Procesamiento de datos para la IA
+            df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
+            total_dmcs = len(df)
+            delito_frecuente = df['Delito'].mode()[0] if 'Delito' in df.columns else "DMCS"
+            dia_max = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado"
+            hora_max = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado"
+
+            # --- MOTOR DE CONCLUSIÓN IA FRIDAY (RESTAURADO) ---
+            # Esta es la lógica que analiza el riesgo según el volumen de datos
+            nivel_riesgo = "ALTO" if total_dmcs > 10 else "MODERADO"
             
-            # 2. Procesar fechas del periodo
+            conclusion_ia = f"""Tras el análisis georreferencial del cuadrante {cuadrante}, se identifica un nivel de riesgo {nivel_riesgo} en las inmediaciones de {domicilio}. 
+            Se observa que la mayor concentración de eventos ({total_dmcs} casos) corresponde a {delito_frecuente}, con una ventana de vulnerabilidad crítica los días {dia_max} durante el bloque horario de {hora_max}. 
+            Dada la proximidad de los eventos al punto de interés (radio 300 mts), se recomienda al mando disponer patrullajes preventivos focalizados y controles de identidad aleatorios para mitigar el desplazamiento delictual detectado."""
+
+            # 2. CARGAR PLANTILLA Y MAPA
+            doc = DocxTemplate("INFORME GEO.docx")
+            img_sait = InlineImage(doc, mapa_img, width=Mm(150))
+
+            # 3. PREPARAR CONTEXTO PARA LA PLANTILLA
             p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
             
-            # 3. Preparar el contexto para las etiquetas {{ }} del Word
             contexto = {
                 "domicilio": domicilio,
                 "jurisdiccion": subcomisaria,
@@ -211,11 +231,30 @@ with t3:
                 "periodo_inicio": p_inicio,
                 "periodo_fin": p_fin,
                 "cuadrante": cuadrante,
-                "total_dmcs": "14",  # Aquí puedes conectar el análisis de Excel
-                "dia_max": "VIERNES",
-                "hora_max": "20:00 A 22:00",
-                "conclusion_ia": "Se recomienda mantener patrullajes preventivos dinámicos en el sector."
+                "mapa": img_sait,
+                "total_dmcs": total_dmcs,
+                "tabla": df.value_counts('Delito').reset_index().to_dict('records'),
+                "dia_max": dia_max,
+                "hora_max": hora_max,
+                "conclusion_ia": conclusion_ia # <--- AQUÍ SE INSERTA LA CONCLUSIÓN
             }
+
+            # 4. RENDER Y DESCARGA
+            doc.render(contexto)
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
+
+            st.success("✅ Informe generado con Conclusión de IA estratégica.")
+            st.download_button(
+                label="📥 DESCARGAR INFORME GEO COMPLETO",
+                data=output,
+                file_name=f"Informe_Geo_{cuadrante}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
+        except Exception as e:
+            st.error(f"Error en el motor de IA: {e}")
 
             # 4. Renderizar y guardar en memoria para evitar que se dañe el archivo
             doc.render(contexto)
