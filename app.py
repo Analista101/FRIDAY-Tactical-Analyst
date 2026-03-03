@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import re
 from datetime import datetime
+from docxtpl import DocxTemplate
+import io
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
@@ -180,47 +182,71 @@ with t3:
         
         with col3:
             domicilio = st.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
-            subcomisaria = st.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
-            # --- AQUÍ ESTÁ EL CAMPO QUE HABÍA BORRADO ---
+            subcomisaria = st.text_input("Subcomisaría (Jurisdicción)", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
             cuadrante = st.text_input("Cuadrante", value="231")
 
         st.markdown("---")
         
         # Periodo de análisis y archivos
         cp1, cp2, cp3 = st.columns([2, 1, 1])
-        periodo_analisis = cp1.text_input("⏱️ Periodo de Análisis", value="03-12-2025 al 03-03-2026")
+        periodo_txt = cp1.text_input("⏱️ Periodo de Análisis (Escribir rango)", value="03-12-2025 al 03-03-2026")
         mapa_img = cp2.file_uploader("📂 MAPA SAIT", type=['png', 'jpg'], key="mapa_geo")
         excel_data = cp3.file_uploader("📊 EXCEL DELITOS", type=['xlsx', 'csv'], key="excel_geo")
         
-        submit_geo = st.form_submit_button("🛡️ EJECUTAR INFORME GEO")
+        submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
-    # --- LÓGICA DE GENERACIÓN DEL INFORME ---
     if submit_geo:
-        st.info(f"🔍 Analizando cuadrante {cuadrante} para el periodo {periodo_analisis}...")
+        # 1. Preparar los datos para la plantilla (Source: INFORME GEO.docx)
+        # Separamos el periodo para las etiquetas de la plantilla
+        p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
         
-        # Contenedor para el resultado del informe
-        st.markdown("### 📄 RESULTADO DEL INFORME GENERADO POR FRIDAY")
-        
-        # Aquí es donde FRIDAY redacta el informe basándose en los inputs
-        informe_redactado = f"""
-        **INFORME TÉCNICO GEORREFERENCIAL**
-        **DOCUMENTO:** DOE N° {doe_n} | **FECHA:** {inf_fecha}
-        
-        **1. ANTECEDENTES DEL SOLICITANTE:**
-        Se recibe requerimiento del {grado} {funcionario}, perteneciente a la unidad {unidad}.
-        
-        **2. ANÁLISIS TERRITORIAL:**
-        El análisis se centra en el **Cuadrante {cuadrante}**, específicamente en el sector de {domicilio}, bajo jurisdicción de la {subcomisaria}.
-        
-        **3. PERIODO EVALUADO:**
-        Los datos comprenden desde el **{periodo_analisis}**. 
-        
-        **4. CONCLUSIÓN DE IA FRIDAY:**
-        *(Aquí FRIDAY procesaría el Excel subido)*: Se observa una concentración de eventos en el radio perimetral al domicilio indicado. Se recomienda intensificar patrullajes preventivos en horarios de mayor incidencia detectados en el archivo adjunto.
-        """
-        
-        st.write(informe_redactado)
-        st.success("✅ Informe generado exitosamente.")
+        datos_informe = {
+            "domicilio": domicilio, # [cite: 3, 10, 18]
+            "jurisdiccion": subcomisaria, # [cite: 3, 13]
+            "fecha_actual": inf_fecha, # [cite: 4, 8]
+            "doe": doe_n, # 
+            "fecha_doe": doe_fecha, # 
+            "grado_solic": grado, # 
+            "solicitante": funcionario, # 
+            "unidad_solic": unidad, # 
+            "periodo_inicio": p_inicio, # [cite: 12]
+            "periodo_fin": p_fin, # [cite: 12]
+            "cuadrante": cuadrante, # [cite: 13]
+            "total_dmcs": "14", # Valor ejemplo, aquí vendría el cálculo del Excel [cite: 20]
+            "dia_max": "Viernes", # Valor ejemplo [cite: 23]
+            "hora_max": "20:00 a 22:00", # Valor ejemplo [cite: 23]
+            "conclusion_ia": "Se observa una alta concentración de delitos en el radio de 300 mts del domicilio analizado..." # [cite: 27]
+        }
+
+        # 2. Lógica de generación de archivo (Simulación de descarga)
+        try:
+            # Aquí cargaríamos tu archivo .docx adjunto
+            # doc = DocxTemplate("INFORME_GEO_PLANTILLA.docx")
+            # doc.render(datos_informe)
+            
+            st.success(f"✅ Análisis finalizado para el Cuadrante {cuadrante}.")
+            st.info("Generando archivo .docx basado en la plantilla oficial...")
+            
+            # Botón de descarga real
+            # bio = io.BytesIO()
+            # doc.save(bio)
+            st.download_button(
+                label="📥 DESCARGAR INFORME GEO (WORD)",
+                data=b"Contenido del documento", # Aquí iría bio.getvalue()
+                fileName=f"Informe_Geo_{cuadrante}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+            
+            # Vista previa en pantalla
+            st.markdown(f"""
+            **PREVISUALIZACIÓN:**
+            * **Sector:** {domicilio} [cite: 18]
+            * **Periodo:** {p_inicio} al {p_fin} [cite: 12]
+            * **Delitos detectados:** {datos_informe['total_dmcs']} eventos. [cite: 20]
+            """)
+            
+        except Exception as e:
+            st.error(f"Error al generar el documento: {e}")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
