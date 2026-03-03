@@ -197,45 +197,51 @@ with t3:
             st.stop()
 
         try:
-            # 1. Cargar Plantilla Oficial [cite: 1, 7]
+            # 1. Cargar Plantilla Oficial
             doc = DocxTemplate("INFORME GEO.docx")
 
-            # 2. Procesamiento de Datos del Excel [cite: 15, 20]
+            # 2. Procesamiento de Datos (Nombres de columnas según tu archivo CSV)
             df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
-            total_dmcs = len(df)
-            delito_frec = df['Delito'].mode()[0] if 'Delito' in df.columns else "D.M.C.S."
-            dia_frec = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado"
-            hora_frec = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado"
+            
+            # Ajuste de nombres de columnas según tu base de datos 
+            col_delito = 'DELITO' 
+            col_dia = 'DIA'
+            col_rango = 'RANGO HORA'
 
-            # 3. Generación de la Conclusión Estratégica [cite: 26, 27]
+            total_dmcs = len(df)
+            delito_frec = df[col_delito].mode()[0] if col_delito in df.columns else "D.M.C.S."
+            dia_frec = df[col_dia].mode()[0] if col_dia in df.columns else "indeterminado"
+            hora_frec = df[col_rango].mode()[0] if col_rango in df.columns else "indeterminado"
+
+            # 3. Generación de la Conclusión Estratégica
             riesgo_nivel = "ELEVADO" if total_dmcs > 12 else "MODERADO"
             analisis_ia = (f"Tras el análisis georreferencial, se determina un nivel de riesgo {riesgo_nivel} "
                           f"en un radio de 300 mts de {domicilio}. Se registran {total_dmcs} eventos de {delito_frec}, "
                           f"con mayor incidencia los días {dia_frec} en el tramo {hora_frec}. "
                           "Se recomienda intensificar la vigilancia preventiva en el sector.")
 
-            # 4. Preparar Contexto para el Word [cite: 10, 12, 13]
+            # 4. Preparar Contexto para el Word
             p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
-            imagen_sait = InlineImage(doc, mapa_img, width=Mm(150)) # [cite: 17, 19]
+            imagen_sait = InlineImage(doc, mapa_img, width=Mm(150))
 
             contexto = {
-                "domicilio": domicilio, # [cite: 3]
-                "jurisdiccion": subcomisaria, # [cite: 13]
-                "fecha_actual": inf_fecha, # [cite: 4]
-                "doe": doe_n, # [cite: 10]
-                "fecha_doe": doe_fecha, # [cite: 10]
-                "grado_solic": grado, # [cite: 10]
-                "solicitante": funcionario, # [cite: 10]
-                "unidad_solic": unidad, # [cite: 10]
-                "periodo_inicio": p_ini, # [cite: 12]
-                "periodo_fin": p_fin, # [cite: 12]
-                "cuadrante": cuadrante, # [cite: 13]
-                "mapa": imagen_sait, # [cite: 17]
-                "total_dmcs": total_dmcs, # [cite: 20]
-                "tabla": df.value_counts('Delito').reset_index().to_dict('records'), # [cite: 21]
-                "dia_max": dia_frec, # [cite: 23]
-                "hora_max": hora_frec, # [cite: 23]
-                "conclusion_ia": analisis_ia # [cite: 27]
+                "domicilio": domicilio,
+                "jurisdiccion": subcomisaria,
+                "fecha_actual": inf_fecha,
+                "doe": doe_n,
+                "fecha_doe": doe_fecha,
+                "grado_solic": grado,
+                "solicitante": funcionario,
+                "unidad_solic": unidad,
+                "periodo_inicio": p_ini,
+                "periodo_fin": p_fin,
+                "cuadrante": cuadrante,
+                "mapa": imagen_sait,
+                "total_dmcs": total_dmcs,
+                "tabla": df[col_delito].value_counts().reset_index().to_dict('records'),
+                "dia_max": dia_frec,
+                "hora_max": hora_frec,
+                "conclusion_ia": analisis_ia
             }
 
             # 5. Renderizado y Descarga
@@ -244,7 +250,7 @@ with t3:
             doc.save(output)
             output.seek(0)
 
-            st.success("✅ Informe generado exitosamente por el motor FRIDAY.")
+            st.success("✅ Informe generado exitosamente con los datos de tu base.")
             st.download_button(
                 label="📥 DESCARGAR INFORME GEO",
                 data=output,
