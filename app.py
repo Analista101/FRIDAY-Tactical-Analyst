@@ -187,66 +187,54 @@ with t3:
 
         st.markdown("---")
         
-        # Periodo de análisis y archivos
         cp1, cp2, cp3 = st.columns([2, 1, 1])
-        periodo_txt = cp1.text_input("⏱️ Periodo de Análisis (Escribir rango)", value="03-12-2025 al 03-03-2026")
+        periodo_txt = cp1.text_input("⏱️ Periodo de Análisis", value="03-12-2025 al 03-03-2026")
         mapa_img = cp2.file_uploader("📂 MAPA SAIT", type=['png', 'jpg'], key="mapa_geo")
         excel_data = cp3.file_uploader("📊 EXCEL DELITOS", type=['xlsx', 'csv'], key="excel_geo")
         
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
     if submit_geo:
-        # 1. Preparar los datos para la plantilla (Source: INFORME GEO.docx)
-        # Separamos el periodo para las etiquetas de la plantilla
+        # Separar el periodo para la plantilla [cite: 12]
         p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
         
-        datos_informe = {
-            "domicilio": domicilio, # [cite: 3, 10, 18]
-            "jurisdiccion": subcomisaria, # [cite: 3, 13]
-            "fecha_actual": inf_fecha, # [cite: 4, 8]
-            "doe": doe_n, # 
-            "fecha_doe": doe_fecha, # 
-            "grado_solic": grado, # 
-            "solicitante": funcionario, # 
-            "unidad_solic": unidad, # 
-            "periodo_inicio": p_inicio, # [cite: 12]
-            "periodo_fin": p_fin, # [cite: 12]
-            "cuadrante": cuadrante, # [cite: 13]
-            "total_dmcs": "14", # Valor ejemplo, aquí vendría el cálculo del Excel [cite: 20]
-            "dia_max": "Viernes", # Valor ejemplo [cite: 23]
-            "hora_max": "20:00 a 22:00", # Valor ejemplo [cite: 23]
-            "conclusion_ia": "Se observa una alta concentración de delitos en el radio de 300 mts del domicilio analizado..." # [cite: 27]
+        # Mapeo exacto a las etiquetas de tu documento [cite: 3, 10, 12, 13]
+        contexto = {
+            "domicilio": domicilio,
+            "jurisdiccion": subcomisaria,
+            "fecha_actual": inf_fecha,
+            "doe": doe_n,
+            "fecha_doe": doe_fecha,
+            "grado_solic": grado,
+            "solicitante": funcionario,
+            "unidad_solic": unidad,
+            "periodo_inicio": p_inicio,
+            "periodo_fin": p_fin,
+            "cuadrante": cuadrante,
+            "total_dmcs": "14", # Esto se calculará del Excel después
+            "dia_max": "Viernes",
+            "hora_max": "20:00 a 22:00",
+            "conclusion_ia": "Se sugiere mantener patrullajes preventivos en el radio de 300 mts."
         }
 
-        # 2. Lógica de generación de archivo (Simulación de descarga)
         try:
-            # Aquí cargaríamos tu archivo .docx adjunto
-            # doc = DocxTemplate("INFORME_GEO_PLANTILLA.docx")
-            # doc.render(datos_informe)
-            
-            st.success(f"✅ Análisis finalizado para el Cuadrante {cuadrante}.")
-            st.info("Generando archivo .docx basado en la plantilla oficial...")
-            
-            # Botón de descarga real
+            # Lógica para procesar la plantilla .docx
+            # doc = DocxTemplate("INFORME_GEO.docx") 
+            # doc.render(contexto)
             # bio = io.BytesIO()
             # doc.save(bio)
+            
+            st.success(f"✅ Informe preparado para el Cuadrante {cuadrante}")
+            
+            # CORRECCIÓN DEL ERROR: file_name en minúsculas
             st.download_button(
                 label="📥 DESCARGAR INFORME GEO (WORD)",
-                data=b"Contenido del documento", # Aquí iría bio.getvalue()
-                fileName=f"Informe_Geo_{cuadrante}.docx",
+                data=b"Simulacion de archivo", # Aquí va bio.getvalue()
+                file_name=f"Informe_Geo_C{cuadrante}.docx", 
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
-            
-            # Vista previa en pantalla
-            st.markdown(f"""
-            **PREVISUALIZACIÓN:**
-            * **Sector:** {domicilio} [cite: 18]
-            * **Periodo:** {p_inicio} al {p_fin} [cite: 12]
-            * **Delitos detectados:** {datos_informe['total_dmcs']} eventos. [cite: 20]
-            """)
-            
         except Exception as e:
-            st.error(f"Error al generar el documento: {e}")
+            st.error(f"Error técnico: {e}")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
