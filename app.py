@@ -166,13 +166,14 @@ with t2:
         
         st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
 
-def crear_imagen_tabla_pro(df, nombre_archivo, ancho_fig=10):
-    # Ajuste dinámico de altura para evitar cortes
-    alto_fig = len(df) * 0.5 + 1.0 
-    fig, ax = plt.subplots(figsize=(ancho_fig, alto_fig))
+# 1. FUNCIÓN DE TABLA MEJORADA (SIN CORTES Y DISEÑO INSTITUCIONAL)
+def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
+    # Ajuste dinámico de altura: 0.5 pulgadas por fila + espacio para encabezado
+    alto_pulgadas = (len(df) * 0.5) + 0.8
+    fig, ax = plt.subplots(figsize=(ancho_pulgadas, alto_pulgadas))
     ax.axis('off')
 
-    # Estética Institucional
+    # Creación de la tabla con colores institucionales
     tabla = ax.table(
         cellText=df.values,
         colLabels=df.columns,
@@ -181,86 +182,113 @@ def crear_imagen_tabla_pro(df, nombre_archivo, ancho_fig=10):
         colColours=['#D9D9D9'] * len(df.columns) # Gris institucional
     )
 
-    # Configuración de estilo
+    # Estilo de celdas
     tabla.auto_set_font_size(False)
     tabla.set_fontsize(11)
-    tabla.scale(1, 2) # Altura de celdas más espaciosa
+    tabla.scale(1, 2) # Aumenta la altura de las celdas para evitar que el texto choque
 
-    # Bordes y Negritas
+    # Aplicar bordes negros y negrita al encabezado
     for (row, col), cell in tabla.get_celld().items():
         cell.set_edgecolor('black')
-        cell.set_linewidth(1)
+        cell.set_linewidth(1.5)
         if row == 0:
             cell.set_text_props(weight='bold')
 
+    # Guardado con alta resolución y sin márgenes perdidos
     plt.savefig(nombre_archivo, bbox_inches='tight', dpi=200, pad_inches=0.1)
     plt.close()
 
-# --- DENTRO DEL FLUJO DE STREAMLIT ---
-if submit_geo:
-    if not mapa_img or not excel_geo:
-        st.error("Faltan archivos obligatorios.")
-        st.stop()
-
-    try:
-        # 1. CARGA DE DATOS
-        df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
+# --- ESTRUCTURA DE LA PESTAÑA ---
+with t3:
+    st.markdown('<div class="section-header">📍 INFORME GEO: GENERACIÓN PROFESIONAL</div>', unsafe_allow_html=True)
+    
+    with st.form("form_geo_final"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            doe_n = st.text_input("DOE N°", value="248812153")
+            doe_fecha = st.text_input("Fecha DOE", value="03-03-2026")
+            inf_fecha = st.text_input("Fecha Informe", value="03 de marzo de 2026")
+        with col2:
+            funcionario = st.text_input("Funcionario", value="JUAN ANDRES URRUTIA LOBOS")
+            grado = st.text_input("Grado", value="SARGENTO 2°")
+            unidad = st.text_input("Unidad", value="GRUPO DE ADIESTRAMIENTO CANINO")
+        with col3:
+            domicilio = st.text_input("Domicilio", value="PASAJE PILCOMAYO 8501")
+            subcomisaria = st.text_input("Subcomisaría", value="26A COMISARIA PUDAHUEL")
+            cuadrante = st.text_input("Cuadrante", value="232-A")
         
-        # TABLA DE DELITOS (FIGURA 2)
-        resumen_dmcs = df['DELITO'].value_counts().reset_index()
-        resumen_dmcs.columns = ['DELITOS DMCS', 'CANTIDAD']
-        crear_imagen_tabla_pro(resumen_dmcs, "t2_delitos.png", ancho_fig=12)
-
-        # TABLA DE TRAMOS (FIGURA 3) - Formato solicitado
-        resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
-        resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(12)
-        resumen_tramos.columns = ['DÍA CRÍTICO', 'TRAMO HORARIO', 'CANTIDAD']
-        crear_imagen_tabla_pro(resumen_tramos, "t3_tramos.png", ancho_fig=10)
-
-        # 2. IA DE PRECISIÓN (Cruce de datos exactos)
-        total_dmcs = len(df)
-        delito_top = resumen_dmcs.iloc[0]['DELITOS DMCS']
-        cant_top = resumen_dmcs.iloc[0]['CANTIDAD'] # CASOS REALES: 5
-        dia_top = df['DIA'].mode()[0]
-        hora_top = df['RANGO HORA'].mode()[0]
-
-        concl_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_dmcs} eventos DMCS. "
-                    f"El delito con mayor prevalencia es '{delito_top}' con {cant_top} casos confirmados. "
-                    f"La criticidad se concentra los días {dia_top} en el tramo {hora_top}. "
-                    f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
-
-        # 3. CONSTRUCCIÓN DEL DOCUMENTO
-        doc = DocxTemplate("INFORME GEO.docx")
+        cp1, cp2, cp3 = st.columns([2, 1, 1])
+        periodo_txt = cp1.text_input("Periodo", value="03-12-2025 al 03-03-2026")
+        mapa_img = cp2.file_uploader("SUBIR MAPA SAIT", type=['png', 'jpg'])
+        excel_geo = cp3.file_uploader("SUBIR EXCEL/CSV", type=['xlsx', 'csv'])
         
-        # Insertar como imágenes (Ajuste de ancho para centrado visual)
-        o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
-        o_t2 = InlineImage(doc, "t2_delitos.png", width=Mm(145))
-        o_t3 = InlineImage(doc, "t3_tramos.png", width=Mm(130))
+        # Variable definida dentro del scope del formulario
+        submit_geo = st.form_submit_button("🛡️ GENERAR INFORME GEO")
 
-        contexto = {
-            "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
-            "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
-            "solicitante": funcionario, "unidad_solic": unidad,
-            "periodo_inicio": periodo_txt.split(" al ")[0], "periodo_fin": periodo_txt.split(" al ")[1],
-            "cuadrante": cuadrante,
-            "mapa": o_mapa,
-            "total_dmcs": total_dmcs,
-            "tabla": o_t2,
-            "tabla_horarios": o_t3,
-            "dia_max": dia_top, "hora_max": hora_top,
-            "conclusion_ia": concl_ia
-        }
+    if submit_geo:
+        if not mapa_img or not excel_geo:
+            st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
+            st.stop()
 
-        doc.render(contexto)
-        output = io.BytesIO()
-        doc.save(output)
-        output.seek(0)
+        try:
+            # 1. PROCESAMIENTO DE DATOS
+            df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
+            
+            # FIGURA 2: TABLA DE DELITOS (Ajustada para nombres largos)
+            resumen_dmcs = df['DELITO'].value_counts().reset_index()
+            resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
+            crear_tabla_profesional(resumen_dmcs, "img_delitos.png", ancho_pulgadas=12)
 
-        st.success(f"✅ Informe para el {cuadrante} finalizado correctamente.")
-        st.download_button("📥 DESCARGAR INFORME OFICIAL", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+            # FIGURA 3: TRAMOS HORARIOS (Diseño según solicitado)
+            resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
+            resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(10)
+            resumen_tramos.columns = ['DÍA', 'TRAMO HORARIO', 'CANTIDAD']
+            crear_tabla_profesional(resumen_tramos, "img_tramos.png", ancho_pulgadas=10)
 
-    except Exception as e:
-        st.error(f"Error en FRIDAY: {e}")
+            # 2. IA: CONCLUSIÓN CON DATOS EXACTOS
+            total_casos = len(df)
+            delito_principal = resumen_dmcs.iloc[0]['TIPO DE DELITO (DMCS)']
+            cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD'] # CASOS REALES (5)
+            dia_frec = df['DIA'].mode()[0]
+            hora_frec = df['RANGO HORA'].mode()[0]
+
+            analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS en el periodo. "
+                          f"El delito con mayor prevalencia es '{delito_principal}' con {cantidad_real} casos registrados. "
+                          f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
+                          f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
+
+            # 3. GENERACIÓN DEL DOCUMENTO WORD
+            doc = DocxTemplate("INFORME GEO.docx")
+            
+            # Objetos de imagen con ancho controlado para centrado
+            o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
+            o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
+            o_tabla2 = InlineImage(doc, "img_tramos.png", width=Mm(130))
+
+            contexto = {
+                "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
+                "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
+                "solicitante": funcionario, "unidad_solic": unidad,
+                "periodo_inicio": periodo_txt.split(" al ")[0], "periodo_fin": periodo_txt.split(" al ")[1],
+                "cuadrante": cuadrante,
+                "mapa": o_mapa,
+                "total_dmcs": total_casos,
+                "tabla": o_tabla1,        # IMAGEN INSTITUCIONAL
+                "tabla_horarios": o_tabla2, # IMAGEN INSTITUCIONAL
+                "dia_max": dia_frec, "hora_max": hora_frec,
+                "conclusion_ia": analisis_ia
+            }
+
+            doc.render(contexto)
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
+
+            st.success("✅ Informe generado. Tablas incorporadas como imágenes de alta resolución.")
+            st.download_button("📥 DESCARGAR INFORME OFICIAL", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+
+        except Exception as e:
+            st.error(f"Error en el motor FRIDAY: {e}")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
