@@ -187,65 +187,58 @@ with t3:
         cp1, cp2, cp3 = st.columns([2, 1, 1])
         periodo_txt = cp1.text_input("⏱️ Periodo de Análisis", value="03-12-2025 al 03-03-2026")
         mapa_img = cp2.file_uploader("📂 MAPA SAIT", type=['png', 'jpg'], key="mapa_geo")
-        excel_data = cp3.file_uploader("📊 EXCEL DELITOS", type=['xlsx', 'csv'], key="excel_geo")
+        excel_geo = cp3.file_uploader("📊 EXCEL DELITOS", type=['xlsx', 'csv'], key="excel_geo")
         
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
     if submit_geo:
         if not mapa_img or not excel_geo:
-            st.error("❌ FRIDAY requiere el Mapa SAIT y el Excel para la conclusión de IA.")
-            return
+            st.warning("⚠️ FRIDAY requiere el Mapa y el Excel para generar el informe.")
+            st.stop() # <-- Esto reemplaza al return y evita el SyntaxError
 
         try:
-            # Procesamiento de datos para la IA
+            # 1. PROCESAMIENTO DE DATOS (EXCEL)
             df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
             total_dmcs = len(df)
+            
+            # Análisis para la Conclusión de IA
             delito_frecuente = df['Delito'].mode()[0] if 'Delito' in df.columns else "DMCS"
             dia_max = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado"
             hora_max = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado"
-
-            # --- MOTOR DE CONCLUSIÓN IA FRIDAY (RESTAURADO) ---
-            # Esta es la lógica que analiza el riesgo según el volumen de datos
-            nivel_riesgo = "ALTO" if total_dmcs > 10 else "MODERADO"
             
-            conclusion_ia = f"""Tras el análisis georreferencial del cuadrante {cuadrante}, se identifica un nivel de riesgo {nivel_riesgo} en las inmediaciones de {domicilio}. 
-            Se observa que la mayor concentración de eventos ({total_dmcs} casos) corresponde a {delito_frecuente}, con una ventana de vulnerabilidad crítica los días {dia_max} durante el bloque horario de {hora_max}. 
-            Dada la proximidad de los eventos al punto de interés (radio 300 mts), se recomienda al mando disponer patrullajes preventivos focalizados y controles de identidad aleatorios para mitigar el desplazamiento delictual detectado."""
+            # --- GENERACIÓN DE CONCLUSIÓN IA ---
+            nivel_riesgo = "ALTO" if total_dmcs > 10 else "MODERADO"
+            concl_ia = (f"Tras el análisis del cuadrante {cuadrante}, se identifica un nivel de riesgo {nivel_riesgo} "
+                        f"en las inmediaciones de {domicilio}. Se observa que la mayor concentración ({total_dmcs} casos) "
+                        f"corresponde a {delito_frecuente}, con mayor actividad los días {dia_max} en el tramo {hora_max}. "
+                        f"Se recomienda focalizar patrullajes en el radio de 300 mts del domicilio.")
 
             # 2. CARGAR PLANTILLA Y MAPA
             doc = DocxTemplate("INFORME GEO.docx")
             img_sait = InlineImage(doc, mapa_img, width=Mm(150))
 
-            # 3. PREPARAR CONTEXTO PARA LA PLANTILLA
+            # 3. PREPARAR DATOS (Contexto exacto de tu Word)
             p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
             
             contexto = {
-                "domicilio": domicilio,
-                "jurisdiccion": subcomisaria,
-                "fecha_actual": inf_fecha,
-                "doe": doe_n,
-                "fecha_doe": doe_fecha,
-                "grado_solic": grado,
-                "solicitante": funcionario,
-                "unidad_solic": unidad,
-                "periodo_inicio": p_inicio,
-                "periodo_fin": p_fin,
-                "cuadrante": cuadrante,
-                "mapa": img_sait,
+                "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
+                "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
+                "solicitante": funcionario, "unidad_solic": unidad,
+                "periodo_inicio": p_inicio, "periodo_fin": p_fin, "cuadrante": cuadrante,
+                "mapa": img_sait, # Inserta la imagen en {{ mapa }}
                 "total_dmcs": total_dmcs,
-                "tabla": df.value_counts('Delito').reset_index().to_dict('records'),
-                "dia_max": dia_max,
-                "hora_max": hora_max,
-                "conclusion_ia": conclusion_ia # <--- AQUÍ SE INSERTA LA CONCLUSIÓN
+                "tabla": df.value_counts('Delito').reset_index().to_dict('records'), # Para el bucle de la tabla
+                "dia_max": dia_max, "hora_max": hora_max,
+                "conclusion_ia": concl_ia # Inserta la conclusión en {{ conclusion_ia }}
             }
 
-            # 4. RENDER Y DESCARGA
+            # 4. RENDER Y MEMORIA
             doc.render(contexto)
             output = io.BytesIO()
             doc.save(output)
             output.seek(0)
 
-            st.success("✅ Informe generado con Conclusión de IA estratégica.")
+            st.success(f"✅ Informe GEO Nivel Prefectura listo para descarga.")
             st.download_button(
                 label="📥 DESCARGAR INFORME GEO COMPLETO",
                 data=output,
@@ -254,7 +247,7 @@ with t3:
             )
 
         except Exception as e:
-            st.error(f"Error en el motor de IA: {e}")
+            st.error(f"Error en el motor FRIDAY: {e}")
 
             # 4. Renderizar y guardar en memoria para evitar que se dañe el archivo
             doc.render(contexto)
