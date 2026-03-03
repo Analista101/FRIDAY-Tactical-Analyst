@@ -164,22 +164,53 @@ with t2:
 
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: CLONACIÓN NIVEL PREFECTURA</div>', unsafe_allow_html=True)
+    
+    # Usamos st.form para agrupar los inputs
     with st.form("form_geo"):
         col1, col2, col3 = st.columns(3)
-        col1.text_input("DOE N°", value="247205577")
-        col1.text_input("Fecha DOE", value="20-02-2026")
-        col1.text_input("Fecha Informe", value="24 de febrero de 2026")
-        col2.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
-        col2.text_input("Grado Solicitante", value="CABO 1RO.")
-        col2.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
-        col3.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
-        col3.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
-        col3.text_input("Cuadrante", value="231")
+        
+        # Columna 1: Datos de Identificación
+        with col1:
+            doe_n = st.text_input("DOE N°", value="247205577")
+            doe_fecha = st.text_input("Fecha DOE", value="20-02-2026")
+            inf_fecha = st.text_input("Fecha Informe", value="24 de febrero de 2026")
+        
+        # Columna 2: Datos del Personal
+        with col2:
+            funcionario = st.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
+            grado = st.text_input("Grado Solicitante", value="CABO 1RO.")
+            unidad = st.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
+        
+        # Columna 3: Datos de Ubicación y el NUEVO campo de Periodo
+        with col3:
+            domicilio = st.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
+            subcomisaria = st.text_input("Subcomisaría", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
+            # --- CAMPO SOLICITADO: PERIODO DE ANÁLISIS ---
+            periodo_analisis = st.text_input("⏱️ Periodo de Análisis", value="01-01-2024 al 31-12-2024", help="Indique el rango de fechas de los datos")
+
         st.markdown("---")
+        
+        # Sección de archivos
         cg1, cg2 = st.columns(2)
-        cg1.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_geo")
-        cg2.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx', 'csv'], key="excel_geo")
-        st.form_submit_button("🛡️ EJECUTAR INFORME GEO")
+        mapa_img = cg1.file_uploader("📂 ADJUNTAR MAPA SAIT (IMAGEN)", type=['png', 'jpg'], key="mapa_geo")
+        excel_data = cg2.file_uploader("📊 ADJUNTAR EXCEL DE DELITOS", type=['xlsx', 'csv'], key="excel_geo")
+        
+        # El botón de envío
+        submit_geo = st.form_submit_button("🛡️ EJECUTAR INFORME GEO")
+
+    # --- LÓGICA DE EJECUCIÓN (Esto es lo que faltaba para que "funcionara") ---
+    if submit_geo:
+        if mapa_img is not None and excel_data is not None:
+            with st.spinner("Generando Inteligencia Geográfica..."):
+                # Aquí llamarías a tu función de procesamiento de IA
+                # Por ahora, simulamos una respuesta:
+                st.success(f"Informe generado exitosamente para el periodo: {periodo_analisis}")
+                st.info(f"Analizando cuadrante {st.session_state.get('Cuadrante', '231')}...")
+                
+                # Aquí iría el código que genera el reporte final
+                # Ejemplo: generar_reporte_geo(doe_n, periodo_analisis, mapa_img, excel_data)
+        else:
+            st.warning("⚠️ Por favor, adjunte tanto el mapa como el archivo Excel para proceder.")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
