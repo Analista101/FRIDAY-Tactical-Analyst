@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 from datetime import datetime
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, InlineImage
 import io
 from docx.shared import Mm
 
@@ -169,6 +169,7 @@ with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: CLONACIÓN NIVEL PREFECTURA</div>', unsafe_allow_html=True)
     
     with st.form("form_geo"):
+        # ... (tus inputs de col1, col2, col3 se mantienen igual)
         col1, col2, col3 = st.columns(3)
         with col1:
             doe_n = st.text_input("DOE N°", value="247205577")
@@ -182,7 +183,7 @@ with t3:
             domicilio = st.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
             subcomisaria = st.text_input("Subcomisaría (Jurisdicción)", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
             cuadrante = st.text_input("Cuadrante", value="231")
-
+        
         st.markdown("---")
         cp1, cp2, cp3 = st.columns([2, 1, 1])
         periodo_txt = cp1.text_input("⏱️ Periodo de Análisis", value="03-12-2025 al 03-03-2026")
@@ -193,83 +194,61 @@ with t3:
 
     if submit_geo:
         if not mapa_img or not excel_geo:
-            st.warning("⚠️ FRIDAY requiere el Mapa y el Excel para generar el informe.")
-            st.stop() # <-- Esto reemplaza al return y evita el SyntaxError
+            st.warning("⚠️ Sube el Mapa y el Excel para que FRIDAY procese el informe.")
+            st.stop()
 
         try:
-            # 1. PROCESAMIENTO DE DATOS (EXCEL)
-            df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
-            total_dmcs = len(df)
-            
-            # Análisis para la Conclusión de IA
-            delito_frecuente = df['Delito'].mode()[0] if 'Delito' in df.columns else "DMCS"
-            dia_max = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado"
-            hora_max = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado"
-            
-            # --- GENERACIÓN DE CONCLUSIÓN IA ---
-            nivel_riesgo = "ALTO" if total_dmcs > 10 else "MODERADO"
-            concl_ia = (f"Tras el análisis del cuadrante {cuadrante}, se identifica un nivel de riesgo {nivel_riesgo} "
-                        f"en las inmediaciones de {domicilio}. Se observa que la mayor concentración ({total_dmcs} casos) "
-                        f"corresponde a {delito_frecuente}, con mayor actividad los días {dia_max} en el tramo {hora_max}. "
-                        f"Se recomienda focalizar patrullajes en el radio de 300 mts del domicilio.")
-
-            # 2. CARGAR PLANTILLA Y MAPA
+            # 1. Cargar Plantilla
             doc = DocxTemplate("INFORME GEO.docx")
-            img_sait = InlineImage(doc, mapa_img, width=Mm(150))
 
-            # 3. PREPARAR DATOS (Contexto exacto de tu Word)
-            p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
+            # 2. Procesar Datos (Excel)
+            df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
+            total_dmcs = len(df) [cite: 20]
+            delito_frec = df['Delito'].mode()[0] if 'Delito' in df.columns else "Delitos Varios"
+            dia_frec = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado" [cite: 23]
+            hora_frec = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado" [cite: 23]
+
+            # 3. Motor de Conclusión IA (Basado en tu formato) [cite: 26, 27]
+            riesgo = "ELEVADO" if total_dmcs > 12 else "MODERADO"
+            analisis_ia = (f"Se detecta un nivel de riesgo {riesgo} en el radio de 300 metros de {domicilio}. "
+                          f"El análisis de {total_dmcs} eventos muestra una recurrencia de {delito_frec}, "
+                          f"especialmente los días {dia_frec} en el tramo {hora_frec}. "
+                          "Se sugiere reforzar la presencia policial en los cuadrantes de aproximación.")
+
+            # 4. Preparar Contexto con Imagen [cite: 17, 21]
+            p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt) [cite: 12]
             
+            # Convertir imagen subida para el Word
+            imagen_word = InlineImage(doc, mapa_img, width=Mm(150)) [cite: 17]
+
             contexto = {
                 "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
                 "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
                 "solicitante": funcionario, "unidad_solic": unidad,
-                "periodo_inicio": p_inicio, "periodo_fin": p_fin, "cuadrante": cuadrante,
-                "mapa": img_sait, # Inserta la imagen en {{ mapa }}
+                "periodo_inicio": p_ini, "periodo_fin": p_fin, "cuadrante": cuadrante,
+                "mapa": imagen_word,
                 "total_dmcs": total_dmcs,
-                "tabla": df.value_counts('Delito').reset_index().to_dict('records'), # Para el bucle de la tabla
-                "dia_max": dia_max, "hora_max": hora_max,
-                "conclusion_ia": concl_ia # Inserta la conclusión en {{ conclusion_ia }}
+                "tabla": df.value_counts('Delito').reset_index().to_dict('records'),
+                "dia_max": dia_frec, "hora_max": hora_frec,
+                "conclusion_ia": analisis_ia
             }
 
-            # 4. RENDER Y MEMORIA
+            # 5. Generación de Archivo
             doc.render(contexto)
-            output = io.BytesIO()
-            doc.save(output)
-            output.seek(0)
+            bio = io.BytesIO()
+            doc.save(bio)
+            bio.seek(0)
 
-            st.success(f"✅ Informe GEO Nivel Prefectura listo para descarga.")
+            st.success("✅ Informe generado. Incluye Mapa, Tablas y Conclusión IA.")
             st.download_button(
-                label="📥 DESCARGAR INFORME GEO COMPLETO",
-                data=output,
+                label="📥 DESCARGAR INFORME TÁCTICO",
+                data=bio,
                 file_name=f"Informe_Geo_{cuadrante}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
         except Exception as e:
             st.error(f"Error en el motor FRIDAY: {e}")
-
-            # 4. Renderizar y guardar en memoria para evitar que se dañe el archivo
-            doc.render(contexto)
-            
-            output = io.BytesIO()
-            doc.save(output)
-            output.seek(0)
-            
-            st.success(f"✅ Informe para Cuadrante {cuadrante} generado correctamente.")
-            
-            # 5. Botón de descarga con datos REALES
-            st.download_button(
-                label="📥 DESCARGAR INFORME OFICIAL (WORD)",
-                data=output,
-                file_name=f"Informe_Geo_C{cuadrante}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
-            
-        except FileNotFoundError:
-            st.error("❌ No se encontró el archivo 'INFORME GEO.docx'. Asegúrate de que el nombre sea exacto.")
-        except Exception as e:
-            st.error(f"❌ Error al procesar el informe: {e}")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
