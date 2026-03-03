@@ -169,7 +169,6 @@ with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: CLONACIÓN NIVEL PREFECTURA</div>', unsafe_allow_html=True)
     
     with st.form("form_geo"):
-        # ... (tus inputs de col1, col2, col3 se mantienen igual)
         col1, col2, col3 = st.columns(3)
         with col1:
             doe_n = st.text_input("DOE N°", value="247205577")
@@ -194,56 +193,62 @@ with t3:
 
     if submit_geo:
         if not mapa_img or not excel_geo:
-            st.warning("⚠️ Sube el Mapa y el Excel para que FRIDAY procese el informe.")
+            st.warning("⚠️ FRIDAY requiere el Mapa y el Excel para procesar el informe.")
             st.stop()
 
         try:
-            # 1. Cargar Plantilla
+            # 1. Cargar Plantilla Oficial [cite: 1, 7]
             doc = DocxTemplate("INFORME GEO.docx")
 
-            # 2. Procesar Datos (Excel)
+            # 2. Procesamiento de Datos del Excel [cite: 15, 20]
             df = pd.read_excel(excel_geo) if excel_geo.name.endswith('xlsx') else pd.read_csv(excel_geo)
-            total_dmcs = len(df) [cite: 20]
-            delito_frec = df['Delito'].mode()[0] if 'Delito' in df.columns else "Delitos Varios"
-            dia_frec = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado" [cite: 23]
-            hora_frec = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado" [cite: 23]
+            total_dmcs = len(df)
+            delito_frec = df['Delito'].mode()[0] if 'Delito' in df.columns else "D.M.C.S."
+            dia_frec = df['Dia'].mode()[0] if 'Dia' in df.columns else "indeterminado"
+            hora_frec = df['Rango_Hora'].mode()[0] if 'Rango_Hora' in df.columns else "indeterminado"
 
-            # 3. Motor de Conclusión IA (Basado en tu formato) [cite: 26, 27]
-            riesgo = "ELEVADO" if total_dmcs > 12 else "MODERADO"
-            analisis_ia = (f"Se detecta un nivel de riesgo {riesgo} en el radio de 300 metros de {domicilio}. "
-                          f"El análisis de {total_dmcs} eventos muestra una recurrencia de {delito_frec}, "
-                          f"especialmente los días {dia_frec} en el tramo {hora_frec}. "
-                          "Se sugiere reforzar la presencia policial en los cuadrantes de aproximación.")
+            # 3. Generación de la Conclusión Estratégica [cite: 26, 27]
+            riesgo_nivel = "ELEVADO" if total_dmcs > 12 else "MODERADO"
+            analisis_ia = (f"Tras el análisis georreferencial, se determina un nivel de riesgo {riesgo_nivel} "
+                          f"en un radio de 300 mts de {domicilio}. Se registran {total_dmcs} eventos de {delito_frec}, "
+                          f"con mayor incidencia los días {dia_frec} en el tramo {hora_frec}. "
+                          "Se recomienda intensificar la vigilancia preventiva en el sector.")
 
-            # 4. Preparar Contexto con Imagen [cite: 17, 21]
-            p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt) [cite: 12]
-            
-            # Convertir imagen subida para el Word
-            imagen_word = InlineImage(doc, mapa_img, width=Mm(150)) [cite: 17]
+            # 4. Preparar Contexto para el Word [cite: 10, 12, 13]
+            p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
+            imagen_sait = InlineImage(doc, mapa_img, width=Mm(150)) # [cite: 17, 19]
 
             contexto = {
-                "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
-                "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
-                "solicitante": funcionario, "unidad_solic": unidad,
-                "periodo_inicio": p_ini, "periodo_fin": p_fin, "cuadrante": cuadrante,
-                "mapa": imagen_word,
-                "total_dmcs": total_dmcs,
-                "tabla": df.value_counts('Delito').reset_index().to_dict('records'),
-                "dia_max": dia_frec, "hora_max": hora_frec,
-                "conclusion_ia": analisis_ia
+                "domicilio": domicilio, # [cite: 3]
+                "jurisdiccion": subcomisaria, # [cite: 13]
+                "fecha_actual": inf_fecha, # [cite: 4]
+                "doe": doe_n, # [cite: 10]
+                "fecha_doe": doe_fecha, # [cite: 10]
+                "grado_solic": grado, # [cite: 10]
+                "solicitante": funcionario, # [cite: 10]
+                "unidad_solic": unidad, # [cite: 10]
+                "periodo_inicio": p_ini, # [cite: 12]
+                "periodo_fin": p_fin, # [cite: 12]
+                "cuadrante": cuadrante, # [cite: 13]
+                "mapa": imagen_sait, # [cite: 17]
+                "total_dmcs": total_dmcs, # [cite: 20]
+                "tabla": df.value_counts('Delito').reset_index().to_dict('records'), # [cite: 21]
+                "dia_max": dia_frec, # [cite: 23]
+                "hora_max": hora_frec, # [cite: 23]
+                "conclusion_ia": analisis_ia # [cite: 27]
             }
 
-            # 5. Generación de Archivo
+            # 5. Renderizado y Descarga
             doc.render(contexto)
-            bio = io.BytesIO()
-            doc.save(bio)
-            bio.seek(0)
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
 
-            st.success("✅ Informe generado. Incluye Mapa, Tablas y Conclusión IA.")
+            st.success("✅ Informe generado exitosamente por el motor FRIDAY.")
             st.download_button(
-                label="📥 DESCARGAR INFORME TÁCTICO",
-                data=bio,
-                file_name=f"Informe_Geo_{cuadrante}.docx",
+                label="📥 DESCARGAR INFORME GEO",
+                data=output,
+                file_name=f"Informe_Geo_C{cuadrante}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
