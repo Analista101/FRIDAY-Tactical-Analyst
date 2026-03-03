@@ -191,55 +191,52 @@ with t3:
         
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
- if submit_geo:
+    # --- EJECUCIÓN DEL MOTOR FRIDAY (Indentación Corregida) ---
+    if submit_geo:
         if not mapa_img or not excel_geo:
-            st.warning("⚠️ FRIDAY requiere el Mapa y el Excel.")
+            st.warning("⚠️ Debes adjuntar el Mapa y el Excel.")
             st.stop()
 
         try:
-            # 1. CARGA DE DATOS
+            # 1. Procesamiento de Datos
             df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
             
-            # 2. PROCESAMIENTO PARA TABLAS (Nombres exactos de tu CSV)
+            # Tabla DMCS
             resumen_dmcs = df['DELITO'].value_counts().reset_index()
             resumen_dmcs.columns = ['DELITO', 'CANTIDAD']
-            # Convertimos a formato lista para el bucle de Word
             lista_tabla = resumen_dmcs.to_dict('records')
 
+            # Tabla de Tramos
             resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
-            resumen_tramos = resumen_tramos.sort_values(by='CANTIDAD', ascending=False).head(10)
+            resumen_tramos = resumen_tramos.sort_values(by='CANTIDAD', ascending=False).head(8)
             lista_tramos = resumen_tramos.to_dict('records')
 
-            # 3. MOTOR DE IA: CONTEO REAL
+            # 2. IA: Conclusión con Conteo Real
             total_casos = len(df)
             top_delito = resumen_dmcs.iloc[0]['DELITO']
-            top_cantidad = resumen_dmcs.iloc[0]['CANTIDAD'] # Esto dará 5 para Lesiones, no 20
+            top_cantidad = resumen_dmcs.iloc[0]['CANTIDAD'] # Esto dará 5 para Lesiones
             dia_frec = df['DIA'].mode()[0]
             hora_frec = df['RANGO HORA'].mode()[0]
 
-            analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran un total de {total_casos} eventos DMCS. "
-                            f"El delito con mayor prevalencia es '{top_delito}' con un total de {top_cantidad} casos registrados. "
+            conclusion_v2 = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS. "
+                            f"El delito con mayor prevalencia es '{top_delito}' con {top_cantidad} casos registrados. "
                             f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
-                            f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
+                            f"Se sugiere intensificar patrullajes en el radio de 300 mts de {domicilio}.")
 
-            # 4. CARGAR PLANTILLA Y GENERAR
+            # 3. Renderizado Word
             doc = DocxTemplate("INFORME GEO.docx")
             img_sait = InlineImage(doc, mapa_img, width=Mm(150))
-            
-            p_ini = periodo_txt.split(" al ")[0] if " al " in periodo_txt else periodo_txt
-            p_fin = periodo_txt.split(" al ")[1] if " al " in periodo_txt else periodo_txt
+            p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
 
             contexto = {
                 "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
                 "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
                 "solicitante": funcionario, "unidad_solic": unidad,
                 "periodo_inicio": p_ini, "periodo_fin": p_fin, "cuadrante": cuadrante,
-                "mapa": img_sait,
-                "total_dmcs": total_casos,
-                "tabla": lista_tabla,          
-                "tabla_horarios": lista_tramos, 
+                "mapa": img_sait, "total_dmcs": total_casos,
+                "tabla": lista_tabla, "tabla_horarios": lista_tramos,
                 "dia_max": dia_frec, "hora_max": hora_frec,
-                "conclusion_ia": analisis_ia
+                "conclusion_ia": conclusion_v2
             }
 
             doc.render(contexto)
@@ -247,11 +244,12 @@ with t3:
             doc.save(output)
             output.seek(0)
 
-            st.success(f"✅ Informe procesado. Delito principal: {top_delito} ({top_cantidad} casos).")
+            st.success("✅ Informe generado exitosamente.")
             st.download_button("📥 DESCARGAR INFORME TÁCTICO", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
 
         except Exception as e:
             st.error(f"Error en FRIDAY: {e}")
+            
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     if st.button("🗑️ LIMPIAR RELATO"):
