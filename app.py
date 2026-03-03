@@ -169,24 +169,20 @@ with t3:
     
     with st.form("form_geo"):
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             doe_n = st.text_input("DOE N°", value="247205577")
             doe_fecha = st.text_input("Fecha DOE", value="20-02-2026")
             inf_fecha = st.text_input("Fecha Informe", value="24 de febrero de 2026")
-        
         with col2:
             funcionario = st.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
             grado = st.text_input("Grado Solicitante", value="CABO 1RO.")
             unidad = st.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
-        
         with col3:
             domicilio = st.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
             subcomisaria = st.text_input("Subcomisaría (Jurisdicción)", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
             cuadrante = st.text_input("Cuadrante", value="231")
 
         st.markdown("---")
-        
         cp1, cp2, cp3 = st.columns([2, 1, 1])
         periodo_txt = cp1.text_input("⏱️ Periodo de Análisis", value="03-12-2025 al 03-03-2026")
         mapa_img = cp2.file_uploader("📂 MAPA SAIT", type=['png', 'jpg'], key="mapa_geo")
@@ -195,46 +191,53 @@ with t3:
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
     if submit_geo:
-        # Separar el periodo para la plantilla [cite: 12]
-        p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
-        
-        # Mapeo exacto a las etiquetas de tu documento [cite: 3, 10, 12, 13]
-        contexto = {
-            "domicilio": domicilio,
-            "jurisdiccion": subcomisaria,
-            "fecha_actual": inf_fecha,
-            "doe": doe_n,
-            "fecha_doe": doe_fecha,
-            "grado_solic": grado,
-            "solicitante": funcionario,
-            "unidad_solic": unidad,
-            "periodo_inicio": p_inicio,
-            "periodo_fin": p_fin,
-            "cuadrante": cuadrante,
-            "total_dmcs": "14", # Esto se calculará del Excel después
-            "dia_max": "Viernes",
-            "hora_max": "20:00 a 22:00",
-            "conclusion_ia": "Se sugiere mantener patrullajes preventivos en el radio de 300 mts."
-        }
-
         try:
-            # Lógica para procesar la plantilla .docx
-            # doc = DocxTemplate("INFORME_GEO.docx") 
-            # doc.render(contexto)
-            # bio = io.BytesIO()
-            # doc.save(bio)
+            # 1. Cargar la plantilla física (Debes tener el archivo INFORME GEO.docx en la misma carpeta)
+            doc = DocxTemplate("INFORME GEO.docx")
             
-            st.success(f"✅ Informe preparado para el Cuadrante {cuadrante}")
+            # 2. Procesar fechas del periodo
+            p_inicio, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
             
-            # CORRECCIÓN DEL ERROR: file_name en minúsculas
+            # 3. Preparar el contexto para las etiquetas {{ }} del Word
+            contexto = {
+                "domicilio": domicilio,
+                "jurisdiccion": subcomisaria,
+                "fecha_actual": inf_fecha,
+                "doe": doe_n,
+                "fecha_doe": doe_fecha,
+                "grado_solic": grado,
+                "solicitante": funcionario,
+                "unidad_solic": unidad,
+                "periodo_inicio": p_inicio,
+                "periodo_fin": p_fin,
+                "cuadrante": cuadrante,
+                "total_dmcs": "14",  # Aquí puedes conectar el análisis de Excel
+                "dia_max": "VIERNES",
+                "hora_max": "20:00 A 22:00",
+                "conclusion_ia": "Se recomienda mantener patrullajes preventivos dinámicos en el sector."
+            }
+
+            # 4. Renderizar y guardar en memoria para evitar que se dañe el archivo
+            doc.render(contexto)
+            
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
+            
+            st.success(f"✅ Informe para Cuadrante {cuadrante} generado correctamente.")
+            
+            # 5. Botón de descarga con datos REALES
             st.download_button(
-                label="📥 DESCARGAR INFORME GEO (WORD)",
-                data=b"Simulacion de archivo", # Aquí va bio.getvalue()
-                file_name=f"Informe_Geo_C{cuadrante}.docx", 
+                label="📥 DESCARGAR INFORME OFICIAL (WORD)",
+                data=output,
+                file_name=f"Informe_Geo_C{cuadrante}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
+            
+        except FileNotFoundError:
+            st.error("❌ No se encontró el archivo 'INFORME GEO.docx'. Asegúrate de que el nombre sea exacto.")
         except Exception as e:
-            st.error(f"Error técnico: {e}")
+            st.error(f"❌ Error al procesar el informe: {e}")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
