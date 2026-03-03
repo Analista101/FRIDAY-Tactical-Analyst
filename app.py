@@ -171,17 +171,17 @@ with t3:
     with st.form("form_geo"):
         col1, col2, col3 = st.columns(3)
         with col1:
-            doe_n = st.text_input("DOE N°", value="247205577")
-            doe_fecha = st.text_input("Fecha DOE", value="20-02-2026")
-            inf_fecha = st.text_input("Fecha Informe", value="24 de febrero de 2026")
+            doe_n = st.text_input("DOE N°", value="248812153")
+            doe_fecha = st.text_input("Fecha DOE", value="03-03-2026")
+            inf_fecha = st.text_input("Fecha Informe", value="03 de marzo de 2026")
         with col2:
-            funcionario = st.text_input("Nombre Funcionario", value="TANIA DE LOS ANGELES GUTIERREZ SEPULVEDA")
-            grado = st.text_input("Grado Solicitante", value="CABO 1RO.")
-            unidad = st.text_input("Unidad Dependiente", value="39A. COM. EL BOSQUE")
+            funcionario = st.text_input("Nombre Funcionario", value="JUAN ANDRES URRUTIA LOBOS")
+            grado = st.text_input("Grado Solicitante", value="SARGENTO 2°")
+            unidad = st.text_input("Unidad Dependiente", value="GRUPO DE ADIESTRAMIENTO CANINO")
         with col3:
-            domicilio = st.text_input("Domicilio Procedimiento", value="Corona Sueca Nro. 8556")
-            subcomisaria = st.text_input("Subcomisaría (Jurisdicción)", value="SUBCOM. TENIENTE HERNÁN MERINO CORREA")
-            cuadrante = st.text_input("Cuadrante", value="231")
+            domicilio = st.text_input("Domicilio Procedimiento", value="PASAJE PILCOMAYO 8501, VILLA SAN ANDRES")
+            subcomisaria = st.text_input("Subcomisaría", value="26A COMISARIA PUDAHUEL")
+            cuadrante = st.text_input("Cuadrante", value="232-A")
         
         st.markdown("---")
         cp1, cp2, cp3 = st.columns([2, 1, 1])
@@ -191,81 +191,70 @@ with t3:
         
         submit_geo = st.form_submit_button("🛡️ EJECUTAR E IMPRIMIR INFORME GEO")
 
- if submit_geo:
-    if not mapa_img or not excel_geo:
-        st.warning("⚠️ Sube el Mapa y el Excel.")
-        st.stop()
+    # --- AQUÍ EMPIEZA LA EJECUCIÓN (Alineado con el 'with st.form') ---
+    if submit_geo:
+        if not mapa_img or not excel_geo:
+            st.warning("⚠️ FRIDAY requiere el Mapa y el Excel.")
+            st.stop()
 
-    try:
-        # 1. CARGA DE DATOS (CSV según tu archivo adjunto)
-        df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
-        
-        # Nombres exactos de tus columnas en el CSV
-        col_delito = 'DELITO'
-        col_dia = 'DIA'
-        col_rango = 'RANGO HORA'
+        try:
+            # 1. CARGA Y FILTRADO DE DATOS
+            df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
+            
+            # Columnas exactas de tu CSV
+            C_DELITO, C_DIA, C_RANGO = 'DELITO', 'DIA', 'RANGO HORA'
 
-        # --- CORRECCIÓN DE CONTEO ---
-        # Resumen de Delitos para la Tabla DMCS
-        resumen_dmcs = df[col_delito].value_counts().reset_index()
-        resumen_dmcs.columns = ['DELITO', 'CANTIDAD']
-        # Esto genera la lista limpia para Word
-        lista_tabla_dmcs = resumen_dmcs.to_dict('records') 
+            # --- CONTEO REAL PARA LA TABLA DMCS ---
+            resumen_dmcs = df[C_DELITO].value_counts().reset_index()
+            resumen_dmcs.columns = ['DELITO', 'CANTIDAD']
+            lista_tabla = resumen_dmcs.to_dict('records')
 
-        # Resumen para Tabla de Tramos (Figura 3)
-        resumen_tramos = df.groupby([col_dia, col_rango]).size().reset_index(name='CANTIDAD')
-        resumen_tramos = resumen_tramos.sort_values(by='CANTIDAD', ascending=False).head(8)
-        lista_tramos = resumen_tramos.to_dict('records')
+            # --- CONTEO REAL PARA TRAMOS HORARIOS ---
+            resumen_tramos = df.groupby([C_DIA, C_RANGO]).size().reset_index(name='CANTIDAD')
+            resumen_tramos = resumen_tramos.sort_values(by='CANTIDAD', ascending=False).head(8)
+            lista_tramos = resumen_tramos.to_dict('records')
 
-        # --- CORRECCIÓN DE IA (DATOS REALES) ---
-        total_casos = len(df)
-        delito_mas_frecuente = resumen_dmcs.iloc[0]['DELITO']
-        cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD']
-        dia_max = df[col_dia].mode()[0]
-        hora_max = df[col_rango].mode()[0]
+            # --- MOTOR DE IA: ANÁLISIS DE VERDAD ---
+            total_casos = len(df)
+            top_delito = resumen_dmcs.iloc[0]['DELITO']
+            top_cantidad = resumen_dmcs.iloc[0]['CANTIDAD'] # Esto dará 5 para Lesiones
+            dia_frec = df[C_DIA].mode()[0]
+            hora_frec = df[C_RANGO].mode()[0]
 
-        # Redacción precisa
-        analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran un total de {total_casos} eventos DMCS. "
-                      f"El delito con mayor prevalencia es '{delito_mas_frecuente}' con un total de {cantidad_real} casos registrados. "
-                      f"Se observa una mayor vulnerabilidad los días {dia_max} en el tramo {hora_max}. "
-                      f"Se sugiere intensificar patrullajes en el radio de 300 mts de {domicilio}.")
+            conclusion_v2 = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS. "
+                            f"El delito con mayor prevalencia es '{top_delito}' con {top_cantidad} casos confirmados. "
+                            f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
+                            f"Se sugiere intensificar patrullajes en el radio de 300 mts de {domicilio}.")
 
-        # 2. RENDERIZADO EN PLANTILLA
-        doc = DocxTemplate("INFORME GEO.docx")
-        img_sait = InlineImage(doc, mapa_img, width=Mm(150))
+            # 2. RENDERIZADO EN WORD
+            doc = DocxTemplate("INFORME GEO.docx")
+            img_sait = InlineImage(doc, mapa_img, width=Mm(150))
 
-        contexto = {
-            "domicilio": domicilio,
-            "jurisdiccion": subcomisaria,
-            "fecha_actual": inf_fecha,
-            "doe": doe_n,
-            "fecha_doe": doe_fecha,
-            "grado_solic": grado,
-            "solicitante": funcionario,
-            "unidad_solic": unidad,
-            "periodo_inicio": periodo_txt.split(" al ")[0],
-            "periodo_fin": periodo_txt.split(" al ")[1],
-            "cuadrante": cuadrante,
-            "mapa": img_sait,
-            "total_dmcs": total_casos,
-            "tabla": lista_tabla_dmcs,           # Para la Tabla DMCS
-            "tabla_horarios": lista_tramos,      # Para la Tabla de Tramos
-            "dia_max": dia_max,
-            "hora_max": hora_max,
-            "conclusion_ia": analisis_ia
-        }
+            p_ini, p_fin = periodo_txt.split(" al ") if " al " in periodo_txt else (periodo_txt, periodo_txt)
 
-        doc.render(contexto)
-        output = io.BytesIO()
-        doc.save(output)
-        output.seek(0)
+            contexto = {
+                "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
+                "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
+                "solicitante": funcionario, "unidad_solic": unidad,
+                "periodo_inicio": p_ini, "periodo_fin": p_fin, "cuadrante": cuadrante,
+                "mapa": img_sait,
+                "total_dmcs": total_casos,
+                "tabla": lista_tabla,          # Envía lista limpia
+                "tabla_horarios": lista_tramos, # Envía lista limpia
+                "dia_max": dia_frec, "hora_max": hora_frec,
+                "conclusion_ia": conclusion_v2
+            }
 
-        st.success("✅ Informe Generado con éxito.")
-        st.download_button("📥 DESCARGAR INFORME CORREGIDO", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+            doc.render(contexto)
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
 
-    except Exception as e:
-        st.error(f"Error en FRIDAY: {e}")
-      
+            st.success(f"✅ Informe para {cuadrante} generado con éxito.")
+            st.download_button("📥 DESCARGAR INFORME TÁCTICO", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+
+        except Exception as e:
+            st.error(f"Error en FRIDAY: {e}")
         
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
