@@ -154,19 +154,16 @@ with t2:
         ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
         ct2.text_input("Unidad / Repartición", value="26ª COMISARÍA PUDAHUEL")
         
-        # CORRECCIÓN DE NAMEERROR: Se cambió f1 por ct1 para mantener consistencia con las columnas definidas
-        ct1.text_input("Nombre Asistente", value="INDICAR NOMBRE")
-        ct1.text_input("Grado Asistente", value="INDICAR GRADO")
-       
-        st.markdown('---')
-        st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
-        # CORRECCIÓN: Se renombraron las variables t1, t2 para no chocar con el objeto tab global
-        col_f1, col_f2 = st.columns(2)
-        col_f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
-        col_f2.text_input("Grado Analista", value="C.P.R. Analista Social")
+    st.markdown('---')
+    st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
+    col_f1, col_f2 = st.columns(2)
+    # Se restauran los tres campos originales para el pie de firma
+    col_f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
+    col_f2.text_input("Grado Analista", value="C.P.R. Analista Social")
+    col_f2.text_input("Cargo Analista", value="OFICINA DE OPERACIONES") # Campo restaurado
         
-        st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
-
+    st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
+       
 # 1. FUNCIÓN DE TABLA MEJORADA (SIN CORTES Y DISEÑO INSTITUCIONAL)
 def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
     alto_pulgadas = (len(df) * 0.5) + 0.8
