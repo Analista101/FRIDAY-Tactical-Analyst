@@ -307,23 +307,39 @@ with t4:
             if relato_in:
                 tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
                 st.markdown(f"""
-                <table class="tabla-carta">
-                    <tr><td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td><td class="celda-sub" style="width:20%">TRAMO</td><td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td></tr>
-                    <tr><td style="text-align:center">{tr}</td><td style="text-align:center">{loc}</td></tr>
-                    <tr><td class="celda-header-perfil">PERFIL VÍCTIMA</td><td class="celda-header-perfil">PERFIL DELINCUENTE</td><td class="celda-header-perfil">MODUS OPERANDI</td></tr>
-                    <tr>
-                        <td style="padding:0; vertical-align:top;"><table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
-                        </table></td>
-                        <td style="padding:0; vertical-align:top;"><table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
-                        </table></td>
-                        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo}</td>
-                    </tr>
-                </table>""", unsafe_allow_html=True)
+     <table class="tabla-carta">
+    <tr>
+        <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
+        <td class="celda-sub" style="width:20%">TRAMO</td>
+        <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
+    </tr>
+    <tr>
+        <td style="text-align:center">{tr}</td>
+        <td style="text-align:center">{loc}</td>
+    </tr>
+    <tr>
+        <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
+        <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
+        <td class="celda-header-perfil">MODUS OPERANDI</td>
+    </tr>
+    <tr>
+        <td style="padding:0; vertical-align:top;">
+            <table class="mini-tabla" style="width:100%">
+                <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
+                <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
+                # CORRECCIÓN: Ahora el campo LUGAR usa {tl} que contiene el 'lugar_oficial' extraído por regex
+                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl}</td></tr>
+                <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
+            </table>
+        </td>
+        <td style="padding:0; vertical-align:top;">
+            <table class="mini-tabla" style="width:100%">
+                <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
+                <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
+                <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
+                <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
+            </table>
+        </td>
+        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo}</td>
+    </tr>
+</table>
