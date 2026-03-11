@@ -298,18 +298,22 @@ with t3:
                 st.error(f"Error en el motor FRIDAY: {e}")
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
+    
     if st.button("🗑️ LIMPIAR RELATO"):
         limpiar_solo_carta()
         st.rerun()
+
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
+        
+        # Procesamiento al presionar el botón
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
+                # Extraemos los datos con el motor IA
                 tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
-                st.markdown(f"""
-# --- RENDERIZADO DE TABLA CARTA DE SITUACIÓN ---
-                # Aseguramos el cierre correcto del f-string y del paréntesis
-                st.markdown(f"""
+                
+                # Definimos el HTML en una variable para que sea más limpio
+                html_carta = f"""
                 <table class="tabla-carta">
                     <tr>
                         <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
@@ -345,4 +349,8 @@ with t4:
                         <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo}</td>
                     </tr>
                 </table>
-                """, unsafe_allow_html=True)
+                """
+                # Renderizamos el HTML
+                st.markdown(html_carta, unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ Por favor, pegue un relato antes de generar.")
