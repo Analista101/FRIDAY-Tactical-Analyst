@@ -306,26 +306,33 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-      # Procesamiento al presionar el botón
+# Procesamiento al presionar el botón
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
-                # 1. Extraemos los datos con el motor IA
-                tip, tr, loc, gv, ev, tl_original, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
+                # 1. Extraemos los datos base
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_original = procesar_relato_ia(relato_in)
                 
-                # 2. REGLA DE EXTRACCIÓN FORZADA PARA EL CUADRO
-                # Buscamos el texto exacto entre 'Lugar de Ocurrencia:' y 'DOMICILIO'
+                # 2. GENERACIÓN DEL RESUMEN DEL MODUS OPERANDI (CORREGIDO)
                 import re
                 texto_u = relato_in.upper()
-                match_lugar = re.search(r'LUGAR DE OCURRENCIA\s*:\s*(.*?)\s*DOMICILIO', texto_u, re.DOTALL)
                 
-                if match_lugar:
-                    tl_clase = match_lugar.group(1).strip()
+                # Buscamos el cuerpo del relato (lo que está después de "expuso:" o "manifiesta:")
+                if "EXPUSO:" in texto_u:
+                    resumen_raw = texto_u.split("EXPUSO:")[1]
+                elif "MANIFIESTA:" in texto_u:
+                    resumen_raw = texto_u.split("MANIFIESTA:")[1]
                 else:
-                    # Si no lo encuentra con el patrón anterior, busca el formato estándar
-                    match_alt = re.search(r'LUGAR DE OCURRENCIA\s*:\s*([^\n\r]+)', texto_u)
-                    tl_clase = match_alt.group(1).strip() if match_alt else "VIA PUBLICA"
+                    resumen_raw = texto_u
 
-                # 3. Definimos el HTML con la variable tl_clase corregida
+                # Limpieza de datos personales (Nombres propios, RUTs y Citas)
+                resumen_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dK]', '', resumen_raw) # Borra RUTs
+                resumen_limpio = re.sub(r'CITACION:.*', '', resumen_limpio) # Borra la parte de la citación
+                
+                # Creamos el resumen ejecutivo en MAYÚSCULAS
+                # Enfocado en: Sujetos desconocidos, daños a infraestructura y robo de cables.
+                mo_final = resumen_limpio.strip()[:500] # Limitamos para que no rompa la tabla
+                
+                # 3. Renderizado de la tabla con el MO real
                 html_carta = f"""
                 <table class="tabla-carta">
                     <tr>
@@ -359,10 +366,8 @@ with t4:
                                 <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
                             </table>
                         </td>
-                        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo}</td>
+                        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
                     </tr>
                 </table>
                 """
                 st.markdown(html_carta, unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ Por favor, pegue un relato antes de generar.")
