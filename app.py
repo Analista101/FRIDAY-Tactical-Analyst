@@ -215,26 +215,26 @@ with t3:
         mapa_img = cp2.file_uploader("SUBIR MAPA SAIT", type=['png', 'jpg'])
         excel_geo = cp3.file_uploader("SUBIR EXCEL/CSV", type=['xlsx', 'csv'])
         
+        # EL BOTÓN DEBE ESTAR AQUÍ (DENTRO DEL FORM)
         submit_geo = st.form_submit_button("🛡️ GENERAR INFORME GEO")
 
+    # LA LÓGICA SE EJECUTA SI SE PRESIONA EL BOTÓN
     if submit_geo:
         if not mapa_img or not excel_geo:
             st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
         else:
-            def ajustar_texto_largo(texto, ancho=30):
-                if texto is None: return ""
-                return '\n'.join(textwrap.wrap(str(texto), width=ancho))
-
             try:
+                # 1. PROCESAMIENTO
                 df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
                 df.columns = [c.upper() for c in df.columns]
-                
                 total_casos = len(df)
 
                 if 'DELITO' in df.columns:
                     df['DELITO'] = df['DELITO'].astype(str).str.upper()
                     resumen_dmcs = df['DELITO'].value_counts().reset_index()
                     resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
+                    
+                    # Usamos la función de ajuste de texto
                     resumen_dmcs_tabla = resumen_dmcs.copy()
                     resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'] = resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'].apply(lambda x: ajustar_texto_largo(x, ancho=35))
                     crear_tabla_profesional(resumen_dmcs_tabla, "img_delitos.png", ancho_pulgadas=12)
@@ -243,6 +243,7 @@ with t3:
                     resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
                     resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(10)
                     resumen_tramos.columns = ['DÍA', 'TRAMO HORARIO', 'CANTIDAD']
+                    
                     resumen_tramos_tabla = resumen_tramos.copy()
                     resumen_tramos_tabla['TRAMO HORARIO'] = resumen_tramos_tabla['TRAMO HORARIO'].apply(lambda x: ajustar_texto_largo(x, ancho=20))
                     crear_tabla_profesional(resumen_tramos_tabla, "img_tramos.png", ancho_pulgadas=10)
@@ -258,6 +259,7 @@ with t3:
                               f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
                               f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
 
+                # 2. DOCUMENTO WORD
                 doc = DocxTemplate("INFORME GEO.docx")
                 o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
                 o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
@@ -283,7 +285,6 @@ with t3:
 
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
-
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     if st.button("🗑️ LIMPIAR RELATO"):
