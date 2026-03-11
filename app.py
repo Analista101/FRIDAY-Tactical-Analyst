@@ -310,13 +310,10 @@ with t4:
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
                 # 1. Extraemos los datos con el motor IA
-                tip, tr, loc, gv, ev, tl_original, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
+                # Ajustamos para que la sexta variable sea 'tl_clase'
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
                 
-                # 2. CORRECCIÓN DE PRIORIDAD: Forzamos que el LUGAR de la víctima sea el LUGAR DE OCURRENCIA
-                # loc contiene el lugar extraído del encabezado del parte
-                tl = loc 
-
-                # 3. Definimos el HTML con la variable tl corregida
+                # 2. Definimos el HTML con las variables correctas
                 html_carta = f"""
                 <table class="tabla-carta">
                     <tr>
@@ -338,7 +335,7 @@ with t4:
                             <table class="mini-tabla" style="width:100%">
                                 <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
                                 <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>                                
+                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
                                 <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
                             </table>
                         </td>
@@ -356,5 +353,3 @@ with t4:
                 """
                 # Renderizamos el HTML corregido
                 st.markdown(html_carta, unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ Por favor, pegue un relato antes de generar.")
