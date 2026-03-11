@@ -308,6 +308,7 @@ with t4:
                 tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
                 st.markdown(f"""
 # --- RENDERIZADO DE TABLA CARTA DE SITUACIÓN ---
+                # Aseguramos el cierre correcto del f-string y del paréntesis
                 st.markdown(f"""
                 <table class="tabla-carta">
                     <tr>
