@@ -6,6 +6,7 @@ from docxtpl import DocxTemplate, InlineImage
 import io
 from docx.shared import Mm
 import matplotlib.pyplot as plt
+import textwrap
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
@@ -152,15 +153,12 @@ with t2:
         ct1.text_input("Periodo Trimestral", value="DIC-ENE-FEB")
         ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
         ct2.text_input("Unidad / Repartición", value="26ª COMISARÍA PUDAHUEL")
-        ct2.text_input("Nivel de Cumplimiento (%)", value="100%")
-        
-        st.text_area("Compromisos Adquiridos", value="1. Aumento de patrullajes preventivos.\n2. Focalización de delitos en Cuadrante 231.")
-
+        f1.text_input("Nombre Asistente", value="INDICAR NOMBRE")
+        f1.text_input("Grado Asistente", value="INDICAR GRADO")
+       
         st.markdown('---')
         st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
         f1, f2 = st.columns(2)
-        f1.text_input("Nombre Asistente", value="INDICAR NOMBRE")
-        f1.text_input("Grado Asistente", value="INDICAR GRADO")
         f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
         f2.text_input("Grado Analista", value="C.P.R. Analista Social")
         
@@ -179,7 +177,7 @@ def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
         colLabels=df.columns,
         cellLoc='center',
         loc='center',
-        colColours=['#D9D9D9'] * len(df.columns) # Gris institucional
+        colColours=["#1E7421"] * len(df.columns) # Verde institucional
     )
 
     # Estilo de celdas
@@ -230,42 +228,68 @@ with t3:
             st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
             st.stop()
 
-        try:
-            # 1. PROCESAMIENTO DE DATOS
-            df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
-            
-            # FIGURA 2: TABLA DE DELITOS (Ajustada para nombres largos)
+# 1. DEFINICIÓN DE FUNCIÓN DE APOYO (Para evitar que el texto se corte)
+def ajustar_texto_largo(texto, ancho=30):
+    if texto is None:
+        return ""
+    return '\n'.join(textwrap.wrap(str(texto), width=ancho))
+
+try:
+    if excel_geo is not None:
+        # Lectura de datos
+        df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
+        
+        # Estandarización a MAYÚSCULAS (Protocolo Stark)
+        df.columns = [c.upper() for c in df.columns]
+        
+        # FIGURA 2: TABLA DE DELITOS
+        if 'DELITO' in df.columns:
+            df['DELITO'] = df['DELITO'].astype(str).str.upper()
             resumen_dmcs = df['DELITO'].value_counts().reset_index()
             resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
+            
+            # Aplicar envoltura de texto para nombres largos
+            resumen_dmcs['TIPO DE DELITO (DMCS)'] = resumen_dmcs['TIPO DE DELITO (DMCS)'].apply(lambda x: ajustar_texto_largo(x, ancho=35))
+            
             crear_tabla_profesional(resumen_dmcs, "img_delitos.png", ancho_pulgadas=12)
 
-            # FIGURA 3: TRAMOS HORARIOS (Diseño según solicitado)
+        # FIGURA 3: TRAMOS HORARIOS
+        if 'DIA' in df.columns and 'RANGO HORA' in df.columns:
             resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
             resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(10)
             resumen_tramos.columns = ['DÍA', 'TRAMO HORARIO', 'CANTIDAD']
+            
+            # Ajuste de texto para los tramos
+            resumen_tramos['TRAMO HORARIO'] = resumen_tramos['TRAMO HORARIO'].apply(lambda x: ajustar_texto_largo(x, ancho=20))
+            
             crear_tabla_profesional(resumen_tramos, "img_tramos.png", ancho_pulgadas=10)
+        else:
+            st.warning("⚠️ Columnas 'DIA' o 'RANGO HORA' no detectadas.")
+
+except Exception as e:
+    st.error(f"Sistemas de FRIDAY reportan un error: {e}")
 
             # 2. IA: CONCLUSIÓN CON DATOS EXACTOS
-            total_casos = len(df)
-            delito_principal = resumen_dmcs.iloc[0]['TIPO DE DELITO (DMCS)']
-            cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD'] # CASOS REALES (5)
-            dia_frec = df['DIA'].mode()[0]
-            hora_frec = df['RANGO HORA'].mode()[0]
+            # total_casos = len(df)
+    delito_principal = resumen_dmcs.iloc[0]['TIPO DE DELITO (DMCS)']
+    cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD'] # CASOS REALES (5)
+    dia_frec = df['DIA'].mode()[0]
+    hora_frec = df['RANGO HORA'].mode()[0]
 
-            analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS en el periodo. "
+    analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS en el periodo. "
                           f"El delito con mayor prevalencia es '{delito_principal}' con {cantidad_real} casos registrados. "
                           f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
                           f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
 
             # 3. GENERACIÓN DEL DOCUMENTO WORD
-            doc = DocxTemplate("INFORME GEO.docx")
+    doc = DocxTemplate("INFORME GEO.docx")
             
             # Objetos de imagen con ancho controlado para centrado
-            o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
-            o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
-            o_tabla2 = InlineImage(doc, "img_tramos.png", width=Mm(130))
+    o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
+    o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
+    o_tabla2 = InlineImage(doc, "img_tramos.png", width=Mm(130))
 
-            contexto = {
+    contexto = {
                 "domicilio": domicilio, "jurisdiccion": subcomisaria, "fecha_actual": inf_fecha,
                 "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado,
                 "solicitante": funcionario, "unidad_solic": unidad,
@@ -279,16 +303,16 @@ with t3:
                 "conclusion_ia": analisis_ia
             }
 
-            doc.render(contexto)
-            output = io.BytesIO()
-            doc.save(output)
-            output.seek(0)
+    doc.render(contexto)
+    output = io.BytesIO()
+    doc.save(output)
+    output.seek(0)
 
-            st.success("✅ Informe generado. Tablas incorporadas como imágenes de alta resolución.")
-            st.download_button("📥 DESCARGAR INFORME OFICIAL", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+    st.success("✅ Informe generado. Tablas incorporadas como imágenes de alta resolución.")
+    st.download_button("📥 DESCARGAR INFORME OFICIAL", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
 
-        except Exception as e:
-            st.error(f"Error en el motor FRIDAY: {e}")
+except Exception as e:
+    st.error(f"Error en el motor FRIDAY: {e}")
 
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
