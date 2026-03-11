@@ -306,13 +306,13 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-        # Procesamiento al presionar el botón
+      # Procesamiento al presionar el botón
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
                 # Extraemos los datos con el motor IA
                 tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
                 
-                # Definimos el HTML en una variable para que sea más limpio
+                # Definimos el HTML en una variable limpia
                 html_carta = f"""
                 <table class="tabla-carta">
                     <tr>
