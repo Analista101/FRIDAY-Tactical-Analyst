@@ -192,6 +192,7 @@ def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
     plt.close()
 
 # --- ESTRUCTURA DE LA PESTAÑA INFORME GEO ---
+# --- ESTRUCTURA DE LA PESTAÑA INFORME GEO ---
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: GENERACIÓN PROFESIONAL</div>', unsafe_allow_html=True)
     
@@ -218,13 +219,13 @@ with t3:
         # EL BOTÓN DEBE ESTAR AQUÍ (DENTRO DEL FORM)
         submit_geo = st.form_submit_button("🛡️ GENERAR INFORME GEO")
 
-    # LA LÓGICA SE EJECUTA SI SE PRESIONA EL BOTÓN
+    # LA LÓGICA DE PROCESAMIENTO FUERA DEL FORM, PERO DEPENDIENTE DEL BOTÓN
     if submit_geo:
         if not mapa_img or not excel_geo:
             st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
         else:
             try:
-                # 1. PROCESAMIENTO
+                # 1. PROCESAMIENTO DE DATOS
                 df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
                 df.columns = [c.upper() for c in df.columns]
                 total_casos = len(df)
@@ -234,7 +235,7 @@ with t3:
                     resumen_dmcs = df['DELITO'].value_counts().reset_index()
                     resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
                     
-                    # Usamos la función de ajuste de texto
+                    # Usamos la función de ajuste de texto para que no se corte
                     resumen_dmcs_tabla = resumen_dmcs.copy()
                     resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'] = resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'].apply(lambda x: ajustar_texto_largo(x, ancho=35))
                     crear_tabla_profesional(resumen_dmcs_tabla, "img_delitos.png", ancho_pulgadas=12)
@@ -259,7 +260,7 @@ with t3:
                               f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
                               f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
 
-                # 2. DOCUMENTO WORD
+                # 2. GENERACIÓN DEL DOCUMENTO WORD
                 doc = DocxTemplate("INFORME GEO.docx")
                 o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
                 o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
