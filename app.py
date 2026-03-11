@@ -158,9 +158,9 @@ with t2:
        
         st.markdown('---')
         st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
-        f1, f2 = st.columns(2)
-        f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
-        f2.text_input("Grado Analista", value="C.P.R. Analista Social")
+        t1, t2 = st.columns(2)
+        t2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
+        t2.text_input("Grado Analista", value="C.P.R. Analista Social")
         
         st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
 
