@@ -306,13 +306,17 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-      # Procesamiento al presionar el botón
+        # Procesamiento al presionar el botón
         if st.form_submit_button("⚡ GENERAR CUADRO"):
             if relato_in:
-                # Extraemos los datos con el motor IA
-                tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
+                # 1. Extraemos los datos con el motor IA
+                tip, tr, loc, gv, ev, tl_original, esp, gd, ed, cd, md, mo = procesar_relato_ia(relato_in)
                 
-                # Definimos el HTML en una variable limpia
+                # 2. CORRECCIÓN DE PRIORIDAD: Forzamos que el LUGAR de la víctima sea el LUGAR DE OCURRENCIA
+                # loc contiene el lugar extraído del encabezado del parte
+                tl = loc 
+
+                # 3. Definimos el HTML con la variable tl corregida
                 html_carta = f"""
                 <table class="tabla-carta">
                     <tr>
@@ -350,7 +354,7 @@ with t4:
                     </tr>
                 </table>
                 """
-                # Renderizamos el HTML
+                # Renderizamos el HTML corregido
                 st.markdown(html_carta, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ Por favor, pegue un relato antes de generar.")
