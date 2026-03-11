@@ -338,7 +338,7 @@ with t4:
                             <table class="mini-tabla" style="width:100%">
                                 <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
                                 <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl}</td></tr>
+                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>                                
                                 <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
                             </table>
                         </td>
