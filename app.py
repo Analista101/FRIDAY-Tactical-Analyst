@@ -148,21 +148,32 @@ with t1:
 
 with t2:
     st.markdown('<div class="section-header">📈 STOP TRIMESTRAL: COMPROMISOS Y ACUERDOS</div>', unsafe_allow_html=True)
+    
+    # Iniciamos el formulario
     with st.form("form_trim"):
         ct1, ct2 = st.columns(2)
         ct1.text_input("Periodo Trimestral", value="DIC-ENE-FEB")
         ct1.text_input("Fecha Sesión STOP", value="24-02-2026")
         ct2.text_input("Unidad / Repartición", value="26ª COMISARÍA PUDAHUEL")
         
-    st.markdown('---')
-    st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
-    col_f1, col_f2 = st.columns(2)
-    # Se restauran los tres campos originales para el pie de firma
-    col_f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
-    col_f2.text_input("Grado Analista", value="C.P.R. Analista Social")
-    col_f2.text_input("Cargo Analista", value="OFICINA DE OPERACIONES") # Campo restaurado
+        ct1.text_input("Nombre Asistente", value="INDICAR NOMBRE")
+        ct1.text_input("Grado Asistente", value="INDICAR GRADO")
+       
+        st.markdown('---')
+        st.markdown('**🖋️ PIE DE FIRMA - VALIDACIÓN DE ACTA**')
         
-    st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
+        col_f1, col_f2 = st.columns(2)
+        # Usamos col_f2 para mantener su diseño original
+        col_f2.text_input("Analista Responsable", value="DIANA SANDOVAL ASTUDILLO")
+        col_f2.text_input("Grado Analista", value="C.P.R. Analista Social")
+        col_f2.text_input("Cargo Analista", value="OFICINA DE OPERACIONES")
+        
+        # EL BOTÓN DEBE ESTAR AQUÍ, DENTRO DEL BLOQUE 'WITH ST.FORM'
+        submit_trim = st.form_submit_button("🛡️ GENERAR TRIMESTRAL")
+
+    # La lógica de procesamiento (si la tiene) iría aquí afuera
+    if submit_trim:
+        st.info("Sistemas FRIDAY: Procesando Acta Trimestral...")
        
 # 1. FUNCIÓN DE TABLA MEJORADA (SIN CORTES Y DISEÑO INSTITUCIONAL)
 def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
@@ -191,7 +202,6 @@ def crear_tabla_profesional(df, nombre_archivo, ancho_pulgadas=10):
     plt.savefig(nombre_archivo, bbox_inches='tight', dpi=200, pad_inches=0.1)
     plt.close()
 
-# --- ESTRUCTURA DE LA PESTAÑA INFORME GEO ---
 # --- ESTRUCTURA DE LA PESTAÑA INFORME GEO ---
 with t3:
     st.markdown('<div class="section-header">📍 INFORME GEO: GENERACIÓN PROFESIONAL</div>', unsafe_allow_html=True)
