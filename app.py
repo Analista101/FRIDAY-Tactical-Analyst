@@ -307,67 +307,77 @@ with t4:
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
 # Procesamiento al presionar el botón
-        if st.form_submit_button("⚡ GENERAR CUADRO"):
-            if relato_in:
-                # 1. Extraemos los datos base
-                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_original = procesar_relato_ia(relato_in)
-                
-                # 2. GENERACIÓN DEL RESUMEN DEL MODUS OPERANDI (CORREGIDO)
-                import re
-                texto_u = relato_in.upper()
-                
-                # Buscamos el cuerpo del relato (lo que está después de "expuso:" o "manifiesta:")
-                if "EXPUSO:" in texto_u:
-                    resumen_raw = texto_u.split("EXPUSO:")[1]
-                elif "MANIFIESTA:" in texto_u:
-                    resumen_raw = texto_u.split("MANIFIESTA:")[1]
-                else:
-                    resumen_raw = texto_u
-
-                # Limpieza de datos personales (Nombres propios, RUTs y Citas)
-                resumen_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dK]', '', resumen_raw) # Borra RUTs
-                resumen_limpio = re.sub(r'CITACION:.*', '', resumen_limpio) # Borra la parte de la citación
-                
-                # Creamos el resumen ejecutivo en MAYÚSCULAS
-                # Enfocado en: Sujetos desconocidos, daños a infraestructura y robo de cables.
-                mo_final = resumen_limpio.strip()[:500] # Limitamos para que no rompa la tabla
-                
-                # 3. Renderizado de la tabla con el MO real
-                html_carta = f"""
-                <table class="tabla-carta">
-                    <tr>
-                        <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
-                        <td class="celda-sub" style="width:20%">TRAMO</td>
-                        <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align:center">{tr}</td>
-                        <td style="text-align:center">{loc}</td>
-                    </tr>
-                    <tr>
-                        <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
-                        <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
-                        <td class="celda-header-perfil">MODUS OPERANDI</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:0; vertical-align:top;">
-                            <table class="mini-tabla" style="width:100%">
-                                <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
-                            </table>
-                        </td>
-                        <td style="padding:0; vertical-align:top;">
-                            <table class="mini-tabla" style="width:100%">
-                                <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
-                                <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
-                            </table>
-                        </td>
-                        <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
-                    </tr>
-                </table>
-                """
-                st.markdown(html_carta, unsafe_allow_html=True)
+if st.form_submit_button("⚡ GENERAR CUADRO"):
+    if relato_in:
+        # 1. Extraemos los datos base
+        tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
+        
+        # 2. REFINAMIENTO DEL MODUS OPERANDI (FILTRO ESTRICTO)
+        import re
+        
+        # Priorizamos el análisis de la IA para el MO
+        base_mo = mo_ia if mo_ia else relato_in
+        
+        # --- FILTROS DE PRIVACIDAD ---
+        # A. Borrar RUTs
+        texto_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+        # B. Borrar Números de Cuenta / Tarjetas / Teléfonos (Cadenas largas de dígitos)
+        texto_limpio = re.sub(r'N°?\s?\d{5,20}', '', texto_limpio)
+        texto_limpio = re.sub(r'CUENTA\s?\w*\s?N°?\d+', '', texto_limpio, flags=re.IGNORECASE)
+        # C. Borrar Direcciones y Referencias Geográficas Específicas
+        patrones_direccion = [
+            r'AVENIDA\s+[\w\s]+(?=CON|INTERSECCION|DE| MOMENTOS)', 
+            r'INTERSECCION\s+[\w\s]+(?=DE| MOMENTOS)',
+            r'NRO\.\s?\d+', 
+            r'CALLE\s+[\w\s]+(?=NRO|INTERSECCION)',
+            r'COMUNA DE\s+[\w]+'
+        ]
+        for patron in patrones_direccion:
+            texto_limpio = re.sub(patron, '', texto_limpio, flags=re.IGNORECASE)
+        
+        # D. Borrar citaciones y despedidas
+        texto_limpio = re.sub(r'CITACION:.*', '', texto_limpio, flags=re.IGNORECASE)
+        
+        # Formateo final: Limpiar espacios extra, mayúsculas y límite de caracteres
+        mo_final = " ".join(texto_limpio.split()) # Elimina espacios y saltos de línea dobles
+        mo_final = mo_final.upper().strip()[:500]
+        
+        # 3. Renderizado de la tabla
+        html_carta = f"""
+        <table class="tabla-carta">
+            <tr>
+                <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
+                <td class="celda-sub" style="width:20%">TRAMO</td>
+                <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
+            </tr>
+            <tr>
+                <td style="text-align:center">{tr}</td>
+                <td style="text-align:center">{loc}</td>
+            </tr>
+            <tr>
+                <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
+                <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
+                <td class="celda-header-perfil">MODUS OPERANDI</td>
+            </tr>
+            <tr>
+                <td style="padding:0; vertical-align:top;">
+                    <table class="mini-tabla" style="width:100%">
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
+                    </table>
+                </td>
+                <td style="padding:0; vertical-align:top;">
+                    <table class="mini-tabla" style="width:100%">
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
+            </tr>
+        </table>
+        """
+        st.markdown(html_carta, unsafe_allow_html=True)
