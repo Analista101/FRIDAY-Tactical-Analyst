@@ -1,4 +1,3 @@
-import streamlit as st
 import pandas as pd
 import re
 from datetime import datetime
@@ -7,10 +6,11 @@ import io
 from docx.shared import Mm
 import matplotlib.pyplot as plt
 import textwrap
+import streamlit as st
 import json
 import os
 
-# 1. PRIMERO: Las funciones (Cómo hacer las cosas)
+# --- 1. PRIMERO DEFINIMOS CÓMO FUNCIONA LA MEMORIA ---
 def cargar_memoria_nube():
     archivo = 'memoria_evolutiva.json'
     if os.path.exists(archivo):
@@ -23,18 +23,21 @@ def cargar_memoria_nube():
     return []
 
 def guardar_en_nube(nueva_leccion):
-    # (Aquí va el código de guardar que ya tiene)
-    ...
+    archivo = 'memoria_evolutiva.json'
+    datos = cargar_memoria_nube()
+    datos.append(nueva_leccion)
+    with open(archivo, 'w') as f:
+        json.dump(datos, f)
 
-# 2. SEGUNDO: El uso de las funciones (Hacer las cosas)
-memoria_historia = cargar_memoria_nube() # <--- AHORA SÍ FUNCIONARÁ
-
+# --- 2. DESPUÉS CARGAMOS LA MEMORIA Y EL ESTILO ---
+memoria_historia = cargar_memoria_nube()
 color_texto = "white"
+
 for leccion in memoria_historia:
     if "LETRA NEGRA" in leccion:
         color_texto = "black"
 
-# --- PROTOCOLO DE AUTONOMÍA NIVEL 4: AUTO-CODIFICACIÓN ---
+# --- PROTOCOLO DE AUTONOMÍA: AUTO-CODIFICACIÓN ---
 def aplicar_evolucion_codigo():
     memoria = cargar_memoria_nube()
     
@@ -73,6 +76,7 @@ st.markdown(f"""
     }}
     </style>
     """, unsafe_allow_html=True)
+
 # --- PROTOCOLO DE SALUDO FRIDAY ---
 memoria_historia = cargar_memoria_nube()
 if memoria_historia:
