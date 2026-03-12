@@ -161,7 +161,7 @@ def procesar_relato_ia(texto):
     
     # Aquí el resto de su código...
     # Ahora cuando llame a extract_value(texto_u, patron), funcionará perfecto.
-    
+
     # 1. TIPIFICACIÓN
     tip_match = re.search(r'CODIGO DELITO\s?:\s?([^\n]+)', texto_u)
     tipificacion = tip_match.group(1).strip() if tip_match else "ROBO DE ACCESORIOS DE VEHICULOS"
@@ -462,51 +462,49 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-        # 3. RENDERIZADO DE LA CARTA DE SITUACIÓN (DISEÑO STARK/POLICIAL)
+       # 3. RENDERIZADO CORRECTO (DISEÑO ORIGINAL PROYECTO JARVIS)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
-                <td colspan="4" class="celda-titulo">CARTA DE SITUACIÓN TÁCTICA</td>
+                <td colspan="3" class="celda-titulo">CARTA DE SITUACIÓN TÁCTICA</td>
             </tr>
             <tr>
                 <td class="celda-sub" style="width:25%;">TIPIFICACIÓN</td>
-                <td style="width:25%;">{tip}</td>
-                <td class="celda-sub" style="width:25%;">TRAMO HORARIO</td>
-                <td style="width:25%;">{tr}</td>
+                <td style="width:30%;">{tip}</td>
+                <td class="celda-header-perfil" style="width:45%;">MODUS OPERANDI (ANÁLISIS IA)</td>
             </tr>
             <tr>
-                <td class="celda-sub">LUGAR DE OCURRENCIA</td>
-                <td>{loc}</td>
-                <td class="celda-sub">CLASE DE LUGAR</td>
-                <td>{tl}</td>
+                <td class="celda-sub">TRAMO HORARIO</td>
+                <td>{tr}</td>
+                <td rowspan="7" style="vertical-align: top; text-align: justify; padding: 15px; background-color: white;">
+                    {mo}
+                </td>
+            </tr>
+            <tr>
+                <td class="celda-sub">LUGAR / CLASE</td>
+                <td>{loc} / {tl}</td>
             </tr>
             <tr>
                 <td colspan="2" class="celda-header-perfil">PERFIL VÍCTIMA</td>
-                <td colspan="2" class="celda-header-perfil">PERFIL DELINCUENTE</td>
             </tr>
             <tr>
                 <td class="celda-sub">GÉNERO / EDAD</td>
                 <td>{gv} / {ev}</td>
-                <td class="celda-sub">GÉNERO / EDAD</td>
-                <td>{gd} / {ed}</td>
             </tr>
             <tr>
                 <td class="celda-sub">ESPECIE SUSTRAÍDA</td>
                 <td>{esp}</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="celda-header-perfil">PERFIL DELINCUENTE</td>
+            </tr>
+            <tr>
                 <td class="celda-sub">VESTIMENTA / MÓVIL</td>
                 <td>{cd} / {md}</td>
             </tr>
             <tr>
-                <td colspan="4" class="celda-header-perfil">MODUS OPERANDI</td>
-            </tr>
-            <tr>
-                <td colspan="4" style="text-align: justify; padding: 15px;">{mo}</td>
-            </tr>
-            <tr>
                 <td class="celda-sub">BASE LEGAL</td>
-                <td colspan="3">{legal}</td>
+                <td colspan="2" style="background-color: #EBF1DE;">{legal}</td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
-        
-        st.success("✅ Análisis táctico finalizado, Srta. Diana.")
