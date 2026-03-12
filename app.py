@@ -433,34 +433,31 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (VERSION JARVIS 2.0) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (MULTI-DELITO) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
-    # Inicialización de la llave para resetear el text_area
+    # 1. ESTADO DEL ÁREA DE TEXTO
     if 'key_relato' not in st.session_state:
         st.session_state.key_relato = 0
 
-    # 1. ENTRADA DE DATOS
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
         key=f"relato_area_{st.session_state.key_relato}"
     )
     
-    # Botones de Acción
     col_btn1, col_btn2 = st.columns([1, 1])
     with col_btn1:
         enviar = st.button("⚡ GENERAR ANÁLISIS TÁCTICO")
-    
     with col_btn2:
-        # Botón para limpiar el cuadro de texto
         if st.button("🗑️ BORRAR RELATO"):
             st.session_state.key_relato += 1
             st.rerun()
 
-   if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Determinando naturaleza del procedimiento...", expanded=False):
+    # 2. PROCESAMIENTO (IDENTACIÓN CORREGIDA)
+    if enviar and relato_in:
+        with st.status("🤖 FRIDAY: Analizando naturaleza del procedimiento...", expanded=False):
             resultado = procesar_relato_ia(relato_in)
             
             if len(resultado) >= 12:
@@ -472,94 +469,69 @@ with t4:
             import re
             texto_analisis = relato_in.upper()
             
-            # --- 1. DETECCIÓN DE TIPO DE HECHO ---
-            es_lesion = any(x in texto_analisis for x in ["LESION", "GOLPE", "AGRESION", "LESIONES", "RIÑA"])
-            es_robo = any(x in texto_analisis for x in ["ROBO", "ARREBATA", "SUSTRAE", "ESPECIES"])
+            # --- 3. LÓGICA DE DETECCIÓN DE DELITO ---
+            es_lesion = any(x in texto_analisis for x in ["LESION", "GOLPE", "AGRESION", "RIÑA", "PUÑO", "PATADA"])
+            es_robo = any(x in texto_analisis for x in ["ROBO", "ARREBATA", "SUSTRAE", "ESPECIES", "CELULAR"])
 
-            # --- 2. CONSTRUCCIÓN DEL RESUMEN TÁCTICO DINÁMICO ---
-            # Identificamos medio de desplazamiento
+            # Sincronización de Medio de Desplazamiento
             md_final = "MOTOCICLETA" if "MOTO" in texto_analisis else "A PIE"
-            sujeto_v = f"UN SUJETO EN {md_final}" if md_final != "A PIE" else "UN SUJETO"
+            sujeto_v = f"UN SUJETO EN MOTOCICLETA" if md_final == "MOTOCICLETA" else "UN SUJETO"
 
+            # --- 4. CONSTRUCCIÓN DEL RESUMEN TÁCTICO ---
             if es_lesion and not es_robo:
-                # Redacción para Lesiones
-                accion_v = "AGREDE FÍSICAMENTE A LA VÍCTIMA"
-                if "GOLPE" in texto_analisis: accion_v = "PROBINA GOLPES A LA VÍCTIMA"
+                # Narrativa para Lesiones
+                accion_v = "PROBINA GOLPES A LA VÍCTIMA" if "GOLPE" in texto_analisis else "AGREDE FÍSICAMENTE A LA VÍCTIMA"
                 resumen_final = f"VICTIMA SE ENCONTRABA EN LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN SIN PROVOCACION PREVIA {accion_v}, RESULTANDO ESTA CON LESIONES DE DIVERSA CONSIDERACION, PARA LUEGO DARSE A LA FUGA."
-                especie_display = "NO REGISTRA (LESIONES)"
+                especie_display = "NO REGISTRA (PROCEDIMIENTO POR LESIONES)"
             else:
-                # Redacción para Robo (Protocolo anterior)
+                # Narrativa para Robo
                 transporte_v = "A PIE"
                 if "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
+                elif "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
+                
                 accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "SUSTRAE"
                 especie_v = str(esp).upper() if esp else "ESPECIES"
                 resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
-                especie_display = esp
+                especie_display = esp if esp else "SIN ESPECIFICAR"
 
-            # --- 3. LIMPIEZA DE PRIVACIDAD ---
+            # Limpieza de Privacidad (Nombres y RUT)
             nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD|CEDULA)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
-            resumen_final = re.sub(r'(FONO|TEL|NRO|CELULAR)\s?[:°]?\s?\d+', '', resumen_final)
 
-            # --- 4. DETECCIÓN DE LUGAR ---
-            centros_salud = ["HOSPITAL", "CLINICA", "SAPU", "CESFAM", "POSTA"]
-            if any(h in texto_analisis for h in centros_salud):
+            # Lógica de Lugar
+            if any(h in texto_analisis for h in ["HOSPITAL", "CLINICA", "POSTA"]):
                 tl_final = "CENTRO DE SALUD"
                 loc_final = str(loc).upper()
-            elif any(v in texto_analisis for v in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA"]):
-                tl_final = "VIA PUBLICA"
-                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
             else:
-                tl_final = tl_clase if tl_clase else "VIA PUBLICA"
+                tl_final = "VIA PUBLICA" if any(v in texto_analisis for v in ["AVENIDA", "CALLE", "TENIENTE CRUZ"]) else tl_clase
                 loc_final = str(loc).upper()
 
-        # --- 5. RENDERIZADO TABLA FINAL ---
+        # --- 5. RENDERIZADO TABLA ---
         st.markdown(f"""
-        <style>
-            .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #333; }}
-            .t-friday td {{ border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: middle; }}
-            .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
-            .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
-            .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
-            .lbl {{ font-weight: bold; width: 42%; }}
-        </style>
-
-        <table class="t-friday">
+        <table style="width: 100%; border-collapse: collapse; font-family: Arial; color: black; border: 1px solid #333;">
             <tr>
-                <td rowspan="2" class="h-verde" style="width:35%;">{tip}</td>
-                <td class="h-sub" style="width:30%;">TRAMO</td>
-                <td class="h-sub" style="width:35%;">LUGAR OCURRENCIA</td>
+                <td rowspan="2" style="background-color: #1E7421; color: white; text-align: center; font-weight: bold; width: 35%;">{tip}</td>
+                <td style="background-color: #D7E4BD; text-align: center; font-weight: bold; width: 30%;">TRAMO</td>
+                <td style="background-color: #D7E4BD; text-align: center; font-weight: bold; width: 35%;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td style="text-align: center; font-weight: bold; height: 40px; background: white;">{tr}</td>
-                <td style="text-align: center; font-weight: bold; background: white;">{loc_final}</td>
+                <td style="text-align: center; height: 40px; background: white;">{tr}</td>
+                <td style="text-align: center; background: white;">{loc_final}</td>
             </tr>
             <tr>
-                <td class="h-perfil">PERFIL VÍCTIMA</td>
-                <td class="h-perfil">PERFIL DELINCUENTE</td>
-                <td class="h-perfil">MODUS OPERANDI</td>
+                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">PERFIL VÍCTIMA</td>
+                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">PERFIL DELINCUENTE</td>
+                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">MODUS OPERANDI</td>
             </tr>
             <tr>
-                <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none;">
-                        <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
-                        <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
-                        <tr><td class="lbl">LUGAR</td><td style="color: #1E7421; font-weight: bold;">{tl_final}</td></tr>
-                        <tr><td class="lbl">ESPECIE SUST.</td><td>{esp}</td></tr>
-                    </table>
+                <td style="vertical-align: top; background: white; padding: 5px;">
+                    <b>GENERO:</b> {gv}<br><b>RANGO:</b> {ev}<br><b>LUGAR:</b> <span style="color:green; font-weight:bold;">{tl_final}</span><br><b>ESPECIE:</b> {especie_display}
                 </td>
-                <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none;">
-                        <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
-                        <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
-                        <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
-                        <tr><td class="lbl">MED. DESPL.</td><td>{md_final}</td></tr>
-                    </table>
+                <td style="vertical-align: top; background: white; padding: 5px;">
+                    <b>VICTIMARIO:</b> {gd}<br><b>EDAD:</b> {ed}<br><b>FISICO:</b> {cd}<br><b>MED. DESPL.:</b> {md_final}
                 </td>
-                <td style="text-align: justify; line-height: 1.4; font-size: 11px; padding: 10px; vertical-align: top; background: white;">
-                    {resumen_final}
-                </td>
+                <td style="text-align: justify; font-size: 11px; padding: 10px; background: white;">{resumen_final}</td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
