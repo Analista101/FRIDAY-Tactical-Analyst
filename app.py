@@ -147,10 +147,20 @@ def limpiar_solo_carta():
     # No necesitamos st.rerun() aquí si se llama desde un botón que ya refresca
 
 # --- 2. MOTOR DE INTELIGENCIA FRIDAY (CARTA DE SITUACIÓN) ---
+# 1. Primero la función de apoyo (fuera de la otra)
+def extract_value(texto, patron):
+    import re
+    match = re.search(patron, texto)
+    return match.group(1).strip() if match else None
+
+# 2. Luego su función de procesamiento
 def procesar_relato_ia(texto):
     # Limpieza inicial y normalización
     texto_u = texto.upper().replace("Aï¿½OS", "AÑOS").replace("N°", "NRO")
     an_actual = 2026 
+    
+    # Aquí el resto de su código...
+    # Ahora cuando llame a extract_value(texto_u, patron), funcionará perfecto.
     
     # 1. TIPIFICACIÓN
     tip_match = re.search(r'CODIGO DELITO\s?:\s?([^\n]+)', texto_u)
