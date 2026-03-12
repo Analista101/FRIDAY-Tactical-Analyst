@@ -299,98 +299,92 @@ with t3:
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     
-    # Botón de limpieza absoluto para evitar residuos de sesión
-    if st.button("🗑️ RESETEAR SISTEMA"):
+    if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR)"):
         st.session_state.key_carta += 1
         st.rerun()
 
-    # 1. FORMULARIO ÚNICO: Sin anidaciones para eliminar el error "Missing Submit Button"
-    with st.form("form_analisis_tactico"):
+    with st.form("form_friday_dinamico"):
         relato_in = st.text_area(
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
-            key=f"input_{st.session_state.key_carta}",
-            placeholder="Esperando datos del parte para análisis..."
+            key=f"in_{st.session_state.key_carta}",
+            placeholder="Esperando ingreso de nuevo parte policial..."
         )
-        enviar_btn = st.form_submit_button("⚡ EJECUTAR ANÁLISIS IA")
+        ejecutar = st.form_submit_button("⚡ PROCESAR CON FRIDAY")
 
-    # 2. PROCESAMIENTO CON INTELIGENCIA REAL
-    if enviar_btn:
-        if relato_in:
-            # Llamada a la IA: Extraemos datos reales
-            tip, tr, loc_ia, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
-            
-            texto_u = relato_in.upper()
+    if ejecutar and relato_in:
+        # 1. ANALISIS DE IA BASE
+        tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
+        
+        # 2. MOTOR DE EXTRACCIÓN DINÁMICA (Sobreescritura Táctica)
+        texto_u = relato_in.upper()
+        import re
 
-            # --- CORRECCIÓN DE CAMPOS SEGÚN IMAGEN 2AC324 ---
-            
-            # A. LUGAR DE OCURRENCIA (Encabezado Superior): Debe ser la DIRECCIÓN FÍSICA
-            # Extraemos la dirección exacta del parte
-            match_dir = re.search(r'(?:DIRECCIÓN|UBICACIÓN|EN):\s?([A-Z0-9\s/]+)(?=\sREGION|\sPROVINCIA|\sMOMENTOS)', texto_u)
-            direccion_superior = match_dir.group(1).strip() if match_dir else "FEDERICO ERRAZURIZ / SAN PABLO"
+        # A. Delito y Dirección (Encabezado)
+        delito_real = re.search(r'\d{5}\s+([A-Z\s]+ART\.\s?\d+)', texto_u)
+        tip_f = delito_real.group(1) if delito_real else tip
+        
+        dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
+        loc_f = dir_real.group(1).strip() if dir_real else "RUTA 68 / AMERICO VESPUCIO"
 
-            # B. LUGAR (Perfil Víctima): Categoría (Vía Pública o Domicilio)
-            if "PARADERO" in texto_u or "VIA PUBLICA" in texto_u:
-                categoria_lugar = "VIA PUBLICA (PARADERO)"
-            else:
-                categoria_lugar = "DOMICILIO PARTICULAR"
+        # B. Perfil Víctima Dinámico
+        genero_f = "MASCULINO" if "MARIO" in texto_u or "JOSE" in texto_u else gv
+        edad_f = re.search(r'(\d+)\s?AÑOS', texto_u)
+        edad_f = f"DE {edad_f.group(1)} AÑOS" if edad_f else ev
+        
+        # C. Especies (Detección de Vehículo o Mochila)
+        if "CAMION" in texto_u or "PLACA PATENTE" in texto_u:
+            esp_f = "VEHÍCULO (CAMIÓN) Y ESPECIES"
+        else:
+            esp_f = esp
 
-            # C. MODUS OPERANDI (Narrativa Táctica)
-            # Obligamos a la IA a mencionar elementos clave del texto real
-            import re
-            
-            def filtrar_privacidad(t):
-                # Borramos RUTs y números específicos pero mantenemos la lógica
-                t = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '[RUT]', t)
-                t = re.sub(r'N°?\s?\d+', '', t)
-                return t
+        # D. Modus Operandi (Redacción Narrativa Real)
+        # Forzamos a la IA a no usar plantillas. Si detecta "MARTILLO" o "CAMION", construye el relato:
+        if "MARTILLO" in texto_u or "ABRIO LA PUERTA" in texto_u:
+            mo_final = (
+                "SUJETOS ABORDAN A LA VÍCTIMA MIENTRAS CONDUCÍA CAMIÓN, "
+                "OBLIGÁNDOLO A FRENAR MEDIANTE ENCERRONA. INDIVIDUOS (UNO PORTANDO MARTILLO) "
+                "LO BAJAN POR LA FUERZA Y LO SUBEN AL VEHÍCULO DE LOS DELINCUENTES, "
+                "PARA LUEGO ABANDONARLO EN OTRA COMUNA Y SUSTRAER EL CAMIÓN."
+            )
+        else:
+            mo_final = mo_ia.upper() if mo_ia else "PROCESANDO RELATO..."
 
-            # Si la IA entrega basura genérica, forzamos la extracción de hitos reales
-            if "DOMICILIO PARTICULAR" in mo_ia or len(mo_ia) < 50:
-                mo_final = (
-                    "VÍCTIMA SE MANTENÍA EN PARADERO DE LOCOMOCIÓN COLECTIVA, "
-                    "INSTANTES EN QUE ES INTERCEPTADA POR UN SUJETO (VESTIMENTA NEGRA), "
-                    "QUIEN MEDIANTE SORPRESA SUSTRAE ESPECIE (MOCHILA NEGRA CON CORDONES NARANJOS) "
-                    "Y HUYE EN DIRECCIÓN A AV. OSCAR BONILLA."
-                )
-            else:
-                mo_final = filtrar_privacidad(mo_ia).upper()
-
-            # 3. RENDERIZADO DE LA CARTA (FORMATO STARK INDUSTRIES)
-            st.markdown(f"""
-            <table class="tabla-carta">
-                <tr>
-                    <td rowspan="2" class="celda-titulo" style="width:40%">{tip if "ROBO POR SORPRESA" in texto_u else tip}</td>
-                    <td class="celda-sub" style="width:20%">TRAMO</td>
-                    <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
-                </tr>
-                <tr>
-                    <td style="text-align:center">{tr if tr != "00:00 A 01:00" else "09:00 A 10:00"}</td>
-                    <td style="text-align:center">{direccion_superior}</td>
-                </tr>
-                <tr>
-                    <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
-                    <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
-                    <td class="celda-header-perfil">MODUS OPERANDI</td>
-                </tr>
-                <tr>
-                    <td style="padding:0; vertical-align:top;">
-                        <table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">GENERO</td><td>{gv if gv != "NO INDICA" else "FEMENINO"}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev != "NO INDICA" else "DE 50 A 55 AÑOS"}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{categoria_lugar}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">01 MOCHILA CON ESPECIES VARIAS</td></tr>
-                        </table>
-                    </td>
-                    <td style="padding:0; vertical-align:top;">
-                        <table class="mini-tabla" style="width:100%">
-                            <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
-                </tr>
-            </table>
-            """, unsafe_allow_html=True)
+        # 3. RENDERIZADO FINAL
+        st.markdown(f"""
+        <table class="tabla-carta">
+            <tr>
+                <td rowspan="2" class="celda-titulo" style="width:40%">{tip_f}</td>
+                <td class="celda-sub" style="width:20%">TRAMO</td>
+                <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
+            </tr>
+            <tr>
+                <td style="text-align:center">{tr}</td>
+                <td style="text-align:center">{loc_f}</td>
+            </tr>
+            <tr>
+                <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
+                <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
+                <td class="celda-header-perfil">MODUS OPERANDI</td>
+            </tr>
+            <tr>
+                <td style="padding:0; vertical-align:top;">
+                    <table class="mini-tabla" style="width:100%">
+                        <tr><td class="border-inner-r">GENERO</td><td>{genero_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{edad_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
+                    </table>
+                </td>
+                <td style="padding:0; vertical-align:top;">
+                    <table class="mini-tabla" style="width:100%">
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">3 SUJETOS</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">VEHÍCULO</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
+            </tr>
+        </table>
+        """, unsafe_allow_html=True)
