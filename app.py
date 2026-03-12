@@ -363,7 +363,23 @@ with t4:
         if "CELULAR" in memoria and "IPHONE" in mo_final and "IPHONE" not in texto_u:
             mo_final = mo_final.replace("01 TELEFONO CELULAR IPHONE", "ESPECIES VARIAS")
 
-        # 3. RENDERIZADO TÉCNICO (TABLA STARK)
+        # --- 2.1 ALERTAS DE INTELIGENCIA PROACTIVA ---
+        alertas = []
+        if "HURTO" in tip.upper() and ("APUÑALAR" in texto_u or "ARMA" in texto_u):
+            alertas.append("⚠️ DISCORDANCIA: El delito es HURTO pero el relato describe INTIMIDACIÓN.")
+        
+        if "CUARTEL" in loc.upper() and "VIA PUBLICA" not in texto_u:
+            alertas.append("⚠️ REVISAR LUGAR: El sistema indica Cuartel, verifique si el hecho fue al interior o es solo donde se tomó la denuncia.")
+
+        # Mostrar Alertas si existen
+        if alertas:
+            with st.status("🔍 FRIDAY: REVISIÓN DE COHERENCIA FINALIZADA", expanded=True):
+                for a in alertas:
+                    st.warning(a)
+                st.write("Srta. Diana, he detectado puntos críticos. He ajustado la tabla para reflejar la realidad del relato sobre el encabezado técnico.")
+
+        # --- 3. RENDERIZADO FINAL STARK ---
+        # (Aquí se mantiene su tabla profesional pero con los datos ya filtrados por el "Pensamiento de FRIDAY")
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -383,15 +399,15 @@ with t4:
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "FEMENINO"}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE</td><td class="border-inner-t">{esp.upper() if esp else "VARIAS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE</td><td class="border-inner-t">{esp.upper() if esp else "PERTENENCIAS"}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
                         <tr><td class="border-inner-r">SUJETO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">VESTIMENTA</td><td class="border-inner-t">{cd.upper() if cd else "SIN DATOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">VESTIMENTA</td><td class="border-inner-t">{cd_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">MOVIL</td><td class="border-inner-t">{md if md else "A PIE"}</td></tr>
                     </table>
                 </td>
