@@ -511,7 +511,7 @@ with t4:
                     <table style="width:100%; border: none;">
                         <tr><td style="border:none;" class="label-b">GENERO</td><td style="border:none;">{gv}</td></tr>
                         <tr><td style="border:none;" class="label-b">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
-                        <tr><td style="border:none;" class="label-b">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421;">{lugar_perfil_final}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
                         <tr><td style="border:none;" class="label-b">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
                     </table>
                 </td>
