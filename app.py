@@ -299,88 +299,91 @@ with t3:
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     
+    # Botón de limpieza fuera del formulario
     if st.button("🗑️ LIMPIAR RELATO"):
         limpiar_solo_carta()
         st.rerun()
 
-    with st.form("form_carta"):
-        relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
+    # 1. Definición del Formulario ÚNICO
+    with st.form("form_carta_final"):
+        relato_in = st.text_area(
+            "PEGUE EL RELATO AQUÍ:", 
+            height=250, 
+            key=f"txt_{st.session_state.key_carta}",
+            placeholder="Ingrese el parte policial o relato aquí..."
+        )
         
-        # --- BLOQUE UNIFICADO DE PROCESAMIENTO (REEMPLAZO TOTAL) ---
+        # El único botón de envío permitido
+        enviar = st.form_submit_button("⚡ GENERAR CUADRO")
 
-# 1. Definición del Formulario Único
-with st.form("main_form"):
-    relato_in = st.text_area("Ingrese el relato del hecho:", height=200, placeholder="Pegue el relato aquí...")
-    # Este botón cierra el formulario. Si hay otro st.form_submit_button fuera, causará error.
-    enviar = st.form_submit_button("⚡ GENERAR CUADRO")
+    # 2. Lógica de Ejecución (Se activa al presionar el botón)
+    if enviar:
+        if relato_in:
+            # Procesamiento mediante IA
+            tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
+            
+            import re
+            # Priorizamos el resumen de la IA para el Modus Operandi
+            base_mo = mo_ia if mo_ia else relato_in
+            
+            # --- FILTROS ESTRICTOS DE PRIVACIDAD (Limpieza de datos sensibles) ---
+            # Borrar RUTs
+            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+            # Borrar Números de Cuenta, Tarjetas, Teléfonos y Nros de serie
+            texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
+            texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
+            
+            # Borrar Direcciones, Calles y Comunas (Evita que aparezcan en el MO)
+            patrones_direccion = [
+                r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)', 
+                r'NRO\.\s?\d+', 
+                r'COMUNA DE\s+\w+',
+                r'UBICADO EN\s+[\w\s]+(?= MOMENTOS| DONDE)'
+            ]
+            for patron in patrones_direccion:
+                texto_l = re.sub(patron, '', texto_l, flags=re.IGNORECASE)
+            
+            # Limpieza final: Mayúsculas y quitar exceso de espacios
+            mo_final = " ".join(texto_l.split()).upper().strip()[:500]
 
-# 2. Lógica de Ejecución (Solo si se presiona el botón)
-if enviar:
-    if relato_in:
-        # Procesamiento de IA
-        tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
-        
-        import re
-        base_mo = mo_ia if mo_ia else relato_in
-        
-        # --- FILTROS ESTRICTOS DE PRIVACIDAD ---
-        # Borrar RUTs
-        texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-        # Borrar Números de Cuenta, Tarjetas y Teléfonos (Dígitos largos)
-        texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
-        texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
-        
-        # Borrar Direcciones, Calles y Comunas
-        patrones_direccion = [
-            r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)', 
-            r'NRO\.\s?\d+', 
-            r'COMUNA DE\s+\w+',
-            r'UBICADO EN\s+[\w\s]+(?= MOMENTOS| DONDE)'
-        ]
-        for patron in patrones_direccion:
-            texto_l = re.sub(patron, '', texto_l, flags=re.IGNORECASE)
-        
-        # Limpieza final de espacios y formato
-        mo_final = " ".join(texto_l.split()).upper().strip()[:500]
-
-        # 3. Renderizado de la Carta de Situación
-        html_carta = f"""
-        <table class="tabla-carta">
-            <tr>
-                <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
-                <td class="celda-sub" style="width:20%">TRAMO</td>
-                <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
-            </tr>
-            <tr>
-                <td style="text-align:center">{tr}</td>
-                <td style="text-align:center">{loc}</td>
-            </tr>
-            <tr>
-                <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
-                <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
-                <td class="celda-header-perfil">MODUS OPERANDI</td>
-            </tr>
-            <tr>
-                <td style="padding:0; vertical-align:top;">
-                    <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
-                    </table>
-                </td>
-                <td style="padding:0; vertical-align:top;">
-                    <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
-                    </table>
-                </td>
-                <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
-            </tr>
-        </table>
-        """
-        st.markdown(html_carta, unsafe_allow_html=True)
-    else:
-        st.warning("Señor, por favor ingrese un relato antes de generar el cuadro.")
+            # 3. Renderizado de la Carta de Situación (HTML)
+            html_carta = f"""
+            <table class="tabla-carta">
+                <tr>
+                    <td rowspan="2" class="celda-titulo" style="width:40%">{tip}</td>
+                    <td class="celda-sub" style="width:20%">TRAMO</td>
+                    <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center">{tr}</td>
+                    <td style="text-align:center">{loc}</td>
+                </tr>
+                <tr>
+                    <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
+                    <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
+                    <td class="celda-header-perfil">MODUS OPERANDI</td>
+                </tr>
+                <tr>
+                    <td style="padding:0; vertical-align:top;">
+                        <table class="mini-tabla" style="width:100%">
+                            <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
+                        </table>
+                    </td>
+                    <td style="padding:0; vertical-align:top;">
+                        <table class="mini-tabla" style="width:100%">
+                            <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
+                        </table>
+                    </td>
+                    <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
+                </tr>
+            </table>
+            """
+            st.markdown(html_carta, unsafe_allow_html=True)
+        else:
+            st.warning("Señor, por favor ingrese un relato antes de generar el cuadro.")
