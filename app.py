@@ -319,48 +319,38 @@ with t4:
 # 2. Lógica de Ejecución (Se activa al presionar el botón)
     if enviar:
         if relato_in:
-            # Procesamiento mediante IA (Obtenemos los datos base)
-            tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
+            # Procesamiento mediante IA
+            tip, tr, loc_raw, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
             
-            # --- CORRECCIÓN DE LUGAR (FORZADO POR PALABRAS CLAVE) ---
+            # --- LÓGICA DE DISTRIBUCIÓN DE DATOS ---
             texto_upper = relato_in.upper()
+            
+            # A. Identificamos la Categoría para el Perfil Víctima
             if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
-                loc = "VIA PUBLICA"
-            elif "DOMICILIO" in texto_upper and "VIA PUBLICA" not in texto_upper:
-                loc = "DOMICILIO PARTICULAR"
+                categoria_lugar = "VIA PUBLICA"
+            elif "DOMICILIO" in texto_upper:
+                categoria_lugar = "DOMICILIO PARTICULAR"
+            else:
+                categoria_lugar = tl_clase # Respaldo de la IA
+            
+            # B. Extraemos la Dirección para el encabezado (Lugar Ocurrencia)
+            # Buscamos patrones comunes en partes policiales
+            match_dir = re.search(r'(?:EN|CALLE|AVENIDA|INTERSECCIÓN)\s+([^,.]+)', texto_upper)
+            direccion_header = match_dir.group(0) if match_dir else loc_raw
 
             import re
+            base_mo = mo_ia if mo_ia else relato_in
             
-            # --- MEJORA DEL RELATO (MODUS OPERANDI) ---
-            # Si el relato es muy corto o pobre, usamos mo_ia que debería venir redactado por la IA
-            # Pero aplicamos una limpieza quirúrgica para no perder el sentido.
-            
-            base_mo = mo_ia if (mo_ia and len(mo_ia) > 50) else relato_in
-            
-            # 1. Quitamos RUTs
+            # --- FILTROS DE PRIVACIDAD (Solo para el Modus Operandi) ---
             texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+            texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
+            texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', r'\1', texto_l, flags=re.IGNORECASE)
             
-            # 2. Quitamos Números de cuenta y teléfonos, pero mantenemos la mención del objeto
-            # (Ej: Borra el número pero deja "TELÉFONO CELULAR")
-            texto_l = re.sub(r'(N°|NRO|NUMERO)\s?\d+', '', texto_l, flags=re.IGNORECASE)
-            texto_l = re.sub(r'(CUENTA|RUT|TELEFONO|CELULAR)\s?\d+', r'\1', texto_l, flags=re.IGNORECASE)
-            
-            # 3. Quitamos direcciones específicas pero mantenemos la referencia al lugar
-            patrones_anonimizar = [
-                r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)',
-                r'COMUNA DE\s+\w+'
-            ]
-            for patron in patrones_anonimizar:
-                texto_l = re.sub(patron, 'EN LA VÍA PÚBLICA', texto_l, flags=re.IGNORECASE)
+            # Redacción del MO: Limpiamos direcciones específicas para anonimizar, 
+            # pero mantenemos la narrativa de lo sucedido.
+            mo_final = " ".join(texto_l.split()).upper().strip()[:500]
 
-            # Formateo final ejecutivo
-            mo_final = " ".join(texto_l.split()).upper().strip()
-            
-            # Si el texto quedó vacío por los filtros, ponemos un estándar de seguridad
-            if len(mo_final) < 10:
-                mo_final = f"SUJETOS DESCONOCIDOS PROCEDEN A LA SUSTRACCIÓN DE {esp} TRAS INTERCEPTAR A LA VÍCTIMA, PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
-
-            # 3. Renderizado de la Tabla
+            # 3. Renderizado de la Carta de Situación
             html_carta = f"""
             <table class="tabla-carta">
                 <tr>
@@ -370,7 +360,7 @@ with t4:
                 </tr>
                 <tr>
                     <td style="text-align:center">{tr}</td>
-                    <td style="text-align:center">{loc}</td>
+                    <td style="text-align:center">{direccion_header}</td>
                 </tr>
                 <tr>
                     <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
@@ -382,7 +372,7 @@ with t4:
                         <table class="mini-tabla" style="width:100%">
                             <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
                             <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
+                            <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{categoria_lugar}</td></tr>
                             <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp}</td></tr>
                         </table>
                     </td>
