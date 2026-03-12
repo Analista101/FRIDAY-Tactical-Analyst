@@ -433,7 +433,7 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FINAL JARVIS) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (VERSIÓN CORREGIDA) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
@@ -453,8 +453,7 @@ with t4:
                 st.session_state.key_carta += 1
                 st.rerun()
 
-   
-if enviar and relato_in:
+    if enviar and relato_in:
         with st.status("🤖 FRIDAY: Sincronizando perfiles y relato...", expanded=False):
             # 1. Procesamiento base
             resultado = procesar_relato_ia(relato_in)
@@ -491,7 +490,7 @@ if enviar and relato_in:
             resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {delincuente_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
 
             # Limpieza de privacidad (Nombres y RUT)
-            nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR)'
+            nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
 
@@ -499,15 +498,16 @@ if enviar and relato_in:
             if any(x in texto_analisis for x in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA"]):
                 tl_final = "VIA PUBLICA"
                 loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
+                if not loc_final or loc_final == "NONE": loc_final = "AVENIDA TENIENTE CRUZ / SAN FRANCISCO"
             else:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-        # --- 5. RENDERIZADO TABLA ESTILO UNIFICADO ---
+        # --- 5. RENDERIZADO TABLA FINAL (CON md_final) ---
         st.markdown(f"""
         <style>
             .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #333; }}
-            .t-friday td {{ border: 1px solid #333; padding: 8px; font-size: 12px; vertical-align: middle; }}
+            .t-friday td {{ border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: middle; }}
             .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
@@ -532,7 +532,7 @@ if enviar and relato_in:
             </tr>
             <tr>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border:none;">
+                    <table style="width:100%; border: none; border-collapse: collapse;">
                         <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
                         <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
                         <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
@@ -540,11 +540,11 @@ if enviar and relato_in:
                     </table>
                 </td>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border:none;">
+                    <table style="width:100%; border: none; border-collapse: collapse;">
                         <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
                         <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
                         <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
-                        <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
+                        <tr><td class="lbl">MED. DESPL.</td><td>{md_final}</td></tr>
                     </table>
                 </td>
                 <td style="text-align: justify; line-height: 1.4; font-size: 11px; padding: 10px; vertical-align: top; background: white;">
