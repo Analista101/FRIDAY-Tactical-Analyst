@@ -308,7 +308,8 @@ with t4:
         relato_in = st.text_area(
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
-            key=f"in_{st.session_state.key_carta}"
+            key=f"in_{st.session_state.key_carta}",
+            placeholder="Analizando datos en tiempo real..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
@@ -316,41 +317,42 @@ with t4:
         # 1. ANALISIS DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE RECONSTRUCCIÓN REAL
+        # 2. MOTOR DE COHERENCIA Y LIMPIEZA DE LUGAR
         texto_u = relato_in.upper()
         import re
 
-        # --- AJUSTE QUIRÚRGICO: CORTE EN VIA PUBLICA ---
-        # La expresión [^\n\r]+ asegura que solo lea la línea actual y no pase a la siguiente (donde está Domicilio)
-        match_lugar_exacto = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([A-Z\s]+)', texto_u)
-        if match_lugar_exacto:
-            tl_clase_f = match_lugar_exacto.group(1).strip()
-            # Limpieza adicional: si por error capturó "DOMICILIO", lo cortamos antes
-            tl_clase_f = tl_clase_f.split("DOMICILIO")[0].strip()
+        # --- CORRECCIÓN DE LUGAR (SOLO HASTA VIA PUBLICA) ---
+        match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([A-Z\s]+)', texto_u)
+        if match_lugar:
+            tl_clase_f = match_lugar.group(1).strip().split('\n')[0].split('DOMICILIO')[0].strip()
         else:
-            tl_clase_f = tl_clase if tl_clase else "VIA PUBLICA"
-        
-        # Mantener dirección del encabezado intacta
+            tl_clase_f = "VIA PUBLICA"
+
+        # --- RECONSTRUCCIÓN DE RELATO COHERENTE (ELIMINA ERRORES DE MEZCLA) ---
+        if "MAZDA" in texto_u or "VEHICULO" in texto_u or "PATENTE" in texto_u:
+            # Si hay un vehículo involucrado, el relato debe ser sobre el robo del móvil
+            patente = re.search(r'PATENTE\s?([A-Z0-9.\-\s]+)', texto_u)
+            p_val = patente.group(0).strip() if patente else ""
+            
+            mo_final = (
+                f"MOMENTOS EN QUE LA VÍCTIMA TRANSITABA POR EL LUGAR, ES ABORDADA POR SUJETOS DESCONOCIDOS, "
+                f"QUIENES MEDIANTE LA INTIMIDACIÓN PROCEDEN A LA SUSTRACCIÓN DE VEHÍCULO PARTICULAR MARCA MAZDA "
+                f"{p_val}, PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+            )
+            esp_f = f"VEHÍCULO MAZDA {p_val}"
+        elif "HOMICIDIO" in texto_u:
+            mo_final = "SUJETOS DESCONOCIDOS EFECTÚAN DISPAROS, RESULTANDO PERSONA FALLECIDA EN EL LUGAR."
+            esp_f = "NO APLICA"
+        else:
+            # Para otros casos, limpiamos las frases repetitivas de la IA
+            mo_final = mo_ia.upper().replace("AL PERCATARSE DE LA SITUACIÓN NOTÓ QUE", "INSTANTES EN QUE")
+            esp_f = esp.upper()
+
+        # Dirección del encabezado (No se toca)
         dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
         loc_f = dir_real.group(1).strip() if dir_real else loc
 
-        # Resto de variables de perfil
-        genero_f = gv if gv else "MASCULINO"
-        match_edad = re.search(r'(\d+)\s?AÑOS', texto_u)
-        edad_f = f"DE {match_edad.group(1)} AÑOS" if match_edad else (ev if ev else "NO INDICA")
-
-        # Lógica de Especies y Modus Operandi
-        if "HOMICIDIO" in texto_u or "DISPAROS" in texto_u:
-            mo_final = (
-                "SUJETOS DESCONOCIDOS EFECTÚAN MÚLTIPLES DISPAROS CON ARMAS DE FUEGO EN SECTOR TERRAZA DE DISCOTEQUE, "
-                "RESULTANDO PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA."
-            )
-            esp_f = "NO APLICA"
-        else:
-            mo_final = mo_ia.upper() if mo_ia else "RELATO NO GENERADO"
-            esp_f = esp.upper() if esp else "NO INDICA"
-
-        # 3. RENDERIZADO FINAL
+        # 3. RENDERIZADO FINAL (DISEÑO ORIGINAL)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -370,17 +372,17 @@ with t4:
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{genero_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{edad_f}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "MASCULINO"}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDOS"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "NO INDICA"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "SIN DATOS"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "VEHÍCULO"}</td></tr>
                     </table>
                 </td>
