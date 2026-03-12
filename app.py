@@ -317,41 +317,43 @@ with t4:
         # 1. ANALISIS DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE RECONSTRUCCIÓN REAL (Para evitar relatos falsos)
+        # 2. MOTOR DE RECONSTRUCCIÓN REAL
         texto_u = relato_in.upper()
         import re
 
-        # Extraer Delito y Dirección directamente del texto del parte
+        # Extraer Delito y Dirección directamente del texto
         delito_real = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
         tip_f = delito_real.group(1).strip() if delito_real else tip
         
         dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
         loc_f = dir_real.group(1).strip() if dir_real else loc
 
-        # --- LÓGICA DE MODUS OPERANDI COHERENTE ---
-        # Si el relato de la IA es genérico o habla de "regresar al lugar" en un tiroteo, lo corregimos
+        # --- SOLUCIÓN AL NAMEERROR: Definición de variables de perfil ---
+        genero_f = gv if gv else "NO INDICA"
+        # Buscamos la edad exacta si la IA no la capturó bien
+        match_edad = re.search(r'(\d+)\s?AÑOS', texto_u)
+        edad_f = f"DE {match_edad.group(1)} AÑOS" if match_edad else (ev if ev else "NO INDICA")
+
+        # --- LÓGICA DE MODUS OPERANDI Y ESPECIES ---
         if "HOMICIDIO" in texto_u or "DISPAROS" in texto_u:
-            # Reconstrucción para el caso de la discoteca (Parte 00241)
             mo_final = (
                 "SUJETOS DESCONOCIDOS EFECTÚAN MÚLTIPLES DISPAROS CON ARMAS DE FUEGO EN SECTOR TERRAZA DE DISCOTEQUE, "
-                "RESULTANDO TRES PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA. "
+                "RESULTANDO PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA. "
                 "PERSONAL POLICIAL HALLA VAINAS Y MUNICIÓN EN EL SITIO DEL SUCESO."
             )
             esp_f = "NO APLICA (EVIDENCIA BALÍSTICA)"
         elif "CAMION" in texto_u:
-            # Reconstrucción para el robo del camión
             mo_final = (
                 "SUJETOS ABORDAN A VÍCTIMA MEDIANTE ENCERRONA MIENTRAS CONDUCÍA CAMIÓN. "
                 "CON USO DE FUERZA Y HERRAMIENTAS (MARTILLO), LO OBLIGAN A DESCENDER PARA SUSTRAER EL VEHÍCULO. "
                 "VÍCTIMA ES ABANDONADA POSTERIORMENTE EN OTRA COMUNA."
             )
-            esp_f = esp.upper()
+            esp_f = esp.upper() if esp else "VEHÍCULO"
         else:
-            # Si es un robo común, usamos el mo_ia pero aseguramos coherencia
-            mo_final = mo_ia.upper()
-            esp_f = esp.upper()
+            mo_final = mo_ia.upper() if mo_ia else "RELATO NO GENERADO"
+            esp_f = esp.upper() if esp else "NO INDICA"
 
-        # 3. RENDERIZADO FINAL
+        # 3. RENDERIZADO FINAL (DISEÑO ORIGINAL)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -373,16 +375,16 @@ with t4:
                     <table class="mini-tabla" style="width:100%">
                         <tr><td class="border-inner-r">GENERO</td><td>{genero_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{edad_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">3 SUJETOS</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">VEHÍCULO</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "MASCULINO"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "3 SUJETOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "VEHÍCULO"}</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
