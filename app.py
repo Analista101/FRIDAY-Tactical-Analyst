@@ -433,10 +433,11 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (DISEÑO SIMÉTRICO) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (DISEÑO SIMÉTRICO Y UNIFICADO) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
+    # Única entrada de texto para evitar duplicidad de variables
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
@@ -454,9 +455,10 @@ with t4:
                 st.rerun()
 
     if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Procesando...", expanded=False):
+        with st.status("🤖 FRIDAY: Sincronizando matriz de datos...", expanded=False):
+            # 1. Procesamiento IA (Protocolo de 12 campos)
             resultado = procesar_relato_ia(relato_in)
-            # Sincronización de variables (Protocolo de 12 campos)
+            
             if len(resultado) >= 12:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
             else:
@@ -466,20 +468,28 @@ with t4:
             import re
             texto_upper = relato_in.upper()
             
-            # --- LÓGICA DE LUGAR Y PRIVACIDAD ---
+            # --- 2. LÓGICA DE PRIORIDAD DE RELATO (MODUS OPERANDI) ---
+            # Limpieza de datos sensibles manteniendo la narrativa original
+            relato_limpio = texto_upper
+            relato_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', relato_limpio) # Elimina RUT
+            relato_limpio = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR|R.U.T)\s?N?°?\s?\d+', '', relato_limpio, flags=re.IGNORECASE)
+            
+            # El Modus Operandi ahora es el relato del parte, formateado para la tabla
+            mo_final = " ".join(relato_limpio.split()).strip()
+
+            # --- 3. LÓGICA DE LUGAR (REGLA INSTITUCIONAL) ---
             if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
                 tl_final = "VIA PUBLICA"
+                # Limpia la dirección cortando cualquier referencia a domicilio
                 loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
                 if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
             else:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-            base_mo = mo_ia if mo_ia else relato_in
-            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-            mo_final = " ".join(texto_l.split()).upper().strip()[:500]
+            st.write("Análisis y limpieza de datos completada.")
 
-        # --- RENDERIZADO CON FUENTE Y TAMAÑO UNIFICADO ---
+        # --- 4. RENDERIZADO CSS Y HTML (ESTILO STARK INDUSTRIES) ---
         st.markdown(f"""
         <style>
             .t-friday {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
@@ -488,9 +498,10 @@ with t4:
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
             .mini-t {{ width: 100%; border-collapse: collapse; border: none; }}
-            .mini-t td {{ border: none; padding: 3px 5px; font-size: 12px; }}
-            .lbl {{ font-weight: bold; width: 40%; }}
+            .mini-t td {{ border: none; padding: 3px 5px; font-size: 12px; height: 22px; }}
+            .lbl {{ font-weight: bold; width: 42%; }}
             .val-resaltado {{ font-weight: bold; color: #1E7421; }}
+            .mo-box {{ text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background-color: white; }}
         </style>
 
         <table class="t-friday">
@@ -525,7 +536,7 @@ with t4:
                         <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
                     </table>
                 </td>
-                <td style="text-align: justify; line-height: 1.3; font-size: 11.5px; padding: 10px;">
+                <td class="mo-box">
                     {mo_final}
                 </td>
             </tr>
