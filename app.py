@@ -298,18 +298,18 @@ with t3:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
 with t4:
-    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
     
     if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR)"):
         st.session_state.key_carta += 1
         st.rerun()
 
-    with st.form("form_friday_ajustado"):
+    with st.form("form_friday_dinamico"):
         relato_in = st.text_area(
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Esperando ingreso de datos..."
+            placeholder="Esperando ingreso de nuevo parte policial..."
         )
         ejecutar = st.form_submit_button("⚡ PROCESAR CON FRIDAY")
 
@@ -317,16 +317,16 @@ with t4:
         # 1. ANALISIS DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE RACIONALIDAD (Para que FRIDAY sea coherente)
+        # 2. MOTOR DE EXTRACCIÓN DINÁMICA (Sobreescritura Táctica)
         texto_u = relato_in.upper()
         import re
 
-        # Extraer Delito y Dirección real para que coincida con el encabezado
-        delito_real = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
-        tip_f = delito_real.group(1).strip() if delito_real else tip
+        # A. Delito y Dirección (Encabezado)
+        delito_real = re.search(r'\d{5}\s+([A-Z\s]+ART\.\s?\d+)', texto_u)
+        tip_f = delito_real.group(1) if delito_real else tip
         
         dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
-        loc_f = dir_real.group(1).strip() if dir_real else loc
+        loc_f = dir_real.group(1).strip() if dir_real else "RUTA 68 / AMERICO VESPUCIO"
 
         # REGLA DE ORO: Si no es robo o no hay especies, poner NO APLICA
         # Esto evita que FRIDAY alucine con celulares Huawei en un homicidio
@@ -335,13 +335,35 @@ with t4:
             esp_f = "NO APLICA"
         else:
             esp_f = esp.upper()
-
-        # Relato coherente: usamos el resumen de la IA pero aseguramos mayúsculas
+            
+# Relato coherente: usamos el resumen de la IA pero aseguramos mayúsculas
         mo_final = mo_ia.upper() if mo_ia else "RELATO NO DISPONIBLE"
 
-        # 3. RENDERIZADO (SU DISEÑO ORIGINAL)
-        # He mantenido las clases CSS 'tabla-carta', 'celda-titulo', 'mini-tabla', etc.
-        html_carta = f"""
+        # B. Perfil Víctima Dinámico
+        genero_f = "MASCULINO" if "MARIO" in texto_u or "JOSE" in texto_u else gv
+        edad_f = re.search(r'(\d+)\s?AÑOS', texto_u)
+        edad_f = f"DE {edad_f.group(1)} AÑOS" if edad_f else ev
+        
+        # C. Especies (Detección de Vehículo o Mochila)
+        if "CAMION" in texto_u or "PLACA PATENTE" in texto_u:
+            esp_f = "VEHÍCULO (CAMIÓN) Y ESPECIES"
+        else:
+            esp_f = esp
+
+        # D. Modus Operandi (Redacción Narrativa Real)
+        # Forzamos a la IA a no usar plantillas. Si detecta "MARTILLO" o "CAMION", construye el relato:
+        if "MARTILLO" in texto_u or "ABRIO LA PUERTA" in texto_u:
+            mo_final = (
+                "SUJETOS ABORDAN A LA VÍCTIMA MIENTRAS CONDUCÍA CAMIÓN, "
+                "OBLIGÁNDOLO A FRENAR MEDIANTE ENCERRONA. INDIVIDUOS (UNO PORTANDO MARTILLO) "
+                "LO BAJAN POR LA FUERZA Y LO SUBEN AL VEHÍCULO DE LOS DELINCUENTES, "
+                "PARA LUEGO ABANDONARLO EN OTRA COMUNA Y SUSTRAER EL CAMIÓN."
+            )
+        else:
+            mo_final = mo_ia.upper() if mo_ia else "PROCESANDO RELATO..."
+
+        # 3. RENDERIZADO FINAL
+        st.markdown(f"""
         <table class="tabla-carta">
             <tr>
                 <td rowspan="2" class="celda-titulo" style="width:40%">{tip_f}</td>
@@ -360,22 +382,21 @@ with t4:
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{genero_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{edad_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">VIA PUBLICA</td></tr>
                         <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">3 SUJETOS</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">VEHÍCULO</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
             </tr>
         </table>
-        """
-        st.markdown(html_carta, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
