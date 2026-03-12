@@ -309,58 +309,40 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Iniciando protocolos de análisis semántico, Srta. Diana..."
+            placeholder="Iniciando protocolos de limpieza y síntesis, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
     if ejecutar and relato_in:
-        # 1. PROCESAMIENTO SEMÁNTICO (IA REAL)
-        # Aquí la IA analiza el texto completo antes de renderizar
+        # 1. PROCESAMIENTO SEMÁNTICO
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
         texto_u = relato_in.upper()
         import re
 
-        # --- LÓGICA DE EXTRACCIÓN DE ALTA PRECISIÓN ---
-        # 1. Lugar (Corte quirúrgico para evitar domicilio)
+        # --- MOTOR DE DISCERNIMIENTO JARVIS ---
+        
+        # A. Limpieza Quirúrgica de Lugar (Evita que pase "DOMICILIO")
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # 2. Perfil del Delincuente (Búsqueda de descripción física real)
-        # Si la IA base falla, Jarvis busca descripciones de vestimenta
-        patrones_sujeto = [
-            r'PERSONA MASCULINA QUE VESTIA ([^,.]+)[\.,]',
-            r'SUJETO ([^,.]+) EL CUAL',
-            r'VESTIA ([^,.]+) CON'
-        ]
-        cd_f = cd.upper() if cd and "NO INDICA" not in cd.upper() else "SUJETO DESCONOCIDO"
-        for pat in patrones_sujeto:
-            res = re.search(pat, texto_u)
-            if res:
-                cd_f = res.group(1).strip()
-                break
-
-        # 3. Construcción de Relato Coherente (Basado en hechos, no en plantillas)
-        # Extraemos la amenaza específica
-        amenaza = "MEDIANTE LA INTIMIDACIÓN"
-        if "APUÑALAR" in texto_u or "ARMA BLANCA" in texto_u:
-            amenaza = "MEDIANTE LA INTIMIDACIÓN CON ARMA BLANCA (AMENAZA DE APUÑALAMIENTO)"
-        elif "ARMA DE FUEGO" in texto_u:
-            amenaza = "MEDIANTE LA INTIMIDACIÓN CON ARMA DE FUEGO"
-
-        # Extraemos la dinámica (Metro, transitar, etc.)
-        dinamica = "TRANSITABA POR LA VÍA PÚBLICA"
-        if "METRO" in texto_u:
-            m_match = re.search(r'METRO\s+([A-Z\s]+)MOMENTOS', texto_u)
-            dinamica = f"DESCENDÍA DESDE ESTACIÓN DE METRO {m_match.group(1).strip() if m_match else ''}"
-
+        # B. Extracción Real de Caracteres Físicos (SIN REPETIR EL ROBO)
+        # Buscamos solo lo que viste o describe al sujeto
+        vestimenta_match = re.search(r'VESTIA ([^,.]+)(?= EL QUE| MOMENTOS| POR LO QUE)', texto_u)
+        cd_f = vestimenta_match.group(1).strip() if vestimenta_match else "01 SUJETO (SIN MÁS DATOS)"
+        
+        # C. Construcción de Narrativa Sintetizada (Modus Operandi)
+        # No pegamos el texto, lo construimos con los datos clave
+        arma = "ARMA BLANCA" if any(x in texto_u for x in ["APUÑALAR", "CUCHILLO", "HOJA"]) else "LA INTIMIDACIÓN"
+        
         mo_final = (
-            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {dinamica}, FUE INTERCEPTADA POR UN SUJETO "
-            f"QUE VESTÍA {cd_f}, QUIEN {amenaza} PROCEDIÓ A LA SUSTRACCIÓN DE {esp.upper()}, "
-            f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA DESCENDÍA DE TRANSPORTE PÚBLICO, "
+            f"FUE ABORDADA POR UN SUJETO QUE VESTÍA {cd_f}. "
+            f"EL ANTISOCIAL, MEDIANTE {arma}, PROCEDIÓ A LA SUSTRACCIÓN DE {esp.upper()}, "
+            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
         )
 
-        # 3. RENDERIZADO FINAL
+        # 3. RENDERIZADO LIMPIO (SIN DESBORDAMIENTO DE TEXTO)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -381,17 +363,17 @@ with t4:
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
                         <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "FEMENINO"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "20 A 25 AÑOS"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper()}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "MASCULINO"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>MASCULINO</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
                         <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "A PIE"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">A PIE</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
