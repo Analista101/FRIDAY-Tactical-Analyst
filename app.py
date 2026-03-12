@@ -433,10 +433,11 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (CON RESUMEN TÁCTICO) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FRIDAY) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
+    # 1. ENTRADA DE DATOS
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
@@ -453,12 +454,13 @@ with t4:
                 st.session_state.key_carta += 1
                 st.rerun()
 
-   if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Generando resumen táctico ejecutivo...", expanded=False):
-            # 1. Ejecución del motor IA
+    # 2. LÓGICA DE PROCESAMIENTO (Alineada correctamente)
+    if enviar and relato_in:
+        with st.status("🤖 FRIDAY: Procesando análisis táctico...", expanded=False):
+            # Procesamiento mediante IA
             resultado = procesar_relato_ia(relato_in)
             
-            # Sincronización de variables
+            # Sincronización de variables (Protocolo de 12 campos)
             if len(resultado) >= 12:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
             else:
@@ -468,46 +470,34 @@ with t4:
             import re
             texto_upper = relato_in.upper()
             
-            # --- 2. GENERACIÓN DEL MODUS OPERANDI (RESUMEN TÁCTICO) ---
-            # En lugar de usar el texto alucinado, extraemos palabras clave del relato real
-            # Buscamos vehículos, vestimentas y la acción principal.
+            # --- 3. GENERACIÓN DE RESUMEN TÁCTICO (NUEVA DIRECTRIZ) ---
+            # Filtramos mo_ia para que sea un resumen ejecutivo en MAYÚSCULAS
+            resumen_tactivo = mo_ia.upper() if mo_ia else "VICTIMA FUE ABORDADA POR SUJETOS DESCONOCIDOS"
             
-            mo_analisis = mo_ia.upper() if mo_ia else ""
-            
-            # Si el análisis de la IA falló o es genérico, forzamos la estructura táctica:
-            if "DOMICILIO" in mo_analisis and "TENIENTE CRUZ" in texto_upper:
-                # Reconstrucción manual basada en el parte real (image_039b9f.png)
-                resumen_final = "VICTIMA TRANSITABA POR LA VIA PUBLICA CUANDO FUE ABORDADA POR UN SUJETO EN UNA MOTOCICLETA, QUIEN LE ARREBATA SORPRESIVAMENTE SU TELEFONO CELULAR DE LAS MANOS, PARA LUEGO DARSE A LA FUGA EN DIRECCION DESCONOCIDA."
-            else:
-                # Limpieza profunda de antecedentes personales en el resumen de la IA
-                resumen_final = mo_analisis
-                # Eliminar RUT
-                resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
-                # Eliminar nombres (Patrón aproximado para nombres en mayúsculas)
-                resumen_final = re.sub(r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO)', 'VICTIMA', resumen_final)
-                # Eliminar teléfonos y direcciones específicas
-                resumen_final = re.sub(r'(FONO|CONTACTO|NRO|MARIVOR|CALLE)\s?[:°]?\s?\d+', '', resumen_final)
-                resumen_final = re.sub(r'\d{8,10}', '', resumen_final)
+            # Limpieza profunda: Omitir nombres, RUTs y teléfonos
+            resumen_tactivo = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_tactivo) # RUT
+            resumen_tactivo = re.sub(r'(CELULAR|TELEFONO|NRO|NUMERO|RUT|FONO)\s?[:°]?\s?\d+', '', resumen_tactivo, flags=re.IGNORECASE)
+            # Reemplazo de nombres específicos detectados en partes anteriores
+            resumen_tactivo = re.sub(r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO)', 'VICTIMA', resumen_tactivo)
 
-            # --- 3. CORRECCIÓN DE LUGAR (VIA PUBLICA) ---
-            # Forzamos VIA PUBLICA si se detectan intersecciones o calles en el relato
-            if any(x in texto_upper for x in ["AVENIDA", "TENIENTE CRUZ", "SAN FRANCISCO", "VIA PUBLICA"]):
+            # --- 4. LÓGICA DE LUGAR (REGLA INSTITUCIONAL) ---
+            if any(x in texto_upper for x in ["AVENIDA", "VIA PUBLICA", "VÍA PÚBLICA", "INTERSECCION"]):
                 tl_final = "VIA PUBLICA"
-                loc_final = "AVENIDA TENIENTE CRUZ / SAN FRANCISCO"
+                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
+                if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
             else:
-                tl_final = tl_clase if tl_clase else "VIA PUBLICA"
+                tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-            st.write("Análisis táctico depurado.")
-
-        # --- 4. RENDERIZADO FINAL ---
+        # --- 5. RENDERIZADO TABLA FINAL ---
         st.markdown(f"""
         <style>
-            .t-friday {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
-            .t-friday td {{ border: 1px solid #333; padding: 8px; font-size: 12px; vertical-align: middle; }}
+            .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #333; }}
+            .t-friday td {{ border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: middle; }}
             .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
+            .lbl {{ font-weight: bold; width: 42%; }}
             .val-resaltado {{ font-weight: bold; color: #1E7421; }}
         </style>
 
@@ -518,8 +508,8 @@ with t4:
                 <td class="h-sub" style="width:35%;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td style="text-align: center; font-weight: bold; height: 40px;">{tr}</td>
-                <td style="text-align: center; font-weight: bold;">{loc_final}</td>
+                <td style="text-align: center; font-weight: bold; height: 40px; background: white;">{tr}</td>
+                <td style="text-align: center; font-weight: bold; background: white;">{loc_final}</td>
             </tr>
             <tr>
                 <td class="h-perfil">PERFIL VÍCTIMA</td>
@@ -527,25 +517,27 @@ with t4:
                 <td class="h-perfil">MODUS OPERANDI</td>
             </tr>
             <tr>
-                <td style="padding: 0; vertical-align: top;">
-                    <table style="width:100%; border:none;">
-                        <tr><td style="font-weight:bold; width:42%;">GENERO</td><td>{gv}</td></tr>
-                        <tr><td style="font-weight:bold;">RANGO ETARIO</td><td>{ev}</td></tr>
-                        <tr><td style="font-weight:bold;">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
-                        <tr><td style="font-weight:bold;">ESPECIE SUST.</td><td>{esp}</td></tr>
+                <td style="padding: 0; vertical-align: top; background: white;">
+                    <table style="width:100%; border: none; border-collapse: collapse;">
+                        <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
+                        <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
+                        <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
+                        <tr><td class="lbl">ESPECIE SUST.</td><td>{esp}</td></tr>
                     </table>
                 </td>
-                <td style="padding: 0; vertical-align: top;">
-                    <table style="width:100%; border:none;">
-                        <tr><td style="font-weight:bold; width:42%;">VICTIMARIO</td><td>{gd}</td></tr>
-                        <tr><td style="font-weight:bold;">RANGO EDAD</td><td>{ed}</td></tr>
-                        <tr><td style="font-weight:bold;">CARACT. FÍS.</td><td>{cd}</td></tr>
-                        <tr><td style="font-weight:bold;">MED. DESPL.</td><td>{md}</td></tr>
+                <td style="padding: 0; vertical-align: top; background: white;">
+                    <table style="width:100%; border: none; border-collapse: collapse;">
+                        <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
+                        <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
+                        <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
+                        <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
                     </table>
                 </td>
-                <td style="text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background-color: white;">
-                    {resumen_final}
+                <td style="text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background: white;">
+                    {resumen_tactivo}
                 </td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
+    elif enviar and not relato_in:
+        st.warning("⚠️ POR FAVOR, INGRESE EL RELATO DEL PARTE.")
