@@ -455,3 +455,82 @@ with t3:
 
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
+
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (BLOQUE FINAL) ---
+with t4:
+    st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
+        # 1. ENTRADA DE TEXTO (Usando la key dinámica para limpieza)
+    relato_in = st.text_area(
+        "PEGUE EL PARTE POLICIAL AQUÍ:", 
+        height=250, 
+        key=f"relato_final_{st.session_state.key_carta}"
+    )
+
+    col_btn1, col_btn2 = st.columns([1, 1])
+    
+    with col_btn1:
+        ejecutar = st.button("⚡ ANALIZAR CON MEMORIA ACTIVA")
+    
+    with col_btn2:
+        # El botón de limpiar solo aparece si usted se lo ordenó a FRIDAY
+        if config_nube.get("boton_limpiar"):
+            if st.button("🗑️ LIMPIAR RELATO"):
+                st.session_state.key_carta += 1
+                st.rerun()
+
+    # 2. LÓGICA DE VISUALIZACIÓN DE LA TABLA
+    if ejecutar and relato_in:
+        with st.status("🤖 FRIDAY: Procesando datos del parte policial...", expanded=False):
+            # Llamamos al motor de inteligencia que revisamos antes
+            datos = procesar_relato_ia(relato_in)
+            (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
+            st.write("Análisis completado.")
+
+        # 3. RENDERIZADO DE LA CARTA DE SITUACIÓN (DISEÑO STARK/POLICIAL)
+        st.markdown(f"""
+        <table class="tabla-carta">
+            <tr>
+                <td colspan="4" class="celda-titulo">CARTA DE SITUACIÓN TÁCTICA</td>
+            </tr>
+            <tr>
+                <td class="celda-sub" style="width:25%;">TIPIFICACIÓN</td>
+                <td style="width:25%;">{tip}</td>
+                <td class="celda-sub" style="width:25%;">TRAMO HORARIO</td>
+                <td style="width:25%;">{tr}</td>
+            </tr>
+            <tr>
+                <td class="celda-sub">LUGAR DE OCURRENCIA</td>
+                <td>{loc}</td>
+                <td class="celda-sub">CLASE DE LUGAR</td>
+                <td>{tl}</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="celda-header-perfil">PERFIL VÍCTIMA</td>
+                <td colspan="2" class="celda-header-perfil">PERFIL DELINCUENTE</td>
+            </tr>
+            <tr>
+                <td class="celda-sub">GÉNERO / EDAD</td>
+                <td>{gv} / {ev}</td>
+                <td class="celda-sub">GÉNERO / EDAD</td>
+                <td>{gd} / {ed}</td>
+            </tr>
+            <tr>
+                <td class="celda-sub">ESPECIE SUSTRAÍDA</td>
+                <td>{esp}</td>
+                <td class="celda-sub">VESTIMENTA / MÓVIL</td>
+                <td>{cd} / {md}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="celda-header-perfil">MODUS OPERANDI</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align: justify; padding: 15px;">{mo}</td>
+            </tr>
+            <tr>
+                <td class="celda-sub">BASE LEGAL</td>
+                <td colspan="3">{legal}</td>
+            </tr>
+        </table>
+        """, unsafe_allow_html=True)
+        
+        st.success("✅ Análisis táctico finalizado, Srta. Diana.")
