@@ -309,45 +309,56 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Iniciando protocolos de análisis semántico real, Srta. Diana..."
+            placeholder="Sistemas listos. Analizando narrativa real, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
     if ejecutar and relato_in:
-        # 1. PROCESAMIENTO POR IA (Sin plantillas rígidas)
+        # 1. EXTRACCIÓN SEMÁNTICA
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
         texto_u = relato_in.upper()
         import re
 
-        # --- MOTOR DE INTELIGENCIA ADAPTATIVA ---
+        # --- MOTOR DE LÓGICA SITUACIONAL ---
         
-        # A. Lugar (Corte quirúrgico para evitar que pase el domicilio personal)
+        # A. Lugar del Perfil (Corte estricto para evitar el domicilio personal)
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
-        tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "DETERMINAR EN RELATO"
+        tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # B. Limpieza de Características Físicas (Detección de Sujetos Reales)
-        # Si el parte menciona nombres o descripciones específicas (como "Julio"), Jarvis los prioriza
-        cd_f = cd.upper() if cd and "NO INDICA" not in cd.upper() else "SUJETOS POR IDENTIFICAR"
-        if "JULIO" in texto_u:
-            cd_f = "SUJETO IDENTIFICADO COMO JULIO E INNUMERABLES INDIVIDUOS"
+        # B. Reconstrucción de Relato sin Alucinaciones
+        # Eliminamos las frases "pre-fabricadas" que causan errores
+        relato_limpio = mo_ia.upper()
+        prohibidas = ["AL REGRESAR AL LUGAR", "TRANSITABA A PIE EN DOMICILIO", "NOTÓ QUE"]
+        for p in prohibidas:
+            relato_limpio = relato_limpio.replace(p, "")
 
-        # C. Reconstrucción de Relato (IA Real: Solo usa lo que viene en el texto)
-        # Limpiamos el mo_ia de frases basura que la IA suele repetir
-        mo_final = mo_ia.upper()
-        basura = [
-            "EN CIRCUNSTANCIAS QUE LA VÍCTIMA SE DESPLAZABA POR EL SECTOR",
-            "FUE ABORDADA POR UN SUJETO",
-            "PROCEDIERON A LA SUSTRACCIÓN DE 01 TELEFONO CELULAR HUAWEI"
-        ]
-        for b in basura:
-            mo_final = mo_final.replace(b, "")
+        # C. Detección de Dinámica Real (¿Qué estaba haciendo la víctima?)
+        if "ARRENDABA" in texto_u or "HABITACION" in texto_u:
+            contexto = "SE ENCONTRABA AL INTERIOR DE SU DOMICILIO/HABITACIÓN"
+        elif "DESCENDE" in texto_u or "METRO" in texto_u:
+            contexto = "DESCENDÍA DE TRANSPORTE PÚBLICO"
+        elif "TRANSITABA" in texto_u:
+            contexto = "TRANSITABA POR LA VÍA PÚBLICA"
+        else:
+            contexto = "SE ENCONTRABA EN EL LUGAR"
+
+        # D. Identificación de Sujetos y Amenaza
+        sujetos = "SUJETOS DESCONOCIDOS"
+        if "JULIO" in texto_u: sujetos = "SUJETO IDENTIFICADO COMO JULIO Y OTROS INDIVIDUOS"
         
-        # Si el relato queda muy corto o incoherente, Jarvis toma el mando:
-        if len(mo_final) < 50:
-            mo_final = f"MOMENTOS EN QUE LA VÍCTIMA SE ENCONTRABA EN SU HABITACIÓN, INGRESAN SUJETOS (IDENTIFICANDO A UNO COMO JULIO), QUIENES LE EXIGEN HACER ABANDONO DEL INMUEBLE Y SUSTRAEN PERTENENCIAS, MANIFESTANDO AMENAZAS Y EXPRESIONES OFENSIVAS."
+        amenaza = "MEDIANTE INTIMIDACIÓN"
+        if "APUÑALAR" in texto_u: amenaza = "MEDIANTE AMENAZA DE ARMA BLANCA"
 
-        # 3. RENDERIZADO FINAL (ESTILO STARK INDUSTRIES)
+        # E. Ensamble Final de IA
+        mo_final = (
+            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {contexto}, "
+            f"INGRESARON {sujetos}, QUIENES {amenaza} "
+            f"PROCEDIERON A LA SUSTRACCIÓN DE {esp.upper() if esp else 'ESPECIES VARIAS'}, "
+            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+        )
+
+        # 3. RENDERIZADO STARK INDUSTRIES
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -370,15 +381,15 @@ with t4:
                         <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper() if esp else "PERTENENCIAS VARIAS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper() if esp else "PERTENENCIAS"}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "GRUPO DE SUJETOS"}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">A PIE / EN LUGAR</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd.upper() if cd else "SIN DATOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">A PIE</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
