@@ -309,50 +309,53 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Analizando datos en tiempo real..."
+            placeholder="Sistemas listos para análisis de datos, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
     if ejecutar and relato_in:
-        # 1. ANALISIS DE IA BASE
+        # 1. EXTRACCIÓN DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE COHERENCIA Y LIMPIEZA DE LUGAR
+        # 2. MOTOR DE COHERENCIA UNIVERSAL (PROYECTO JARVIS)
         texto_u = relato_in.upper()
         import re
 
-        # --- CORRECCIÓN DE LUGAR (SOLO HASTA VIA PUBLICA) ---
-        match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([A-Z\s]+)', texto_u)
-        if match_lugar:
-            tl_clase_f = match_lugar.group(1).strip().split('\n')[0].split('DOMICILIO')[0].strip()
+        # --- EXTRACCIÓN QUIRÚRGICA DE LUGAR (PERFIL VÍCTIMA) ---
+        # Corta exactamente en el salto de línea para no capturar "DOMICILIO"
+        match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
+        tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
+
+        # --- RECONSTRUCCIÓN LÓGICA DEL RELATO (MODUS OPERANDI) ---
+        especie_f = esp.upper() if esp else "ESPECIES NO DETERMINADAS"
+        
+        # Determinar acción de la víctima
+        if "TRANSITABA" in texto_u or "CAMINANDO" in texto_u:
+            accion = "TRANSITABA A PIE POR EL LUGAR"
+        elif "PARADERO" in texto_u:
+            accion = "SE MANTENÍA EN PARADERO DE LOCOMOCIÓN COLECTIVA"
+        elif "CONDUCIA" in texto_u or "ESTACIONADO" in texto_u:
+            accion = "SE ENCONTRABA EN SU VEHÍCULO"
         else:
-            tl_clase_f = "VIA PUBLICA"
+            accion = "SE ENCONTRABA EN LA VÍA PÚBLICA"
 
-        # --- RECONSTRUCCIÓN DE RELATO COHERENTE (ELIMINA ERRORES DE MEZCLA) ---
-        if "MAZDA" in texto_u or "VEHICULO" in texto_u or "PATENTE" in texto_u:
-            # Si hay un vehículo involucrado, el relato debe ser sobre el robo del móvil
-            patente = re.search(r'PATENTE\s?([A-Z0-9.\-\s]+)', texto_u)
-            p_val = patente.group(0).strip() if patente else ""
-            
-            mo_final = (
-                f"MOMENTOS EN QUE LA VÍCTIMA TRANSITABA POR EL LUGAR, ES ABORDADA POR SUJETOS DESCONOCIDOS, "
-                f"QUIENES MEDIANTE LA INTIMIDACIÓN PROCEDEN A LA SUSTRACCIÓN DE VEHÍCULO PARTICULAR MARCA MAZDA "
-                f"{p_val}, PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
-            )
-            esp_f = f"VEHÍCULO MAZDA {p_val}"
-        elif "HOMICIDIO" in texto_u:
-            mo_final = "SUJETOS DESCONOCIDOS EFECTÚAN DISPAROS, RESULTANDO PERSONA FALLECIDA EN EL LUGAR."
-            esp_f = "NO APLICA"
+        # Determinar acción del delincuente
+        if "INTIMIDACION" in texto_u or "ARMA" in texto_u:
+            delito_accion = "MEDIANTE LA INTIMIDACIÓN CON ARMA"
+        elif "SORPRESA" in texto_u or "SORPRESIVAMENTE" in texto_u:
+            delito_accion = "MEDIANTE LA SORPRESA"
         else:
-            # Para otros casos, limpiamos las frases repetitivas de la IA
-            mo_final = mo_ia.upper().replace("AL PERCATARSE DE LA SITUACIÓN NOTÓ QUE", "INSTANTES EN QUE")
-            esp_f = esp.upper()
+            delito_accion = "POR CAUSAS QUE SE INVESTIGAN"
 
-        # Dirección del encabezado (No se toca)
-        dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
-        loc_f = dir_real.group(1).strip() if dir_real else loc
+        # Relato final coherente y profesional
+        mo_final = (
+            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {accion}, "
+            f"FUE INTERCEPTADA POR SUJETOS DESCONOCIDOS, QUIENES {delito_accion} "
+            f"PROCEDIERON A LA SUSTRACCIÓN DE {especie_f}, "
+            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+        )
 
-        # 3. RENDERIZADO FINAL (DISEÑO ORIGINAL)
+        # 3. RENDERIZADO DE TABLA (ESTILO STARK INDUSTRIES)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -362,7 +365,7 @@ with t4:
             </tr>
             <tr>
                 <td style="text-align:center">{tr}</td>
-                <td style="text-align:center">{loc_f}</td>
+                <td style="text-align:center">{loc.upper()}</td>
             </tr>
             <tr>
                 <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
@@ -375,15 +378,15 @@ with t4:
                         <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{especie_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDOS"}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "SIN DATOS"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "VEHÍCULO"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "A PIE"}</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
