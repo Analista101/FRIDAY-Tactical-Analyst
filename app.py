@@ -464,22 +464,25 @@ with t4:
             st.write("Análisis completado.")
 
 # 3. RENDERIZADO DEFINITIVO (DISEÑO)
-  # --- 1. MOTOR DE DECISIÓN LÓGICA (REGLA DE ACERO) ---
-        loc_clean = str(loc).upper()
-        
-        # Extraemos la dirección para el encabezado eliminando basura técnica
-        direccion_encabezado = loc_clean.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
-        if not direccion_encabezado: direccion_encabezado = "VIA PUBLICA"
+# --- LOGICA DE EXTRACCIÓN REFORZADA (PROTOCOLO FRIDAY) ---
+loc_raw = str(loc).upper()
 
-        # REGLA CRÍTICA: Prioridad absoluta a VIA PUBLICA
-        # Si el encabezado tiene una dirección o dice VIA PUBLICA, el perfil DEBE ser VIA PUBLICA
-        if "VIA PUBLICA" in loc_clean or any(char.isdigit() for char in direccion_encabezado):
-            lugar_perfil_final = "VIA PUBLICA"
-        else:
-            lugar_perfil_final = "DOMICILIO PARTICULAR"
+# 1. Limpiamos la dirección para el encabezado (cortamos antes de "DOMICILIO")
+direccion_limpia = loc_raw.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
+if not direccion_limpia: 
+    direccion_limpia = "VIA PUBLICA"
 
-        # --- 2. RENDERIZADO DE ALTA DEFINICIÓN ---
-        st.markdown(f"""
+# 2. REGLA DE ORO: Si hay una dirección física, el lugar es VIA PUBLICA
+# Buscamos si hay números en la dirección (indicador de calle)
+tiene_numeros = any(char.isdigit() for char in direccion_limpia)
+
+if "VIA PUBLICA" in loc_raw or tiene_numeros:
+    lugar_final = "VIA PUBLICA"
+else:
+    lugar_final = "DOMICILIO PARTICULAR"
+
+# 3. RENDERIZADO DE ALTA DEFINICIÓN ---
+    st.markdown(f"""
         <style>
             .t-final {{
                 width: 100%;
