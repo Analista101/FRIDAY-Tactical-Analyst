@@ -459,9 +459,8 @@ with t4:
             st.session_state.key_relato += 1
             st.rerun()
 
-    if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Analizando nuevo escenario táctico...", expanded=False):
-            # 1. Procesamiento base de IA
+   if enviar and relato_in:
+        with st.status("🤖 FRIDAY: Determinando naturaleza del procedimiento...", expanded=False):
             resultado = procesar_relato_ia(relato_in)
             
             if len(resultado) >= 12:
@@ -473,46 +472,47 @@ with t4:
             import re
             texto_analisis = relato_in.upper()
             
-            # --- 2. DETECCIÓN DINÁMICA DE LUGAR (NUEVO PROTOCOLO) ---
-            # Prioridad 1: Centros de Salud
-            centros_salud = ["HOSPITAL", "CLINICA", "SAPU", "CESFAM", "POSTA"]
-            # Prioridad 2: Vía Pública
-            via_publica = ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA", "INTERSECCION", "CALLE"]
+            # --- 1. DETECCIÓN DE TIPO DE HECHO ---
+            es_lesion = any(x in texto_analisis for x in ["LESION", "GOLPE", "AGRESION", "LESIONES", "RIÑA"])
+            es_robo = any(x in texto_analisis for x in ["ROBO", "ARREBATA", "SUSTRAE", "ESPECIES"])
 
-            if any(h in texto_analisis for h in centros_salud):
-                tl_final = "CENTRO DE SALUD / CLINICA"
-                loc_final = str(loc).upper() if loc else "ESTABLECIMIENTO ASISTENCIAL"
-                lugar_para_relato = "UN CENTRO DE SALUD"
-            elif any(v in texto_analisis for v in via_publica):
-                tl_final = "VIA PUBLICA"
-                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
-                lugar_para_relato = "LA VIA PUBLICA"
+            # --- 2. CONSTRUCCIÓN DEL RESUMEN TÁCTICO DINÁMICO ---
+            # Identificamos medio de desplazamiento
+            md_final = "MOTOCICLETA" if "MOTO" in texto_analisis else "A PIE"
+            sujeto_v = f"UN SUJETO EN {md_final}" if md_final != "A PIE" else "UN SUJETO"
+
+            if es_lesion and not es_robo:
+                # Redacción para Lesiones
+                accion_v = "AGREDE FÍSICAMENTE A LA VÍCTIMA"
+                if "GOLPE" in texto_analisis: accion_v = "PROBINA GOLPES A LA VÍCTIMA"
+                resumen_final = f"VICTIMA SE ENCONTRABA EN LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN SIN PROVOCACION PREVIA {accion_v}, RESULTANDO ESTA CON LESIONES DE DIVERSA CONSIDERACION, PARA LUEGO DARSE A LA FUGA."
+                especie_display = "NO REGISTRA (LESIONES)"
             else:
-                tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
-                loc_final = str(loc).upper()
-                lugar_para_relato = "UN DOMICILIO PARTICULAR"
+                # Redacción para Robo (Protocolo anterior)
+                transporte_v = "A PIE"
+                if "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
+                accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "SUSTRAE"
+                especie_v = str(esp).upper() if esp else "ESPECIES"
+                resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
+                especie_display = esp
 
-            # --- 3. SINCRONIZACIÓN DE MEDIO DE DESPLAZAMIENTO ---
-            if "MOTO" in texto_analisis:
-                md_final = "MOTOCICLETA"
-                delincuente_v = "UN SUJETO EN MOTOCICLETA"
-            else:
-                md_final = "A PIE"
-                delincuente_v = "UN SUJETO A PIE"
-
-            # --- 4. CONSTRUCCIÓN DEL RESUMEN TÁCTICO ACTUALIZADO ---
-            accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "SUSTRAE"
-            especie_v = str(esp).upper() if esp else "ESPECIES"
-
-            resumen_final = f"VICTIMA SE ENCONTRABA EN {lugar_para_relato}, MOMENTOS EN QUE ES ABORDADA POR {delincuente_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
-
-            # Limpieza de privacidad (Omitir nombres y RUT)
+            # --- 3. LIMPIEZA DE PRIVACIDAD ---
             nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD|CEDULA)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
             resumen_final = re.sub(r'(FONO|TEL|NRO|CELULAR)\s?[:°]?\s?\d+', '', resumen_final)
 
-            st.write("Análisis de escenario completado.")
+            # --- 4. DETECCIÓN DE LUGAR ---
+            centros_salud = ["HOSPITAL", "CLINICA", "SAPU", "CESFAM", "POSTA"]
+            if any(h in texto_analisis for h in centros_salud):
+                tl_final = "CENTRO DE SALUD"
+                loc_final = str(loc).upper()
+            elif any(v in texto_analisis for v in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA"]):
+                tl_final = "VIA PUBLICA"
+                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
+            else:
+                tl_final = tl_clase if tl_clase else "VIA PUBLICA"
+                loc_final = str(loc).upper()
 
         # --- 5. RENDERIZADO TABLA FINAL ---
         st.markdown(f"""
