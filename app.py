@@ -464,53 +464,58 @@ with t4:
             st.write("Análisis completado.")
 
 # 3. RENDERIZADO DEFINITIVO (DISEÑO JARVIS)
-        # Primero definimos el código HTML en una variable limpia
-        html_tabla = f"""
-        <div style="font-family: Arial, sans-serif;">
-            <table style="width:100%; border-collapse: collapse; border: 1px solid #000;">
-                <tr>
-                    <td rowspan="2" style="width:40%; background-color: #1E7421; color: white; padding: 10px; text-align: center; font-weight: bold; border: 1px solid #000; font-size: 14px;">
-                        {tip}
-                    </td>
-                    <td style="width:30%; text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">TRAMO</td>
-                    <td style="width:30%; text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">LUGAR OCURRENCIA</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold; border: 1px solid #000; background-color: white; color: black; padding: 8px;">{tr}</td>
-                    <td style="text-align: center; font-weight: bold; border: 1px solid #000; background-color: white; color: black; padding: 8px;">{loc}</td>
-                </tr>
-                
-                <tr>
-                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">PERFIL VÍCTIMA</td>
-                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">PERFIL DELINCUENTE</td>
-                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">MODUS OPERANDI</td>
-                </tr>
+        # --- 1. MOTOR CORREGIDO (DENTRO DE LA LÓGICA DEL BOTÓN) ---
+        # Forzamos la corrección de 'LUGAR' del Perfil Víctima
+        # El motor original se confundía si el relato mencionaba un domicilio
+        # aunque el delito fuera en la calle.
+        tl_corregido = tl # Valor por defecto del motor
+        if "VIA PUBLICA" in lugar_ocurrencia or re.search(r'\d{2,}', lugar_ocurrencia):
+            tl_corregido = "VIA PUBLICA"
 
-                <tr>
-                    <td style="vertical-align: top; padding: 5px; border: 1px solid #000; background-color: white;">
-                        <table style="width:100%; border: none; font-size: 12px; color: black;">
-                            <tr><td style="font-weight:bold;">GENERO</td><td>{gv}</td></tr>
-                            <tr><td style="font-weight:bold;">RANGO ETARIO</td><td>{ev}</td></tr>
-                            <tr><td style="font-weight:bold;">LUGAR</td><td>{tl}</td></tr>
-                            <tr><td style="font-weight:bold;">ESPECIE SUST.</td><td>{esp}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align: top; padding: 5px; border: 1px solid #000; background-color: white;">
-                        <table style="width:100%; border: none; font-size: 12px; color: black;">
-                            <tr><td style="font-weight:bold;">VICTIMARIO</td><td>{gd}</td></tr>
-                            <tr><td style="font-weight:bold;">RANGO EDAD</td><td>{ed}</td></tr>
-                            <tr><td style="font-weight:bold;">CARACT. FÍS.</td><td>{cd}</td></tr>
-                            <tr><td style="font-weight:bold;">MED. DESPL.</td><td>{md}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align: top; text-align: justify; padding: 8px; font-size: 12px; border: 1px solid #000; background-color: white; color: black;">
-                        {mo}
-                    </td>
-                </tr>
-            </table>
-        </div>
-        """
+        # --- 2. RENDERIZADO REFINADO (DISEÑO ALTO ESTÁNDAR) ---
+        # He reducido el grosor y aclarado el color de los bordes (#ccc)
+        # y ajustado los paddings para una apariencia más 'fina'.
         
-        # AQUÍ ESTÁ LA MAGIA: El comando de renderizado fuera de la variable
-        st.write("---")
-        st.components.v1.html(html_tabla, height=350, scrolling=True)
+        st.markdown(f"""
+        <table class="tabla-carta" style="width:100%; border-collapse: collapse; border: 1px solid #ccc; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px;">
+            <tr>
+                <td rowspan="2" class="celda-titulo" style="width:40%; background-color: #1E7421; color: white; padding: 12px 8px; text-align: center; font-weight: bold; border: 1px solid #ccc; font-size: 14px;">
+                    {tip}
+                </td>
+                <td class="celda-sub" style="width:25%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #ccc; color: black; padding: 4px; font-size: 12px;">TRAMO</td>
+                <td class="celda-sub" style="width:35%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #ccc; color: black; padding: 4px; font-size: 12px;">LUGAR OCURRENCIA</td>
+            </tr>
+            <tr>
+                <td style="text-align: center; font-weight: bold; border: 1px solid #ccc; background-color: white; color: black; padding: 6px;">{tr}</td>
+                <td style="text-align: center; font-weight: bold; border: 1px solid #ccc; background-color: white; color: black; padding: 6px; text-transform: uppercase;">{loc}</td>
+            </tr>
+            
+            <tr>
+                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #ccc; color: black; padding: 5px; font-size: 12px;">PERFIL VÍCTIMA</td>
+                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #ccc; color: black; padding: 5px; font-size: 12px;">PERFIL DELINCUENTE</td>
+                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #ccc; color: black; padding: 5px; font-size: 12px;">MODUS OPERANDI</td>
+            </tr>
+
+            <tr>
+                <td style="vertical-align: top; padding: 0; border: 1px solid #ccc; background-color: white;">
+                    <table style="width:100%; border-collapse: collapse; border: none; font-size: 12px;">
+                        <tr><td style="border:none; font-weight:bold; width:42%; padding: 4px 6px; color: black;">GENERO</td><td style="border:none; color: black;">{gv}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">RANGO ETARIO</td><td style="border:none; color: black;">{ev}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">LUGAR</td><td style="border:none; color: black; font-weight: bold;">{tl_corregido}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">ESPECIE SUST.</td><td style="border:none; color: black;">{esp}</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align: top; padding: 0; border: 1px solid #ccc; background-color: white;">
+                    <table style="width:100%; border-collapse: collapse; border: none; font-size: 12px;">
+                        <tr><td style="border:none; font-weight:bold; width:42%; padding: 4px 6px; color: black;">VICTIMARIO</td><td style="border:none; color: black;">{gd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">RANGO EDAD</td><td style="border:none; color: black;">{ed}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">CARACT. FÍS.</td><td style="border:none; color: black;">{cd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 4px 6px; color: black;">MED. DESPL.</td><td style="border:none; color: black;">{md}</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align: top; text-align: justify; padding: 8px; font-size: 12px; border: 1px solid #ccc; background-color: white; color: black; line-height: 1.4;">
+                    {mo}
+                </td>
+            </tr>
+        </table>
+        """, unsafe_allow_html=True)
