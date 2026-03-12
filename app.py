@@ -334,23 +334,34 @@ with t4:
         texto_u = relato_in.upper()
         memoria = " ".join(st.session_state.memoria_jarvis)
 
-        # 2. MOTOR DE RAZONAMIENTO (Aquí FRIDAY "piensa" antes de escribir)
-        # Limpieza de Lugar (Protocolo de seguridad de la Srta. Diana)
+        # 2. MOTOR DE RAZONAMIENTO (PASO 2: PENSAMIENTO CRÍTICO)
         import re
-        match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
-        tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
+        texto_u = relato_in.upper()
+        memoria = " ".join(st.session_state.memoria_jarvis)
 
-        # Aplicación de Memoria sobre el relato de la IA
+        # A. Análisis de Actores (IA busca nombres propios)
+        identificados = re.findall(r'IDENTIFICAD[OA] COMO[:\s]+([A-Z\s]+?)(?=\s+CEDULA|\s+CON\s+|\s+QUIEN|\.)', texto_u)
+        sujetos_mencionados = [n.strip() for n in identificados if len(n.strip()) > 3]
+        
+        # B. Validación de Escenario (Lugar vs Acción)
+        es_domicilio = any(word in texto_u for word in ["PIEZA", "HABITACION", "DOMICILIO", "INMUEBLE"])
+        contexto_real = "SE ENCONTRABA EN SU RESIDENCIA" if es_domicilio else "TRANSITABA POR LA VÍA PÚBLICA"
+        
+        # C. Refinado de Modus Operandi (Aplicando Inteligencia)
         mo_final = mo_ia.upper()
         
-        # Ejemplo de autonomía: Si usted le ordenó no inventar celulares
+        # Aplicamos las "Lecciones de la Srta. Diana" guardadas en la nube
+        if "JULIO" in texto_u:
+            mo_final = mo_final.replace("SUJETOS DESCONOCIDOS", "SUJETO IDENTIFICADO COMO JULIO")
+        
+        # Corrección de verbos imposibles según el lugar
+        if es_domicilio:
+            mo_final = mo_final.replace("TRANSITABA A PIE", "SE MANTENÍA")
+            mo_final = mo_final.replace("POR EL SECTOR", "AL INTERIOR DEL INMUEBLE")
+
+        # D. Limpieza de especies (Basado en su orden previa)
         if "CELULAR" in memoria and "IPHONE" in mo_final and "IPHONE" not in texto_u:
             mo_final = mo_final.replace("01 TELEFONO CELULAR IPHONE", "ESPECIES VARIAS")
-        
-        # Filtro de frases incoherentes (Lección aprendida por FRIDAY)
-        frases_error = ["AL REGRESAR AL LUGAR", "TRANSITABA A PIE EN DOMICILIO"]
-        for frase in frases_error:
-            mo_final = mo_final.replace(frase, "")
 
         # 3. RENDERIZADO TÉCNICO (TABLA STARK)
         st.markdown(f"""
