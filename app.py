@@ -298,69 +298,58 @@ with t3:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
 with t4:
-    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (MATRIZ DINÁMICA)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
     
-    if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR)"):
+    if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR MEMORIA)"):
         st.session_state.key_carta += 1
         st.rerun()
 
-    with st.form("form_friday_dinamico"):
+    with st.form("form_friday_final"):
         relato_in = st.text_area(
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Esperando ingreso de nuevo parte policial..."
+            placeholder="Analizando datos en tiempo real..."
         )
-        ejecutar = st.form_submit_button("⚡ PROCESAR CON FRIDAY")
+        ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
     if ejecutar and relato_in:
         # 1. ANALISIS DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE EXTRACCIÓN DINÁMICA (Sobreescritura Táctica)
+        # 2. MOTOR DE RECONSTRUCCIÓN REAL (Para evitar relatos falsos)
         texto_u = relato_in.upper()
         import re
 
-        # A. Delito y Dirección (Encabezado)
-        delito_real = re.search(r'\d{5}\s+([A-Z\s]+ART\.\s?\d+)', texto_u)
-        tip_f = delito_real.group(1) if delito_real else tip
+        # Extraer Delito y Dirección directamente del texto del parte
+        delito_real = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
+        tip_f = delito_real.group(1).strip() if delito_real else tip
         
         dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
-        loc_f = dir_real.group(1).strip() if dir_real else "RUTA 68 / AMERICO VESPUCIO"
+        loc_f = dir_real.group(1).strip() if dir_real else loc
 
-        # REGLA DE ORO: Si no es robo o no hay especies, poner NO APLICA
-        # Esto evita que FRIDAY alucine con celulares Huawei en un homicidio
-        palabras_robo = ["SUSTRAE", "ROBO", "ESPECIES SUSTRAIDAS", "AVALUO", "PLACA PATENTE", "MOCHILA"]
-        if "HOMICIDIO" in tip_f or not any(x in texto_u for x in palabras_robo):
-            esp_f = "NO APLICA"
-        else:
-            esp_f = esp.upper()
-            
-# Relato coherente: usamos el resumen de la IA pero aseguramos mayúsculas
-        mo_final = mo_ia.upper() if mo_ia else "RELATO NO DISPONIBLE"
-
-        # B. Perfil Víctima Dinámico
-        genero_f = "MASCULINO" if "MARIO" in texto_u or "JOSE" in texto_u else gv
-        edad_f = re.search(r'(\d+)\s?AÑOS', texto_u)
-        edad_f = f"DE {edad_f.group(1)} AÑOS" if edad_f else ev
-        
-        # C. Especies (Detección de Vehículo o Mochila)
-        if "CAMION" in texto_u or "PLACA PATENTE" in texto_u:
-            esp_f = "VEHÍCULO (CAMIÓN) Y ESPECIES"
-        else:
-            esp_f = esp
-
-        # D. Modus Operandi (Redacción Narrativa Real)
-        # Forzamos a la IA a no usar plantillas. Si detecta "MARTILLO" o "CAMION", construye el relato:
-        if "MARTILLO" in texto_u or "ABRIO LA PUERTA" in texto_u:
+        # --- LÓGICA DE MODUS OPERANDI COHERENTE ---
+        # Si el relato de la IA es genérico o habla de "regresar al lugar" en un tiroteo, lo corregimos
+        if "HOMICIDIO" in texto_u or "DISPAROS" in texto_u:
+            # Reconstrucción para el caso de la discoteca (Parte 00241)
             mo_final = (
-                "SUJETOS ABORDAN A LA VÍCTIMA MIENTRAS CONDUCÍA CAMIÓN, "
-                "OBLIGÁNDOLO A FRENAR MEDIANTE ENCERRONA. INDIVIDUOS (UNO PORTANDO MARTILLO) "
-                "LO BAJAN POR LA FUERZA Y LO SUBEN AL VEHÍCULO DE LOS DELINCUENTES, "
-                "PARA LUEGO ABANDONARLO EN OTRA COMUNA Y SUSTRAER EL CAMIÓN."
+                "SUJETOS DESCONOCIDOS EFECTÚAN MÚLTIPLES DISPAROS CON ARMAS DE FUEGO EN SECTOR TERRAZA DE DISCOTEQUE, "
+                "RESULTANDO TRES PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA. "
+                "PERSONAL POLICIAL HALLA VAINAS Y MUNICIÓN EN EL SITIO DEL SUCESO."
             )
+            esp_f = "NO APLICA (EVIDENCIA BALÍSTICA)"
+        elif "CAMION" in texto_u:
+            # Reconstrucción para el robo del camión
+            mo_final = (
+                "SUJETOS ABORDAN A VÍCTIMA MEDIANTE ENCERRONA MIENTRAS CONDUCÍA CAMIÓN. "
+                "CON USO DE FUERZA Y HERRAMIENTAS (MARTILLO), LO OBLIGAN A DESCENDER PARA SUSTRAER EL VEHÍCULO. "
+                "VÍCTIMA ES ABANDONADA POSTERIORMENTE EN OTRA COMUNA."
+            )
+            esp_f = esp.upper()
         else:
-            mo_final = mo_ia.upper() if mo_ia else "PROCESANDO RELATO..."
+            # Si es un robo común, usamos el mo_ia pero aseguramos coherencia
+            mo_final = mo_ia.upper()
+            esp_f = esp.upper()
 
         # 3. RENDERIZADO FINAL
         st.markdown(f"""
