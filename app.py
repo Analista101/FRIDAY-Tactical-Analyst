@@ -433,11 +433,10 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FRIDAY) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FINAL JARVIS) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
-    # 1. ENTRADA DE DATOS
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
@@ -454,12 +453,12 @@ with t4:
                 st.session_state.key_carta += 1
                 st.rerun()
 
-    # 2. LÓGICA DE PROCESAMIENTO (Alineada correctamente)
     if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Generando resumen táctico ejecutivo...", expanded=False):
-            # 1. Procesamiento base
+        with st.status("🤖 FRIDAY: Ejecutando limpieza y resumen táctico...", expanded=False):
+            # 1. PROCESAMIENTO IA
             resultado = procesar_relato_ia(relato_in)
             
+            # Sincronización de 12 campos
             if len(resultado) >= 12:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
             else:
@@ -467,50 +466,33 @@ with t4:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = datos_relleno
 
             import re
-            texto_raw = relato_in.upper()
+            # DEFINICIÓN CRÍTICA DE VARIABLE (Para evitar NameError)
+            texto_analisis = relato_in.upper()
             
-            # --- 2. MOTOR DE RESUMEN TÁCTICO (EVITA ALUCINACIONES) ---
-            # En lugar de confiar ciegamente en mo_ia, analizamos el texto original
-            
-            # Detectamos elementos clave del relato real (image_039b9f.png)
-            vehiculo = "UNA MOTOCICLETA" if "MOTO" in texto_raw else "INFANTERIA"
-            accion = "LE ARREBATA SORPRESIVAMENTE" if "ARREBATA" in texto_raw else "SUSTRAE"
-            especie = str(esp).upper() if esp else "ESPECIES"
-            
-            # Construimos el resumen con la estructura solicitada
-            if "VIA PUBLICA" in texto_raw or "TENIENTE CRUZ" in texto_raw:
-                resumen_final = f"VICTIMA TRANSITABA POR LA VIA PUBLICA CUANDO FUE ABORDADA POR UN SUJETO EN {vehiculo}, QUIEN {accion} {especie}, PARA LUEGO DARSE A LA FUGA EN DIRECCION DESCONOCIDA."
-            else:
-                # Si no es vía pública, usamos un filtro de limpieza profunda sobre el relato original
-                resumen_final = texto_raw
-                # Eliminamos nombres propios detectados y patrones de RUT/Fono
-                resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
-                resumen_final = re.sub(r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR)', 'VICTIMA', resumen_final)
-                resumen_final = re.sub(r'(FONO|CELULAR|RUT|NRO|NUMERO)\s?[:°]?\s?\d+', '', resumen_final)
-                resumen_final = " ".join(resumen_final.split()[:60]) + "..." # Limitamos longitud
+            # --- 2. CONSTRUCCIÓN DEL RESUMEN TÁCTICO (SOLICITUD SRTA. DIANA) ---
+            # Detectamos elementos clave para redactar el resumen
+            transporte_v = "A PIE"
+            if "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
+            elif "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
 
-            # --- 3. CORRECCIÓN DE LUGAR ---
-            if "TENIENTE CRUZ" in texto_raw or "SAN FRANCISCO" in texto_raw:
-                tl_final = "VIA PUBLICA"
-                loc_final = "AVENIDA TENIENTE CRUZ / SAN FRANCISCO"
-            else:
-                tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
-                loc_final = str(loc).upper()
-
-            st.write("Análisis táctico corregido.")
+            delincuente_v = "UN SUJETO"
+            if "MOTO" in texto_analisis: delincuente_v = "UN SUJETO EN MOTOCICLETA"
             
-            # --- 3. GENERACIÓN DE RESUMEN TÁCTICO (NUEVA DIRECTRIZ) ---
-            # Filtramos mo_ia para que sea un resumen ejecutivo en MAYÚSCULAS
-            resumen_tactivo = mo_ia.upper() if mo_ia else "VICTIMA FUE ABORDADA POR SUJETOS DESCONOCIDOS"
-            
-            # Limpieza profunda: Omitir nombres, RUTs y teléfonos
-            resumen_tactivo = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_tactivo) # RUT
-            resumen_tactivo = re.sub(r'(CELULAR|TELEFONO|NRO|NUMERO|RUT|FONO)\s?[:°]?\s?\d+', '', resumen_tactivo, flags=re.IGNORECASE)
-            # Reemplazo de nombres específicos detectados en partes anteriores
-            resumen_tactivo = re.sub(r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO)', 'VICTIMA', resumen_tactivo)
+            accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "LO INTIMIDA PARA SUSTRAER"
+            especie_v = str(esp).upper() if esp else "ESPECIES"
 
-            # --- 4. LÓGICA DE LUGAR (REGLA INSTITUCIONAL) ---
-            if any(x in texto_upper for x in ["AVENIDA", "VIA PUBLICA", "VÍA PÚBLICA", "INTERSECCION"]):
+            # Redacción Automática Táctica
+            resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {delincuente_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
+
+            # --- 3. LIMPIEZA DE ANTECEDENTES (PRIVACIDAD STARK) ---
+            # Borramos cualquier nombre que la IA haya podido dejar
+            nombres_prohibidos = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|CEDULA|IDENTIDAD)'
+            resumen_final = re.sub(nombres_prohibidos, 'VICTIMA', resumen_final)
+            resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final) # RUT
+            resumen_final = re.sub(r'(FONO|TEL|NRO|CELULAR)\s?[:°]?\s?\d+', '', resumen_final)
+
+            # --- 4. CORRECCIÓN DE LUGAR ---
+            if any(x in texto_analisis for x in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA", "INTERSECCION"]):
                 tl_final = "VIA PUBLICA"
                 loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
                 if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
@@ -518,11 +500,13 @@ with t4:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-        # --- 5. RENDERIZADO TABLA FINAL ---
+            st.write("Protocolo de resumen finalizado.")
+
+        # --- 5. RENDERIZADO TABLA ESTILO UNIFICADO ---
         st.markdown(f"""
         <style>
             .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #333; }}
-            .t-friday td {{ border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: middle; }}
+            .t-friday td {{ border: 1px solid #333; padding: 8px; font-size: 12px; vertical-align: middle; }}
             .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
@@ -547,7 +531,7 @@ with t4:
             </tr>
             <tr>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none; border-collapse: collapse;">
+                    <table style="width:100%; border:none;">
                         <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
                         <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
                         <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
@@ -555,18 +539,16 @@ with t4:
                     </table>
                 </td>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none; border-collapse: collapse;">
+                    <table style="width:100%; border:none;">
                         <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
                         <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
                         <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
                         <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
                     </table>
                 </td>
-                <td style="text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background: white;">
-                    {resumen_tactivo}
+                <td style="text-align: justify; line-height: 1.4; font-size: 11px; padding: 10px; vertical-align: top; background: white;">
+                    {resumen_final}
                 </td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
-    elif enviar and not relato_in:
-        st.warning("⚠️ POR FAVOR, INGRESE EL RELATO DEL PARTE.")
