@@ -316,37 +316,51 @@ with t4:
         # El único botón de envío permitido
         enviar = st.form_submit_button("⚡ GENERAR CUADRO")
 
-    # 2. Lógica de Ejecución (Se activa al presionar el botón)
+# 2. Lógica de Ejecución (Se activa al presionar el botón)
     if enviar:
         if relato_in:
-            # Procesamiento mediante IA
+            # Procesamiento mediante IA (Obtenemos los datos base)
             tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
             
-            import re
-            # Priorizamos el resumen de la IA para el Modus Operandi
-            base_mo = mo_ia if mo_ia else relato_in
-            
-            # --- FILTROS ESTRICTOS DE PRIVACIDAD (Limpieza de datos sensibles) ---
-            # Borrar RUTs
-            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-            # Borrar Números de Cuenta, Tarjetas, Teléfonos y Nros de serie
-            texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
-            texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
-            
-            # Borrar Direcciones, Calles y Comunas (Evita que aparezcan en el MO)
-            patrones_direccion = [
-                r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)', 
-                r'NRO\.\s?\d+', 
-                r'COMUNA DE\s+\w+',
-                r'UBICADO EN\s+[\w\s]+(?= MOMENTOS| DONDE)'
-            ]
-            for patron in patrones_direccion:
-                texto_l = re.sub(patron, '', texto_l, flags=re.IGNORECASE)
-            
-            # Limpieza final: Mayúsculas y quitar exceso de espacios
-            mo_final = " ".join(texto_l.split()).upper().strip()[:500]
+            # --- CORRECCIÓN DE LUGAR (FORZADO POR PALABRAS CLAVE) ---
+            texto_upper = relato_in.upper()
+            if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
+                loc = "VIA PUBLICA"
+            elif "DOMICILIO" in texto_upper and "VIA PUBLICA" not in texto_upper:
+                loc = "DOMICILIO PARTICULAR"
 
-            # 3. Renderizado de la Carta de Situación (HTML)
+            import re
+            
+            # --- MEJORA DEL RELATO (MODUS OPERANDI) ---
+            # Si el relato es muy corto o pobre, usamos mo_ia que debería venir redactado por la IA
+            # Pero aplicamos una limpieza quirúrgica para no perder el sentido.
+            
+            base_mo = mo_ia if (mo_ia and len(mo_ia) > 50) else relato_in
+            
+            # 1. Quitamos RUTs
+            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+            
+            # 2. Quitamos Números de cuenta y teléfonos, pero mantenemos la mención del objeto
+            # (Ej: Borra el número pero deja "TELÉFONO CELULAR")
+            texto_l = re.sub(r'(N°|NRO|NUMERO)\s?\d+', '', texto_l, flags=re.IGNORECASE)
+            texto_l = re.sub(r'(CUENTA|RUT|TELEFONO|CELULAR)\s?\d+', r'\1', texto_l, flags=re.IGNORECASE)
+            
+            # 3. Quitamos direcciones específicas pero mantenemos la referencia al lugar
+            patrones_anonimizar = [
+                r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)',
+                r'COMUNA DE\s+\w+'
+            ]
+            for patron in patrones_anonimizar:
+                texto_l = re.sub(patron, 'EN LA VÍA PÚBLICA', texto_l, flags=re.IGNORECASE)
+
+            # Formateo final ejecutivo
+            mo_final = " ".join(texto_l.split()).upper().strip()
+            
+            # Si el texto quedó vacío por los filtros, ponemos un estándar de seguridad
+            if len(mo_final) < 10:
+                mo_final = f"SUJETOS DESCONOCIDOS PROCEDEN A LA SUSTRACCIÓN DE {esp} TRAS INTERCEPTAR A LA VÍCTIMA, PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+
+            # 3. Renderizado de la Tabla
             html_carta = f"""
             <table class="tabla-carta">
                 <tr>
@@ -385,5 +399,3 @@ with t4:
             </table>
             """
             st.markdown(html_carta, unsafe_allow_html=True)
-        else:
-            st.warning("Señor, por favor ingrese un relato antes de generar el cuadro.")
