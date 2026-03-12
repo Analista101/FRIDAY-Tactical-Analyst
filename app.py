@@ -463,48 +463,38 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-# 2. Lógica de Ejecución (Se activa al presionar el botón)
+# 1. Definición del Botón (Asegurarse de que el nombre coincida)
+    enviar = st.button("GENERAR ANÁLISIS TÁCTICO")
+
+    # 2. Lógica de Ejecución (Solo se activa si se presiona el botón)
     if enviar:
         if relato_in:
             # Procesamiento mediante IA
             tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
             
-            # --- CORRECCIÓN DE LUGAR (VIA PUBLICA VS DOMICILIO) ---
-            # Prioridad absoluta: Si el relato menciona vía pública, se limpia el encabezado y el perfil
+            import re
             texto_upper = relato_in.upper()
             
-            import re
-            
-            # REGLA DE ORO FRIDAY: Forzar VIA PUBLICA y limpiar dirección del encabezado
+            # --- CORRECCIÓN DE LUGAR (VIA PUBLICA VS DOMICILIO) ---
+            # Si el relato menciona VIA PUBLICA, forzamos ese valor y limpiamos el encabezado
             if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
                 tl_final = "VIA PUBLICA"
-                # En el encabezado dejamos la dirección limpia (cortando en DOMICILIO si existe)
-                loc_limpio = str(loc).upper().split("DOMICILIO")[0].strip()
-                loc_final = loc_limpio if loc_limpio else "VIA PUBLICA"
+                # Limpiamos la dirección cortando antes de cualquier mención de domicilio
+                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
+                if not loc_final: loc_final = "VIA PUBLICA"
             else:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-            # --- FILTROS ESTRICTOS DE PRIVACIDAD Y LIMPIEZA ---
+            # --- FILTROS DE PRIVACIDAD STARK ---
             base_mo = mo_ia if mo_ia else relato_in
-            # Eliminación de RUTs y números de cuenta/teléfono
-            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-            texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
+            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo) # RUT
             texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
             
-            # Limpieza de direcciones sobrantes en el Modus Operandi
-            patrones_direccion = [
-                r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)', 
-                r'NRO\.\s?\d+', 
-                r'COMUNA DE\s+\w+',
-                r'UBICADO EN\s+[\w\s]+(?= MOMENTOS| DONDE)'
-            ]
-            for patron in patrones_direccion:
-                texto_l = re.sub(patron, '', texto_l, flags=re.IGNORECASE)
-            
+            # Limpieza de Modus Operandi (Mayúsculas y límite de caracteres)
             mo_final = " ".join(texto_l.split()).upper().strip()[:500]
 
-            # --- 3. RENDERIZADO ESTÉTICO FINAL (DISEÑO FINO) ---
+            # --- 3. RENDERIZADO ESTÉTICO FINAL ---
             st.markdown(f"""
             <style>
                 .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #ccc; }}
@@ -512,8 +502,7 @@ with t4:
                 .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 14px; }}
                 .h-claro {{ background-color: #D7E4BD; text-align: center; font-weight: bold; font-size: 12px; }}
                 .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; font-size: 12px; }}
-                .label-b {{ font-weight: bold; width: 42%; font-size: 11px; color: #333; }}
-                .val-f {{ font-size: 11px; color: black; }}
+                .label-b {{ font-weight: bold; width: 42%; font-size: 11px; }}
             </style>
 
             <table class="t-friday">
@@ -534,23 +523,25 @@ with t4:
                 <tr>
                     <td style="vertical-align: top; padding: 0; background: white;">
                         <table style="width:100%; border: none;">
-                            <tr><td style="border:none;" class="label-b">GENERO</td><td style="border:none;" class="val-f">{gv}</td></tr>
-                            <tr><td style="border:none;" class="label-b">RANGO ETARIO</td><td style="border:none;" class="val-f">{ev}</td></tr>
+                            <tr><td style="border:none;" class="label-b">GENERO</td><td style="border:none;">{gv}</td></tr>
+                            <tr><td style="border:none;" class="label-b">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
                             <tr><td style="border:none;" class="label-b">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421;">{tl_final}</td></tr>
-                            <tr><td style="border:none;" class="label-b">ESPECIE SUST.</td><td style="border:none;" class="val-f">{esp}</td></tr>
+                            <tr><td style="border:none;" class="label-b">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
                         </table>
                     </td>
                     <td style="vertical-align: top; padding: 0; background: white;">
                         <table style="width:100%; border: none;">
-                            <tr><td style="border:none;" class="label-b">VICTIMARIO</td><td style="border:none;" class="val-f">{gd}</td></tr>
-                            <tr><td style="border:none;" class="label-b">RANGO EDAD</td><td style="border:none;" class="val-f">{ed}</td></tr>
-                            <tr><td style="border:none;" class="label-b">CARACT. FÍS.</td><td style="border:none;" class="val-f">{cd}</td></tr>
-                            <tr><td style="border:none;" class="label-b">MED. DESPL.</td><td style="border:none;" class="val-f">{md}</td></tr>
+                            <tr><td style="border:none;" class="label-b">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
+                            <tr><td style="border:none;" class="label-b">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
+                            <tr><td style="border:none;" class="label-b">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
+                            <tr><td style="border:none;" class="label-b">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
                         </table>
                     </td>
-                    <td style="vertical-align: top; text-align: justify; font-size: 11px; line-height: 1.3; background: white; padding: 10px;">
+                    <td style="vertical-align: top; text-align: justify; font-size: 11px; line-height: 1.4; background: white;">
                         {mo_final}
                     </td>
                 </tr>
             </table>
             """, unsafe_allow_html=True)
+        else:
+            st.warning("POR FAVOR, INGRESE EL RELATO DEL PARTE.")
