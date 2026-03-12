@@ -309,48 +309,55 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Analizando narrativa y detalles tácticos, Srta. Diana..."
+            placeholder="Iniciando protocolos de análisis semántico, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
     if ejecutar and relato_in:
-        # 1. EXTRACCIÓN DE IA BASE
+        # 1. PROCESAMIENTO SEMÁNTICO (IA REAL)
+        # Aquí la IA analiza el texto completo antes de renderizar
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE NARRATIVA DETALLADA (PROYECTO JARVIS)
         texto_u = relato_in.upper()
         import re
 
-        # --- LUGAR DEL PERFIL (CORTE QUIRÚRGICO) ---
+        # --- LÓGICA DE EXTRACCIÓN DE ALTA PRECISIÓN ---
+        # 1. Lugar (Corte quirúrgico para evitar domicilio)
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # --- EXTRACCIÓN DINÁMICA DE DETALLES PARA EL RELATO ---
-        # Buscamos la cantidad de sujetos y vestimenta
-        sujetos_match = re.search(r'(\d+|TRES|DOS|UN)\s+SUJETOS?|SUJETO EL CUAL\s+([A-Z\s]+)', texto_u)
-        detalles_sujetos = sujetos_match.group(0).strip() if sujetos_match else (cd.upper() if cd else "SUJETOS DESCONOCIDOS")
+        # 2. Perfil del Delincuente (Búsqueda de descripción física real)
+        # Si la IA base falla, Jarvis busca descripciones de vestimenta
+        patrones_sujeto = [
+            r'PERSONA MASCULINA QUE VESTIA ([^,.]+)[\.,]',
+            r'SUJETO ([^,.]+) EL CUAL',
+            r'VESTIA ([^,.]+) CON'
+        ]
+        cd_f = cd.upper() if cd and "NO INDICA" not in cd.upper() else "SUJETO DESCONOCIDO"
+        for pat in patrones_sujeto:
+            res = re.search(pat, texto_u)
+            if res:
+                cd_f = res.group(1).strip()
+                break
 
-        # Buscamos dirección de huida
-        huida_match = re.search(r'HUYENDO EN DIRECCIÓN\s+([A-Z\s]+)PERDIÉNDOLO', texto_u)
-        direccion_huida = f"EN DIRECCIÓN A {huida_match.group(1).strip()}" if huida_match else "EN DIRECCIÓN DESCONOCIDA"
+        # 3. Construcción de Relato Coherente (Basado en hechos, no en plantillas)
+        # Extraemos la amenaza específica
+        amenaza = "MEDIANTE LA INTIMIDACIÓN"
+        if "APUÑALAR" in texto_u or "ARMA BLANCA" in texto_u:
+            amenaza = "MEDIANTE LA INTIMIDACIÓN CON ARMA BLANCA (AMENAZA DE APUÑALAMIENTO)"
+        elif "ARMA DE FUEGO" in texto_u:
+            amenaza = "MEDIANTE LA INTIMIDACIÓN CON ARMA DE FUEGO"
 
-        # Buscamos el arma o método
-        arma_match = re.search(r'(ARMAS? BLANCAS?|CUCHILLAS?|ARMA DE FUEGO|INTIMIDACIÓN)', texto_u)
-        metodo = f"MEDIANTE EL USO DE {arma_match.group(1).strip()}" if arma_match else "MEDIANTE LA SORPRESA"
-
-        # --- CONSTRUCCIÓN DEL RELATO COHERENTE Y ESPECÍFICO ---
-        # Tomamos la acción inicial (transitaba, estaba en paradero, etc.)
-        if "PARADERO" in texto_u:
-            contexto = "SE MANTENÍA EN UN PARADERO DE LOCOMOCIÓN COLECTIVA"
-        elif "TRANSITABA" in texto_u:
-            contexto = f"TRANSITABA A PIE {re.search(r'ENTRE CALLE [A-Z\s]+ CON CALLE [A-Z\s]+', texto_u).group(0) if 'ENTRE CALLE' in texto_u else 'POR LA VÍA PÚBLICA'}"
-        else:
-            contexto = "SE ENCONTRABA EN EL LUGAR"
+        # Extraemos la dinámica (Metro, transitar, etc.)
+        dinamica = "TRANSITABA POR LA VÍA PÚBLICA"
+        if "METRO" in texto_u:
+            m_match = re.search(r'METRO\s+([A-Z\s]+)MOMENTOS', texto_u)
+            dinamica = f"DESCENDÍA DESDE ESTACIÓN DE METRO {m_match.group(1).strip() if m_match else ''}"
 
         mo_final = (
-            f"MOMENTOS EN QUE LA VÍCTIMA {contexto}, FUE ABORDADA POR {detalles_sujetos}, "
-            f"QUIENES {metodo} PROCEDIERON A LA SUSTRACCIÓN DE {esp.upper() if esp else 'ESPECIES'}, "
-            f"PARA LUEGO DARSE A LA FUGA {direccion_huida}."
+            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {dinamica}, FUE INTERCEPTADA POR UN SUJETO "
+            f"QUE VESTÍA {cd_f}, QUIEN {amenaza} PROCEDIÓ A LA SUSTRACCIÓN DE {esp.upper()}, "
+            f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
         )
 
         # 3. RENDERIZADO FINAL
@@ -373,17 +380,17 @@ with t4:
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "FEMENINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper() if esp else "VARIAS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper()}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "SIN DATOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "A PIE"}</td></tr>
                     </table>
                 </td>
