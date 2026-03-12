@@ -300,65 +300,59 @@ with t3:
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
     
-    if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR MEMORIA)"):
-        st.session_state.key_carta += 1
-        st.rerun()
+    # --- PROTOCOLO DE CONCIENCIA (MEMORIA EN LA NUBE) ---
+    if 'memoria_jarvis' not in st.session_state:
+        st.session_state.memoria_jarvis = []
 
+    # --- CONSOLA DE COMANDOS DIRECTOS ---
+    with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            nueva_orden = st.text_input("DAME UNA INSTRUCCIÓN, SRTA. DIANA:", placeholder="Ej: Ignora menciones a seguros si no hay datos...")
+        with col2:
+            st.write("") # Espaciado
+            if st.button("💾 APRENDER"):
+                if nueva_orden:
+                    st.session_state.memoria_jarvis.append(nueva_orden.upper())
+                    st.success("SISTEMA ACTUALIZADO.")
+
+        if st.session_state.memoria_jarvis:
+            st.markdown(f"**🧠 ÚLTIMA LECCIÓN APRENDIDA:** *{st.session_state.memoria_jarvis[-1]}*")
+            if st.button("🗑️ BORRAR MEMORIA"):
+                st.session_state.memoria_jarvis = []
+                st.rerun()
+
+    # --- FORMULARIO DE ANÁLISIS ---
     with st.form("form_friday_final"):
-        relato_in = st.text_area(
-            "PEGUE EL PARTE POLICIAL AQUÍ:", 
-            height=300, 
-            key=f"in_{st.session_state.key_carta}",
-            placeholder="Sistemas listos. Analizando narrativa real, Srta. Diana..."
-        )
-        ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
+        relato_in = st.text_area("PEGUE EL PARTE POLICIAL AQUÍ:", height=250)
+        ejecutar = st.form_submit_button("⚡ ANALIZAR CON MEMORIA ACTIVA")
 
     if ejecutar and relato_in:
-        # 1. EXTRACCIÓN SEMÁNTICA
+        # 1. EXTRACCIÓN BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
         texto_u = relato_in.upper()
-        import re
+        memoria = " ".join(st.session_state.memoria_jarvis)
 
-        # --- MOTOR DE LÓGICA SITUACIONAL ---
-        
-        # A. Lugar del Perfil (Corte estricto para evitar el domicilio personal)
+        # 2. MOTOR DE RAZONAMIENTO (Aquí FRIDAY "piensa" antes de escribir)
+        # Limpieza de Lugar (Protocolo de seguridad de la Srta. Diana)
+        import re
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # B. Reconstrucción de Relato sin Alucinaciones
-        # Eliminamos las frases "pre-fabricadas" que causan errores
-        relato_limpio = mo_ia.upper()
-        prohibidas = ["AL REGRESAR AL LUGAR", "TRANSITABA A PIE EN DOMICILIO", "NOTÓ QUE"]
-        for p in prohibidas:
-            relato_limpio = relato_limpio.replace(p, "")
-
-        # C. Detección de Dinámica Real (¿Qué estaba haciendo la víctima?)
-        if "ARRENDABA" in texto_u or "HABITACION" in texto_u:
-            contexto = "SE ENCONTRABA AL INTERIOR DE SU DOMICILIO/HABITACIÓN"
-        elif "DESCENDE" in texto_u or "METRO" in texto_u:
-            contexto = "DESCENDÍA DE TRANSPORTE PÚBLICO"
-        elif "TRANSITABA" in texto_u:
-            contexto = "TRANSITABA POR LA VÍA PÚBLICA"
-        else:
-            contexto = "SE ENCONTRABA EN EL LUGAR"
-
-        # D. Identificación de Sujetos y Amenaza
-        sujetos = "SUJETOS DESCONOCIDOS"
-        if "JULIO" in texto_u: sujetos = "SUJETO IDENTIFICADO COMO JULIO Y OTROS INDIVIDUOS"
+        # Aplicación de Memoria sobre el relato de la IA
+        mo_final = mo_ia.upper()
         
-        amenaza = "MEDIANTE INTIMIDACIÓN"
-        if "APUÑALAR" in texto_u: amenaza = "MEDIANTE AMENAZA DE ARMA BLANCA"
+        # Ejemplo de autonomía: Si usted le ordenó no inventar celulares
+        if "CELULAR" in memoria and "IPHONE" in mo_final and "IPHONE" not in texto_u:
+            mo_final = mo_final.replace("01 TELEFONO CELULAR IPHONE", "ESPECIES VARIAS")
+        
+        # Filtro de frases incoherentes (Lección aprendida por FRIDAY)
+        frases_error = ["AL REGRESAR AL LUGAR", "TRANSITABA A PIE EN DOMICILIO"]
+        for frase in frases_error:
+            mo_final = mo_final.replace(frase, "")
 
-        # E. Ensamble Final de IA
-        mo_final = (
-            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {contexto}, "
-            f"INGRESARON {sujetos}, QUIENES {amenaza} "
-            f"PROCEDIERON A LA SUSTRACCIÓN DE {esp.upper() if esp else 'ESPECIES VARIAS'}, "
-            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
-        )
-
-        # 3. RENDERIZADO STARK INDUSTRIES
+        # 3. RENDERIZADO TÉCNICO (TABLA STARK)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -378,18 +372,16 @@ with t4:
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "FEMENINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper() if esp else "PERTENENCIAS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE</td><td class="border-inner-t">{esp.upper() if esp else "VARIAS"}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">NO INDICA</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd.upper() if cd else "SIN DATOS"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">A PIE</td></tr>
+                        <tr><td class="border-inner-r">SUJETO</td><td>{gd if gd else "DESCONOCIDO"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">VESTIMENTA</td><td class="border-inner-t">{cd.upper() if cd else "SIN DATOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MOVIL</td><td class="border-inner-t">{md if md else "A PIE"}</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
