@@ -463,51 +463,54 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-# --- RENDERIZADO FINAL DE LA CARTA DE SITUACIÓN ---
-        st.markdown(f"""
-        <table style="width:100%; border-collapse: collapse; border: 1px solid black; font-family: Arial, sans-serif;">
-            <tr>
-                <td rowspan="2" style="width:40%; background-color: #1E7421; color: white; padding: 10px; text-align: center; font-weight: bold; border: 1px solid black;">
-                    {tip}
-                </td>
-                <td style="width:30%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black;">TRAMO</td>
-                <td style="width:30%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black;">LUGAR OCURRENCIA</td>
-            </tr>
-            <tr>
-                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white; color: black; padding: 5px;">{tr}</td>
-                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white; color: black; padding: 5px;">{loc}</td>
-            </tr>
-            
-            <tr>
-                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">PERFIL VÍCTIMA</td>
-                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">PERFIL DELINCUENTE</td>
-                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">MODUS OPERANDI</td>
-            </tr>
+# 3. RENDERIZADO DEFINITIVO (DISEÑO JARVIS)
+        # Primero definimos el código HTML en una variable limpia
+        html_tabla = f"""
+        <div style="font-family: Arial, sans-serif;">
+            <table style="width:100%; border-collapse: collapse; border: 1px solid #000;">
+                <tr>
+                    <td rowspan="2" style="width:40%; background-color: #1E7421; color: white; padding: 10px; text-align: center; font-weight: bold; border: 1px solid #000; font-size: 14px;">
+                        {tip}
+                    </td>
+                    <td style="width:30%; text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">TRAMO</td>
+                    <td style="width:30%; text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">LUGAR OCURRENCIA</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold; border: 1px solid #000; background-color: white; color: black; padding: 8px;">{tr}</td>
+                    <td style="text-align: center; font-weight: bold; border: 1px solid #000; background-color: white; color: black; padding: 8px;">{loc}</td>
+                </tr>
+                
+                <tr>
+                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">PERFIL VÍCTIMA</td>
+                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">PERFIL DELINCUENTE</td>
+                    <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid #000; color: black; padding: 5px;">MODUS OPERANDI</td>
+                </tr>
 
-            <tr>
-                <td style="vertical-align: top; padding: 0; border: 1px solid black; background-color: white;">
-                    <table style="width:100%; border-collapse: collapse; border: none;">
-                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px; color: black;">GENERO</td><td style="border:none; color: black;">{gv}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">RANGO ETARIO</td><td style="border:none; color: black;">{ev}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">LUGAR</td><td style="border:none; color: black;">{tl}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">ESPECIE SUST.</td><td style="border:none; color: black;">{esp}</td></tr>
-                    </table>
-                </td>
-                <td style="vertical-align: top; padding: 0; border: 1px solid black; background-color: white;">
-                    <table style="width:100%; border-collapse: collapse; border: none;">
-                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px; color: black;">VICTIMARIO</td><td style="border:none; color: black;">{gd}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">RANGO EDAD</td><td style="border:none; color: black;">{ed}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">CARACT. FÍS.</td><td style="border:none; color: black;">{cd}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">MED. DESPL.</td><td style="border:none; color: black;">{md}</td></tr>
-                    </table>
-                </td>
-                <td style="vertical-align: top; text-align: justify; padding: 10px; font-size: 13px; border: 1px solid black; background-color: white; color: black;">
-                    {mo}
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">BASE LEGAL</td>
-                <td colspan="2" style="background-color: #f9f9f9; font-size: 12px; border: 1px solid black; padding: 5px; color: black;">{legal}</td>
-            </tr>
-        </table>
-        """, unsafe_allow_html=True)
+                <tr>
+                    <td style="vertical-align: top; padding: 5px; border: 1px solid #000; background-color: white;">
+                        <table style="width:100%; border: none; font-size: 12px; color: black;">
+                            <tr><td style="font-weight:bold;">GENERO</td><td>{gv}</td></tr>
+                            <tr><td style="font-weight:bold;">RANGO ETARIO</td><td>{ev}</td></tr>
+                            <tr><td style="font-weight:bold;">LUGAR</td><td>{tl}</td></tr>
+                            <tr><td style="font-weight:bold;">ESPECIE SUST.</td><td>{esp}</td></tr>
+                        </table>
+                    </td>
+                    <td style="vertical-align: top; padding: 5px; border: 1px solid #000; background-color: white;">
+                        <table style="width:100%; border: none; font-size: 12px; color: black;">
+                            <tr><td style="font-weight:bold;">VICTIMARIO</td><td>{gd}</td></tr>
+                            <tr><td style="font-weight:bold;">RANGO EDAD</td><td>{ed}</td></tr>
+                            <tr><td style="font-weight:bold;">CARACT. FÍS.</td><td>{cd}</td></tr>
+                            <tr><td style="font-weight:bold;">MED. DESPL.</td><td>{md}</td></tr>
+                        </table>
+                    </td>
+                    <td style="vertical-align: top; text-align: justify; padding: 8px; font-size: 12px; border: 1px solid #000; background-color: white; color: black;">
+                        {mo}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        """
+        
+        # AQUÍ ESTÁ LA MAGIA: El comando de renderizado fuera de la variable
+        st.write("---")
+        st.components.v1.html(html_tabla, height=350, scrolling=True)
