@@ -98,33 +98,6 @@ with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
                 st.success("SISTEMA ACTUALIZADO.")
                 st.rerun()
 
-# --- 5. ÁREA DE TRABAJO (CARTA DE SITUACIÓN) ---
-if "key_carta" not in st.session_state:
-    st.session_state.key_carta = 0
-
-# 1. Botones de acción alineados
-c1, c2 = st.columns([1, 1])
-with c1:
-    ejecutar = st.button("⚡ ANALIZAR CON MEMORIA ACTIVA")
-
-with c2:
-    # Solo se muestra si FRIDAY activó la configuración
-    if config_nube.get("boton_limpiar"):
-        if st.button("🗑️ LIMPIAR RELATO"):
-            st.session_state.key_carta += 1
-            st.rerun()
-
-# 3. Lógica de procesamiento
-if ejecutar and relato_in:
-    st.info("🤖 FRIDAY: Procesando datos del parte policial...")
-    # Aquí es donde llamaremos a procesar_relato_ia(relato_in)
-    # y luego mostraremos la tabla negra/dorada.
-
-# --- SIDEBAR DE ESTADO ---
-st.sidebar.markdown(f"### 🛡️ NÚCLEO ACTIVO")
-st.sidebar.write(f"Lecciones: {len(memoria_historia)}")
-if config_nube.get("boton_limpiar"):
-    st.sidebar.success("BOTÓN LIMPIAR: ON")
     
 # --- 1. CONFIGURACIÓN VISUAL (SISTEMA STARK INDUSTRIES) ---
 # Nota: st.set_page_config ya se llamó en el núcleo, así que aquí solo definimos el estilo.
