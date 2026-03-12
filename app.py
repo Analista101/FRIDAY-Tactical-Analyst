@@ -433,7 +433,7 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FRIDAY) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO JARVIS) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
