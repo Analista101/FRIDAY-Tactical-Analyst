@@ -10,6 +10,30 @@ import textwrap
 import json
 import os
 
+# 1. PRIMERO: Las funciones (Cómo hacer las cosas)
+def cargar_memoria_nube():
+    archivo = 'memoria_evolutiva.json'
+    if os.path.exists(archivo):
+        try:
+            with open(archivo, 'r') as f:
+                contenido = f.read().strip()
+                return json.loads(contenido) if contenido else []
+        except:
+            return []
+    return []
+
+def guardar_en_nube(nueva_leccion):
+    # (Aquí va el código de guardar que ya tiene)
+    ...
+
+# 2. SEGUNDO: El uso de las funciones (Hacer las cosas)
+memoria_historia = cargar_memoria_nube() # <--- AHORA SÍ FUNCIONARÁ
+
+color_texto = "white"
+for leccion in memoria_historia:
+    if "LETRA NEGRA" in leccion:
+        color_texto = "black"
+
 # --- PROTOCOLO DE AUTONOMÍA NIVEL 4: AUTO-CODIFICACIÓN ---
 def aplicar_evolucion_codigo():
     memoria = cargar_memoria_nube()
@@ -29,17 +53,6 @@ def aplicar_evolucion_codigo():
         if "LLÁMAME" in instruccion:
             nuevo_nombre = instruccion.split("LLÁMAME")[-1].strip()
             st.session_state.nombre_asistente = f"FRIDAY (Modo: {nuevo_nombre})"
-
-# --- LÓGICA DE AUTO-CONFIGURACIÓN DE FRIDAY ---
-memoria_historia = cargar_memoria_nube()
-color_texto = "white" # Color base
-
-for leccion in memoria_historia:
-    if "LETRA NEGRA" in leccion:
-        color_texto = "black"
-    if "LETRA ROJA" in leccion:
-        color_texto = "red"
-    # Aquí es donde FRIDAY irá añadiendo sus propias reglas
 
 # Aplicamos el estilo que FRIDAY decidió basándose en su memoria
 st.markdown(f"""
