@@ -36,7 +36,7 @@ color_texto = "white" # <--- Este valor cambia 'dinámicamente'
 for leccion in memoria_historia:
     if "LETRA NEGRA" in leccion:
         color_texto = "black" # <--- Aquí ocurre el cambio de estado
-        
+
 # --- PROTOCOLO DE AUTONOMÍA: AUTO-CODIFICACIÓN ---
 def aplicar_evolucion_codigo():
     memoria = cargar_memoria_nube()
@@ -61,9 +61,10 @@ def aplicar_evolucion_codigo():
 st.markdown(f"""
     <style>
     .stApp {{
-        color: {color_texto}; # <--- Aquí el código 'se escribe a sí mismo'
+        color: {color_texto};
     }}
-    ...
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- PROTOCOLO DE SALUDO FRIDAY ---
 memoria_historia = cargar_memoria_nube()
@@ -94,28 +95,61 @@ def extract_value(text, pattern):
     match = re.search(pattern, text, re.IGNORECASE)
     return match.group(1).strip() if match else None
 
-# --- 1. CONFIGURACIÓN VISUAL FRIDAY ---
+# --- 1. CONFIGURACIÓN VISUAL FRIDAY (SISTEMA REPARADO) ---
 st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
+
+# Unificamos todo el CSS en un solo bloque seguro
 st.markdown("""
     <style>
+    /* Fondo y Base */
     .stApp { background-color: #D1D8C4 !important; }
     .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .section-header { background-color: #004A2F !important; color: white; padding: 10px; border-radius: 5px; font-weight: bold; border-left: 10px solid #C5A059; margin-bottom: 20px; }
-    .ia-box { background-color: #002D1D; color: #C5A059; padding: 20px; border-radius: 10px; border: 2px solid #C5A059; font-family: 'Arial', sans-serif; }
+    .reportview-container .main .block-container { padding: 25px; }
     
+    /* Encabezados y Cajas de IA */
+    .section-header { 
+        background-color: #004A2F !important; 
+        color: white; 
+        padding: 10px; 
+        border-radius: 5px; 
+        font-weight: bold; 
+        border-left: 10px solid #C5A059; 
+        margin-bottom: 20px; 
+    }
+    .ia-box { 
+        background-color: #002D1D; 
+        color: #C5A059; 
+        padding: 20px; 
+        border-radius: 10px; 
+        border: 2px solid #C5A059; 
+        font-family: 'Arial', sans-serif; 
+    }
+    
+    /* Output Legal (Corregido) */
     .legal-output-black { 
         background-color: #000000 !important; 
         color: #FFFFFF !important; 
-        padding: 25px; 
         border-radius: 10px; 
         border: 2px solid #C5A059; 
         font-family: 'Arial'; 
         line-height: 1.6;
         font-size: 16px;
+        padding: 15px;
     }
     
+    /* Etiquetas y Tablas */
     label { color: black !important; font-weight: bold; }
-    .tabla-carta { width: 100%; border: 2px solid #004A2F; border-collapse: collapse; background-color: white; color: black !important; font-family: 'Arial', sans-serif; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+    .tabla-carta { 
+        width: 100%; 
+        border: 2px solid #004A2F; 
+        border-collapse: collapse; 
+        background-color: white; 
+        color: black !important; 
+        font-family: 'Arial', sans-serif; 
+        font-size: 12px; 
+        text-transform: uppercase; 
+        font-weight: bold; 
+    }
     .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; }
     .celda-titulo { background-color: #4F6228 !important; color: white !important; text-align: center !important; font-size: 16px !important; }
     .celda-sub { background-color: #EBF1DE !important; text-align: center !important; color: black !important; }
@@ -126,6 +160,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- 2. GESTIÓN DE ESTADO ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
