@@ -433,11 +433,10 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (MULTI-DELITO) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (ESTILO Y LÓGICA FINAL) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
-    # 1. ESTADO DEL ÁREA DE TEXTO
     if 'key_relato' not in st.session_state:
         st.session_state.key_relato = 0
 
@@ -455,11 +454,11 @@ with t4:
             st.session_state.key_relato += 1
             st.rerun()
 
-    # 2. PROCESAMIENTO (IDENTACIÓN CORREGIDA)
     if enviar and relato_in:
         with st.status("🤖 FRIDAY: Analizando naturaleza del procedimiento...", expanded=False):
             resultado = procesar_relato_ia(relato_in)
             
+            # Sincronización de campos
             if len(resultado) >= 12:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md_ia, mo_ia = resultado[:12]
             else:
@@ -469,22 +468,19 @@ with t4:
             import re
             texto_analisis = relato_in.upper()
             
-            # --- 3. LÓGICA DE DETECCIÓN DE DELITO ---
+            # 1. DETECCIÓN DE DELITO
             es_lesion = any(x in texto_analisis for x in ["LESION", "GOLPE", "AGRESION", "RIÑA", "PUÑO", "PATADA"])
-            es_robo = any(x in texto_analisis for x in ["ROBO", "ARREBATA", "SUSTRAE", "ESPECIES", "CELULAR"])
-
-            # Sincronización de Medio de Desplazamiento
+            
+            # 2. SINCRONIZACIÓN DE MEDIO DE DESPLAZAMIENTO
             md_final = "MOTOCICLETA" if "MOTO" in texto_analisis else "A PIE"
             sujeto_v = f"UN SUJETO EN MOTOCICLETA" if md_final == "MOTOCICLETA" else "UN SUJETO"
 
-            # --- 4. CONSTRUCCIÓN DEL RESUMEN TÁCTICO ---
-            if es_lesion and not es_robo:
-                # Narrativa para Lesiones
+            # 3. CONSTRUCCIÓN DEL RESUMEN TÁCTICO
+            if es_lesion:
                 accion_v = "PROBINA GOLPES A LA VÍCTIMA" if "GOLPE" in texto_analisis else "AGREDE FÍSICAMENTE A LA VÍCTIMA"
                 resumen_final = f"VICTIMA SE ENCONTRABA EN LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN SIN PROVOCACION PREVIA {accion_v}, RESULTANDO ESTA CON LESIONES DE DIVERSA CONSIDERACION, PARA LUEGO DARSE A LA FUGA."
                 especie_display = "NO REGISTRA (PROCEDIMIENTO POR LESIONES)"
             else:
-                # Narrativa para Robo
                 transporte_v = "A PIE"
                 if "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
                 elif "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
@@ -494,12 +490,12 @@ with t4:
                 resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
                 especie_display = esp if esp else "SIN ESPECIFICAR"
 
-            # Limpieza de Privacidad (Nombres y RUT)
+            # 4. LIMPIEZA DE PRIVACIDAD
             nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD|CEDULA)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
 
-            # Lógica de Lugar
+            # 5. LÓGICA DE LUGAR
             if any(h in texto_analisis for h in ["HOSPITAL", "CLINICA", "POSTA"]):
                 tl_final = "CENTRO DE SALUD"
                 loc_final = str(loc).upper()
@@ -507,31 +503,47 @@ with t4:
                 tl_final = "VIA PUBLICA" if any(v in texto_analisis for v in ["AVENIDA", "CALLE", "TENIENTE CRUZ"]) else tl_clase
                 loc_final = str(loc).upper()
 
-        # --- 5. RENDERIZADO TABLA ---
+        # --- 6. RENDERIZADO CON TAMAÑO DE LETRA CORREGIDO ---
         st.markdown(f"""
-        <table style="width: 100%; border-collapse: collapse; font-family: Arial; color: black; border: 1px solid #333;">
+        <style>
+            .tabla-final {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
+            .tabla-final td {{ border: 1px solid #333; padding: 10px; font-size: 14px !important; vertical-align: middle; background-color: white; }}
+            .encabezado-verde {{ background-color: #1E7421 !important; color: white !important; text-align: center; font-weight: bold; font-size: 15px !important; }}
+            .sub-encabezado {{ background-color: #D7E4BD !important; text-align: center; font-weight: bold; font-size: 14px !important; }}
+            .perfil-header {{ background-color: #EBF1DE !important; text-align: center; font-weight: bold; font-size: 14px !important; }}
+            .dato-negrita {{ font-weight: bold; font-size: 14px !important; }}
+            .resumen-texto {{ text-align: justify; line-height: 1.5; font-size: 13px !important; }}
+        </style>
+
+        <table class="tabla-final">
             <tr>
-                <td rowspan="2" style="background-color: #1E7421; color: white; text-align: center; font-weight: bold; width: 35%;">{tip}</td>
-                <td style="background-color: #D7E4BD; text-align: center; font-weight: bold; width: 30%;">TRAMO</td>
-                <td style="background-color: #D7E4BD; text-align: center; font-weight: bold; width: 35%;">LUGAR OCURRENCIA</td>
+                <td rowspan="2" class="encabezado-verde" style="width: 35%;">{tip}</td>
+                <td class="sub-encabezado" style="width: 30%;">TRAMO</td>
+                <td class="sub-encabezado" style="width: 35%;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td style="text-align: center; height: 40px; background: white;">{tr}</td>
-                <td style="text-align: center; background: white;">{loc_final}</td>
+                <td style="text-align: center; height: 50px;" class="dato-negrita">{tr}</td>
+                <td style="text-align: center;" class="dato-negrita">{loc_final}</td>
             </tr>
             <tr>
-                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">PERFIL VÍCTIMA</td>
-                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">PERFIL DELINCUENTE</td>
-                <td style="background-color: #EBF1DE; text-align: center; font-weight: bold;">MODUS OPERANDI</td>
+                <td class="perfil-header">PERFIL VÍCTIMA</td>
+                <td class="perfil-header">PERFIL DELINCUENTE</td>
+                <td class="perfil-header">MODUS OPERANDI</td>
             </tr>
             <tr>
-                <td style="vertical-align: top; background: white; padding: 5px;">
-                    <b>GENERO:</b> {gv}<br><b>RANGO:</b> {ev}<br><b>LUGAR:</b> <span style="color:green; font-weight:bold;">{tl_final}</span><br><b>ESPECIE:</b> {especie_display}
+                <td style="vertical-align: top;">
+                    <span class="dato-negrita">GENERO:</span> {gv}<br>
+                    <span class="dato-negrita">RANGO:</span> {ev}<br>
+                    <span class="dato-negrita">LUGAR:</span> <span style="color:green; font-weight:bold;">{tl_final}</span><br>
+                    <span class="dato-negrita">ESPECIE:</span> {especie_display}
                 </td>
-                <td style="vertical-align: top; background: white; padding: 5px;">
-                    <b>VICTIMARIO:</b> {gd}<br><b>EDAD:</b> {ed}<br><b>FISICO:</b> {cd}<br><b>MED. DESPL.:</b> {md_final}
+                <td style="vertical-align: top;">
+                    <span class="dato-negrita">VICTIMARIO:</span> {gd}<br>
+                    <span class="dato-negrita">EDAD:</span> {ed}<br>
+                    <span class="dato-negrita">FISICO:</span> {cd}<br>
+                    <span class="dato-negrita">MED. DESPL.:</span> {md_final}
                 </td>
-                <td style="text-align: justify; font-size: 11px; padding: 10px; background: white;">{resumen_final}</td>
+                <td class="resumen-texto">{resumen_final}</td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
