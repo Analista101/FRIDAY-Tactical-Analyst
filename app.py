@@ -433,11 +433,10 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (DISEÑO SIMÉTRICO Y UNIFICADO) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (CON RESUMEN TÁCTICO) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
-    # Única entrada de texto para evitar duplicidad de variables
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
@@ -455,7 +454,7 @@ with t4:
                 st.rerun()
 
     if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Sincronizando matriz de datos...", expanded=False):
+        with st.status("🤖 FRIDAY: Generando resumen ejecutivo...", expanded=False):
             # 1. Procesamiento IA (Protocolo de 12 campos)
             resultado = procesar_relato_ia(relato_in)
             
@@ -468,28 +467,33 @@ with t4:
             import re
             texto_upper = relato_in.upper()
             
-            # --- 2. LÓGICA DE PRIORIDAD DE RELATO (MODUS OPERANDI) ---
-            # Limpieza de datos sensibles manteniendo la narrativa original
-            relato_limpio = texto_upper
-            relato_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', relato_limpio) # Elimina RUT
-            relato_limpio = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR|R.U.T)\s?N?°?\s?\d+', '', relato_limpio, flags=re.IGNORECASE)
+            # --- 2. LÓGICA DE RESUMEN TÁCTICO (NUEVA DIRECTRIZ) ---
+            # Si mo_ia ya viene resumido de la función principal, lo usamos; 
+            # de lo contrario, aplicamos filtros de limpieza profunda.
+            resumen_tactivo = mo_ia.upper() if mo_ia else "NO SE PUDO GENERAR RESUMEN"
             
-            # El Modus Operandi ahora es el relato del parte, formateado para la tabla
-            mo_final = " ".join(relato_limpio.split()).strip()
+            # Filtro de Privacidad Stark: Eliminación de Nombres, RUTs, Teléfonos y Direcciones
+            # Reemplazamos patrones comunes de direcciones y números
+            resumen_tactivo = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_tactivo) # RUT
+            resumen_tactivo = re.sub(r'(CELULAR|TELEFONO|NRO|NUMERO|RUT)\s?[:°]?\s?\d+', '', resumen_tactivo, flags=re.IGNORECASE)
+            resumen_tactivo = re.sub(r'CALLE\s+[A-Z\s]+(\d+)?', 'LA VIA PUBLICA', resumen_tactivo) # Generaliza calles
+            
+            # Aseguramos que empiece con "VICTIMA..." si no tiene un inicio claro
+            if not resumen_tactivo.startswith("VICTIMA"):
+                resumen_tactivo = f"VICTIMA {resumen_tactivo}"
 
-            # --- 3. LÓGICA DE LUGAR (REGLA INSTITUCIONAL) ---
+            # --- 3. LÓGICA DE LUGAR ---
             if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
                 tl_final = "VIA PUBLICA"
-                # Limpia la dirección cortando cualquier referencia a domicilio
                 loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
                 if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
             else:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-            st.write("Análisis y limpieza de datos completada.")
+            st.write("Resumen táctico finalizado.")
 
-        # --- 4. RENDERIZADO CSS Y HTML (ESTILO STARK INDUSTRIES) ---
+        # --- 4. RENDERIZADO CSS Y HTML UNIFICADO ---
         st.markdown(f"""
         <style>
             .t-friday {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
@@ -497,11 +501,8 @@ with t4:
             .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
-            .mini-t {{ width: 100%; border-collapse: collapse; border: none; }}
-            .mini-t td {{ border: none; padding: 3px 5px; font-size: 12px; height: 22px; }}
             .lbl {{ font-weight: bold; width: 42%; }}
             .val-resaltado {{ font-weight: bold; color: #1E7421; }}
-            .mo-box {{ text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background-color: white; }}
         </style>
 
         <table class="t-friday">
@@ -521,23 +522,23 @@ with t4:
             </tr>
             <tr>
                 <td style="padding: 0; vertical-align: top;">
-                    <table class="mini-t">
-                        <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
-                        <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
-                        <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
-                        <tr><td class="lbl">ESPECIE SUST.</td><td>{esp}</td></tr>
+                    <table style="width:100%; border: none; border-collapse: collapse;">
+                        <tr><td class="lbl" style="padding: 4px 6px;">GENERO</td><td>{gv}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">RANGO ETARIO</td><td>{ev}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">ESPECIE SUST.</td><td>{esp}</td></tr>
                     </table>
                 </td>
                 <td style="padding: 0; vertical-align: top;">
-                    <table class="mini-t">
-                        <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
-                        <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
-                        <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
-                        <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
+                    <table style="width:100%; border: none; border-collapse: collapse;">
+                        <tr><td class="lbl" style="padding: 4px 6px;">VICTIMARIO</td><td>{gd}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">RANGO EDAD</td><td>{ed}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">CARACT. FÍS.</td><td>{cd}</td></tr>
+                        <tr><td class="lbl" style="padding: 4px 6px;">MED. DESPL.</td><td>{md}</td></tr>
                     </table>
                 </td>
-                <td class="mo-box">
-                    {mo_final}
+                <td style="text-align: justify; line-height: 1.3; font-size: 11px; padding: 10px; vertical-align: top; background-color: white;">
+                    {resumen_tactivo}
                 </td>
             </tr>
         </table>
