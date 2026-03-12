@@ -308,8 +308,7 @@ with t4:
         relato_in = st.text_area(
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
-            key=f"in_{st.session_state.key_carta}",
-            placeholder="Analizando datos en tiempo real..."
+            key=f"in_{st.session_state.key_carta}"
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
@@ -321,44 +320,48 @@ with t4:
         texto_u = relato_in.upper()
         import re
 
-        # --- AJUSTE EXCLUSIVO: PERFIL VÍCTIMA (CAMPO LUGAR) ---
-        # Buscamos el tipo de lugar (VIA PUBLICA, DISCOTEQUE, etc.) sin tocar la dirección física
-        match_tipo_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([A-Z\s]+)', texto_u)
-        tl_clase_f = match_tipo_lugar.group(1).strip() if match_tipo_lugar else (tl_clase if tl_clase else "VIA PUBLICA")
+        # --- AJUSTE QUIRÚRGICO: CORTE EN VIA PUBLICA ---
+        # La expresión [^\n\r]+ asegura que solo lea la línea actual y no pase a la siguiente (donde está Domicilio)
+        match_lugar_exacto = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([A-Z\s]+)', texto_u)
+        if match_lugar_exacto:
+            tl_clase_f = match_lugar_exacto.group(1).strip()
+            # Limpieza adicional: si por error capturó "DOMICILIO", lo cortamos antes
+            tl_clase_f = tl_clase_f.split("DOMICILIO")[0].strip()
+        else:
+            tl_clase_f = tl_clase if tl_clase else "VIA PUBLICA"
         
-        # --- EL RESTO DE LOS DATOS SE MANTIENEN IGUAL ---
-        delito_real = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
-        tip_f = delito_real.group(1).strip() if delito_real else tip
-        
+        # Mantener dirección del encabezado intacta
         dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
         loc_f = dir_real.group(1).strip() if dir_real else loc
 
-        genero_f = gv if gv else "NO INDICA"
+        # Resto de variables de perfil
+        genero_f = gv if gv else "MASCULINO"
         match_edad = re.search(r'(\d+)\s?AÑOS', texto_u)
         edad_f = f"DE {match_edad.group(1)} AÑOS" if match_edad else (ev if ev else "NO INDICA")
 
+        # Lógica de Especies y Modus Operandi
         if "HOMICIDIO" in texto_u or "DISPAROS" in texto_u:
             mo_final = (
                 "SUJETOS DESCONOCIDOS EFECTÚAN MÚLTIPLES DISPAROS CON ARMAS DE FUEGO EN SECTOR TERRAZA DE DISCOTEQUE, "
-                "RESULTANDO PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA. "
-                "PERSONAL POLICIAL HALLA VAINAS Y MUNICIÓN EN EL SITIO DEL SUCESO."
+                "RESULTANDO PERSONAS FALLECIDAS EN EL LUGAR. AUTORES HUYEN EN DIRECCIÓN DESCONOCIDA."
             )
-            esp_f = "NO APLICA (EVIDENCIA BALÍSTICA)"
+            esp_f = "NO APLICA"
         else:
             mo_final = mo_ia.upper() if mo_ia else "RELATO NO GENERADO"
             esp_f = esp.upper() if esp else "NO INDICA"
 
-        # 3. RENDERIZADO FINAL (ESTRUCTURA ORIGINAL)
+        # 3. RENDERIZADO FINAL
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
-                <td rowspan="2" class="celda-titulo" style="width:40%">{tip_f}</td>
+                <td rowspan="2" class="celda-titulo" style="width:40%">{tip.upper()}</td>
                 <td class="celda-sub" style="width:20%">TRAMO</td>
                 <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
                 <td style="text-align:center">{tr}</td>
-                <td style="text-align:center">{loc_f}</td> </tr>
+                <td style="text-align:center">{loc_f}</td>
+            </tr>
             <tr>
                 <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
                 <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
@@ -369,14 +372,15 @@ with t4:
                     <table class="mini-tabla" style="width:100%">
                         <tr><td class="border-inner-r">GENERO</td><td>{genero_f}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{edad_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr> <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
                         <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd if gd else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed if ed else "NO INDICA"}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "3 SUJETOS"}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd if cd else "NO INDICA"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md if md else "VEHÍCULO"}</td></tr>
                     </table>
                 </td>
