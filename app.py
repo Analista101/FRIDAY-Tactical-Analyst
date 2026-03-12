@@ -465,21 +465,28 @@ with t4:
 
 # 3. RENDERIZADO DEFINITIVO (DISEÑO)
 # --- LOGICA DE EXTRACCIÓN REFORZADA (PROTOCOLO FRIDAY) ---
-loc_raw = str(loc).upper()
+# Intentamos obtener la ubicación de las variables comunes en su código
+try:
+    # Probamos con 'loc', 'lugar_ocurrencia' o el valor directo de la fila
+    ubicacion_fuente = loc if 'loc' in locals() else lugar_ocurrencia
+    loc_raw = str(ubicacion_fuente).upper()
+except NameError:
+    # Si falla, usamos una cadena vacía para evitar que la app se caiga
+    loc_raw = ""
 
-# 1. Limpiamos la dirección para el encabezado (cortamos antes de "DOMICILIO")
-direccion_limpia = loc_raw.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
-if not direccion_limpia: 
-    direccion_limpia = "VIA PUBLICA"
+# 1. Limpiamos la dirección para el encabezado
+# Cortamos antes de que aparezca la palabra "DOMICILIO" para evitar errores
+direccion_final = loc_raw.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
+if not direccion_final: 
+    direccion_final = "VIA PUBLICA"
 
-# 2. REGLA DE ORO: Si hay una dirección física, el lugar es VIA PUBLICA
-# Buscamos si hay números en la dirección (indicador de calle)
-tiene_numeros = any(char.isdigit() for char in direccion_limpia)
+# 2. REGLA DE ACERO: Si hay números (calle) o dice VIA PUBLICA, mandamos ese valor
+tiene_calle = any(char.isdigit() for char in direccion_final)
 
-if "VIA PUBLICA" in loc_raw or tiene_numeros:
-    lugar_final = "VIA PUBLICA"
+if "VIA PUBLICA" in loc_raw or tiene_calle:
+    lugar_perfil_v = "VIA PUBLICA"
 else:
-    lugar_final = "DOMICILIO PARTICULAR"
+    lugar_perfil_v = "DOMICILIO PARTICULAR"
 
 # 3. RENDERIZADO DE ALTA DEFINICIÓN ---
     st.markdown(f"""
