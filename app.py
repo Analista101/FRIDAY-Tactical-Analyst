@@ -463,110 +463,67 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-# 3. RENDERIZADO DEFINITIVO (DISEÑO)
-# --- LOGICA DE EXTRACCIÓN REFORZADA (PROTOCOLO FRIDAY) ---
-# Intentamos obtener la ubicación de las variables comunes en su código
-try:
-    # Probamos con 'loc', 'lugar_ocurrencia' o el valor directo de la fila
-    ubicacion_fuente = loc if 'loc' in locals() else lugar_ocurrencia
-    loc_raw = str(ubicacion_fuente).upper()
-except NameError:
-    # Si falla, usamos una cadena vacía para evitar que la app se caiga
-    loc_raw = ""
+# --- 1. MOTOR DE LÓGICA REFORZADA (FRIDAY) ---
+        # Usamos la variable 'loc' que es la que su app reconoce para la ubicación
+        loc_texto = str(loc).upper()
+        
+        # Extraemos la dirección exacta para el encabezado (cortamos en DOMICILIO)
+        direccion_encabezado = loc_texto.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
+        if not direccion_encabezado: 
+            direccion_encabezado = "VIA PUBLICA"
 
-# 1. Limpiamos la dirección para el encabezado
-# Cortamos antes de que aparezca la palabra "DOMICILIO" para evitar errores
-direccion_final = loc_raw.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
-if not direccion_final: 
-    direccion_final = "VIA PUBLICA"
+        # REGLA DE ORO: Si hay números (calle) o dice VIA PUBLICA, forzamos ese valor
+        tiene_numeros = any(char.isdigit() for char in direccion_encabezado)
+        
+        if "VIA PUBLICA" in loc_texto or tiene_numeros:
+            lugar_perfil_final = "VIA PUBLICA"
+        else:
+            lugar_perfil_final = "DOMICILIO PARTICULAR"
 
-# 2. REGLA DE ACERO: Si hay números (calle) o dice VIA PUBLICA, mandamos ese valor
-tiene_calle = any(char.isdigit() for char in direccion_final)
-
-if "VIA PUBLICA" in loc_raw or tiene_calle:
-    lugar_perfil_v = "VIA PUBLICA"
-else:
-    lugar_perfil_v = "DOMICILIO PARTICULAR"
-
-# 3. RENDERIZADO DE ALTA DEFINICIÓN ---
-    st.markdown(f"""
+        # --- 2. RENDERIZADO ESTÉTICO FINAL ---
+        st.markdown(f"""
         <style>
-            .t-final {{
-                width: 100%;
-                border-collapse: collapse;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                color: #1a1a1a;
-                border: 1px solid #d1d1d1;
-            }}
-            .t-final td {{
-                border: 1px solid #d1d1d1;
-                padding: 7px 10px;
-            }}
-            .h-verde-intenso {{
-                background-color: #1E7421;
-                color: white;
-                text-align: center;
-                font-weight: bold;
-                font-size: 14px;
-            }}
-            .h-seccion {{
-                background-color: #D7E4BD;
-                text-align: center;
-                font-weight: bold;
-                font-size: 11px;
-                text-transform: uppercase;
-            }}
-            .h-subseccion {{
-                background-color: #EBF1DE;
-                text-align: center;
-                font-weight: bold;
-                font-size: 11px;
-                text-transform: uppercase;
-            }}
-            .f-etiqueta {{
-                font-weight: bold;
-                font-size: 11px;
-                width: 40%;
-                color: #333;
-            }}
-            .f-valor {{
-                font-size: 11px;
-            }}
+            .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #ccc; }}
+            .t-friday td {{ border: 1px solid #ccc; padding: 8px; }}
+            .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 14px; }}
+            .h-claro {{ background-color: #D7E4BD; text-align: center; font-weight: bold; font-size: 12px; }}
+            .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; font-size: 12px; }}
+            .label-b {{ font-weight: bold; width: 42%; font-size: 12px; }}
         </style>
 
-        <table class="t-final">
+        <table class="t-friday">
             <tr>
-                <td rowspan="2" class="h-verde-intenso" style="width:40%;">{tip}</td>
-                <td class="h-seccion" style="width:30%;">TRAMO</td>
-                <td class="h-seccion" style="width:30%;">LUGAR OCURRENCIA</td>
+                <td rowspan="2" class="h-verde" style="width:40%;">{tip}</td>
+                <td class="h-claro" style="width:30%;">TRAMO</td>
+                <td class="h-claro" style="width:30%;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
                 <td style="text-align: center; font-weight: bold; background: white;">{tr}</td>
                 <td style="text-align: center; font-weight: bold; background: white;">{direccion_encabezado}</td>
             </tr>
             <tr>
-                <td class="h-subseccion">PERFIL VÍCTIMA</td>
-                <td class="h-subseccion">PERFIL DELINCUENTE</td>
-                <td class="h-subseccion">MODUS OPERANDI</td>
+                <td class="h-perfil">PERFIL VÍCTIMA</td>
+                <td class="h-perfil">PERFIL DELINCUENTE</td>
+                <td class="h-perfil">MODUS OPERANDI</td>
             </tr>
             <tr>
                 <td style="vertical-align: top; padding: 0; background: white;">
                     <table style="width:100%; border: none;">
-                        <tr><td style="border:none;" class="f-etiqueta">GENERO</td><td style="border:none;" class="f-valor">{gv}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">RANGO ETARIO</td><td style="border:none;" class="f-valor">{ev}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421; font-size: 12px;">{lugar_perfil_final}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">ESPECIE SUST.</td><td style="border:none;" class="f-valor">{esp}</td></tr>
+                        <tr><td style="border:none;" class="label-b">GENERO</td><td style="border:none;">{gv}</td></tr>
+                        <tr><td style="border:none;" class="label-b">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
+                        <tr><td style="border:none;" class="label-b">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421;">{lugar_perfil_final}</td></tr>
+                        <tr><td style="border:none;" class="label-b">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align: top; padding: 0; background: white;">
                     <table style="width:100%; border: none;">
-                        <tr><td style="border:none;" class="f-etiqueta">VICTIMARIO</td><td style="border:none;" class="f-valor">{gd}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">RANGO EDAD</td><td style="border:none;" class="f-valor">{ed}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">CARACT. FÍS.</td><td style="border:none;" class="f-valor">{cd}</td></tr>
-                        <tr><td style="border:none;" class="f-etiqueta">MED. DESPL.</td><td style="border:none;" class="f-valor">{md}</td></tr>
+                        <tr><td style="border:none;" class="label-b">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
+                        <tr><td style="border:none;" class="label-b">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
+                        <tr><td style="border:none;" class="label-b">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
+                        <tr><td style="border:none;" class="label-b">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
                     </table>
                 </td>
-                <td style="vertical-align: top; text-align: justify; font-size: 11px; line-height: 1.4; background: white;">
+                <td style="vertical-align: top; text-align: justify; font-size: 12px; line-height: 1.4; background: white;">
                     {mo}
                 </td>
             </tr>
