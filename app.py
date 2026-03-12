@@ -31,12 +31,12 @@ def guardar_en_nube(nueva_leccion):
 
 # --- 2. DESPUÉS CARGAMOS LA MEMORIA Y EL ESTILO ---
 memoria_historia = cargar_memoria_nube()
-color_texto = "white"
+color_texto = "white" # <--- Este valor cambia 'dinámicamente'
 
 for leccion in memoria_historia:
     if "LETRA NEGRA" in leccion:
-        color_texto = "black"
-
+        color_texto = "black" # <--- Aquí ocurre el cambio de estado
+        
 # --- PROTOCOLO DE AUTONOMÍA: AUTO-CODIFICACIÓN ---
 def aplicar_evolucion_codigo():
     memoria = cargar_memoria_nube()
@@ -61,21 +61,9 @@ def aplicar_evolucion_codigo():
 st.markdown(f"""
     <style>
     .stApp {{
-        color: {color_texto};
+        color: {color_texto}; # <--- Aquí el código 'se escribe a sí mismo'
     }}
-    .section-header {{
-        color: {color_texto} !important;
-        font-weight: bold;
-        border-bottom: 2px solid #ed1c24;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }}
-    /* Forzamos que los mensajes de FRIDAY también cambien */
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
-        color: {color_texto} !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+    ...
 
 # --- PROTOCOLO DE SALUDO FRIDAY ---
 memoria_historia = cargar_memoria_nube()
