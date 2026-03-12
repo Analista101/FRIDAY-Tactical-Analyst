@@ -11,23 +11,22 @@ import json
 import os
 import requests
 
-# --- 1. NÚCLEO DE MEMORIA Y CONFIGURACIÓN (EL DISCO DURO INTEGRADO) ---
+import streamlit as st
+import json
+import os
+import re
+
+# --- 1. NÚCLEO DE MEMORIA Y CONFIGURACIÓN ---
 def inicializar_sistema_friday():
     archivo_config = 'friday_settings.json'
-    # Si el archivo no existe, creamos el ADN básico de FRIDAY
     if not os.path.exists(archivo_config):
         base = {
-            "config": {
-                "boton_limpiar": False, 
-                "mayusculas_auto": True,
-                "estilo_visual": "STARK"
-            },
+            "config": {"boton_limpiar": False, "mayusculas_auto": True},
             "historial": []
         }
         with open(archivo_config, 'w') as f:
             json.dump(base, f)
         return base
-    
     try:
         with open(archivo_config, 'r') as f:
             return json.load(f)
@@ -38,92 +37,95 @@ def guardar_cambios_friday(datos):
     with open('friday_settings.json', 'w') as f:
         json.dump(datos, f)
 
-# CARGA INICIAL: Aquí definimos 'config' y 'memoria_historia' de una vez por todas
+# Carga inicial de datos
 datos_maestros = inicializar_sistema_friday()
-config = datos_maestros["config"]
+config_nube = datos_maestros["config"]
 memoria_historia = datos_maestros["historial"]
 
-# --- 2. MOTOR DE AUTONOMÍA (INTERPRETE DE ÓRDENES) ---
-def aplicar_evolucion_universal(orden_usuario=None):
-    if not orden_usuario:
-        return False
-        
-    orden = orden_usuario.upper()
-    actualizado = False
-    
-    # Lógica de Autonomía: FRIDAY activa sus herramientas internas
-    if "LIMPIAR" in orden or "BOTON DE LIMPIEZA" in orden:
-        config["boton_limpiar"] = True
-        actualizado = True
-        
-    if "QUITA EL BOTON" in orden or "BORRA LIMPIAR" in orden:
-        config["boton_limpiar"] = False
-        actualizado = True
-
-    if actualizado:
-        # Guardamos la orden en el historial para que no se pierda la evolución
-        memoria_historia.append(f"Protocolo activado: {orden}")
-        datos_actualizados = {"config": config, "historial": memoria_historia}
-        guardar_cambios_friday(datos_actualizados)
-        return True
-    return False
-
-# --- 3. CONFIGURACIÓN DE LA INTERFAZ ---
-st.set_page_config(page_title="PROJECT JARVIS", layout="wide")
+# --- 2. CONFIGURACIÓN VISUAL Y CSS (EL CUERPO) ---
+# Debe ser el primer comando de Streamlit
+if 'config_ejecutada' not in st.session_state:
+    st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
+    st.session_state.config_ejecutada = True
 
 st.markdown("""
     <style>
-    .stApp { background-color: #D1D8C4; }
+    .stApp { background-color: #D1D8C4 !important; }
     .section-header { 
-        background-color: #004A2F; color: white; padding: 10px; 
+        background-color: #004A2F !important; color: white; padding: 10px; 
         border-radius: 5px; font-weight: bold; border-left: 10px solid #C5A059; 
+        margin-bottom: 20px; 
     }
+    .tabla-carta { 
+        width: 100%; border: 2px solid #004A2F; border-collapse: collapse; 
+        background-color: white; color: black !important; font-size: 12px; 
+        text-transform: uppercase; 
+    }
+    .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; font-weight: bold; }
+    .celda-titulo { background-color: #4F6228 !important; color: white !important; text-align: center; }
     </style>
 """, unsafe_allow_html=True)
 
+# --- 3. MOTOR DE AUTONOMÍA ---
+def aplicar_evolucion_universal(orden_usuario):
+    if not orden_usuario: return False
+    orden = orden_usuario.upper()
+    actualizado = False
+    
+    if "LIMPIAR" in orden or "BOTON DE LIMPIEZA" in orden:
+        config_nube["boton_limpiar"] = True
+        actualizado = True
+    
+    if "QUITA EL BOTON" in orden or "BORRA LIMPIAR" in orden:
+        config_nube["boton_limpiar"] = False
+        actualizado = True
+
+    if actualizado:
+        memoria_historia.append(f"Protocolo: {orden}")
+        guardar_cambios_friday({"config": config_nube, "historial": memoria_historia})
+        return True
+    return False
+
+# --- 4. INTERFAZ DE USUARIO ---
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
-# --- 4. CONSOLA DE ÓRDENES (HABLAR CON FRIDAY) ---
-with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
-    col_input, col_btn = st.columns([4, 1])
-    nueva_orden = col_input.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, activa el botón de limpieza...")
-    
-    if col_btn.button("🚀 EVOLUCIONAR"):
-        if nueva_orden:
-            if aplicar_evolucion_universal(nueva_orden):
-                st.success("SISTEMA RECONFIGURADO. APLICANDO PROTOCOLO...")
-                st.rerun()
-            else:
-                st.info("FRIDAY: Orden registrada, pero esa función no está en mi base de datos.")
+with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
+    col_in, col_ev = st.columns([4, 1])
+    nueva_orden = col_in.text_input("INSTRUCCIÓN:", placeholder="Friday, activa el botón de limpieza...")
+    if col_ev.button("🚀 EVOLUCIONAR"):
+        if aplicar_evolucion_universal(nueva_orden):
+            st.success("SISTEMA ACTUALIZADO.")
+            st.rerun()
 
 # --- 5. ÁREA DE TRABAJO (CARTA DE SITUACIÓN) ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
+# NOTA: Solo existe UN st.text_area en todo el código para evitar el Duplicate Key Error
 relato_in = st.text_area(
     "PEGUE EL PARTE POLICIAL AQUÍ:", 
     height=250, 
-    key=f"relato_{st.session_state.key_carta}"
+    key=f"relato_unico_{st.session_state.key_carta}"
 )
 
 c1, c2 = st.columns([1, 1])
 
 with c1:
     if st.button("⚡ ANALIZAR CON MEMORIA ACTIVA"):
-        st.info("Iniciando análisis de datos...")
+        st.info("Iniciando protocolos de análisis...")
 
 with c2:
-    # EL BOTÓN AUTÓNOMO: Aparece solo si FRIDAY leyó su orden
-    if config.get("boton_limpiar"):
+    # El botón solo aparece si FRIDAY lo tiene activo en su configuración
+    if config_nube.get("boton_limpiar"):
         if st.button("🗑️ LIMPIAR RELATO"):
             st.session_state.key_carta += 1
             st.rerun()
 
-# Historial de evolución para confirmar que FRIDAY trabaja
-if memoria_historia:
-    with st.expander("📜 REGISTRO DE EVOLUCIÓN"):
-        for h in memoria_historia[-5:]: # Muestra las últimas 5 órdenes
-            st.write(f"· {h}")
+# Barra lateral de estado
+st.sidebar.markdown(f"### 🛡️ NÚCLEO ACTIVO")
+st.sidebar.write(f"Lecciones: {len(memoria_historia)}")
+if config_nube.get("boton_limpiar"):
+    st.sidebar.success("BOTÓN LIMPIAR: ON")
 
 # --- 0. FUNCIONES AUXILIARES (INTEGRADAS AL NÚCLEO) ---
 import re  # Asegúrese de tener esta línea arriba para evitar NameError
