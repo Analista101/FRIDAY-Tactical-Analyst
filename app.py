@@ -306,40 +306,42 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-# --- BLOQUE UNIFICADO DE PROCESAMIENTO ---
+        # --- BLOQUE UNIFICADO DE PROCESAMIENTO (REEMPLAZO TOTAL) ---
 
-# Creamos un único formulario
+# 1. Definición del Formulario Único
 with st.form("main_form"):
     relato_in = st.text_area("Ingrese el relato del hecho:", height=200, placeholder="Pegue el relato aquí...")
-    # El botón debe estar AQUÍ adentro para cerrar el formulario correctamente
+    # Este botón cierra el formulario. Si hay otro st.form_submit_button fuera, causará error.
     enviar = st.form_submit_button("⚡ GENERAR CUADRO")
 
-# La lógica de procesamiento se ejecuta solo si se presiona el botón
+# 2. Lógica de Ejecución (Solo si se presiona el botón)
 if enviar:
     if relato_in:
-        # 1. Procesamiento de IA
+        # Procesamiento de IA
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. Refinamiento y Limpieza Estricta del Modus Operandi
         import re
         base_mo = mo_ia if mo_ia else relato_in
         
-        # Filtros de privacidad (RUT, Cuentas, Direcciones)
-        texto_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-        texto_limpio = re.sub(r'N°?\s?\d{5,20}', '', texto_limpio)
-        texto_limpio = re.sub(r'CUENTA\s?\w*\s?N°?\d+', '', texto_limpio, flags=re.IGNORECASE)
+        # --- FILTROS ESTRICTOS DE PRIVACIDAD ---
+        # Borrar RUTs
+        texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+        # Borrar Números de Cuenta, Tarjetas y Teléfonos (Dígitos largos)
+        texto_l = re.sub(r'N°?\s?\d{5,20}', '', texto_l)
+        texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
         
+        # Borrar Direcciones, Calles y Comunas
         patrones_direccion = [
-            r'AVENIDA\s+[\w\s]+(?=CON|INTERSECCION|DE| MOMENTOS)', 
-            r'INTERSECCION\s+[\w\s]+(?=DE| MOMENTOS)',
+            r'(AVENIDA|CALLE|PASAJE|INTERSECCION)\s+[\w\s]+(?=CON|DE| MOMENTOS| EN| DONDE)', 
             r'NRO\.\s?\d+', 
-            r'CALLE\s+[\w\s]+(?=NRO|INTERSECCION)',
-            r'COMUNA DE\s+[\w]+'
+            r'COMUNA DE\s+\w+',
+            r'UBICADO EN\s+[\w\s]+(?= MOMENTOS| DONDE)'
         ]
         for patron in patrones_direccion:
-            texto_limpio = re.sub(patron, '', texto_limpio, flags=re.IGNORECASE)
+            texto_l = re.sub(patron, '', texto_l, flags=re.IGNORECASE)
         
-        mo_final = " ".join(texto_limpio.split()).upper().strip()[:500]
+        # Limpieza final de espacios y formato
+        mo_final = " ".join(texto_l.split()).upper().strip()[:500]
 
         # 3. Renderizado de la Carta de Situación
         html_carta = f"""
@@ -381,4 +383,4 @@ if enviar:
         """
         st.markdown(html_carta, unsafe_allow_html=True)
     else:
-        st.warning("Señor, el sistema requiere un relato para iniciar el análisis.")
+        st.warning("Señor, por favor ingrese un relato antes de generar el cuadro.")
