@@ -306,30 +306,29 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-# Definición del formulario
-with st.form("formulario_relato"):
-    relato_in = st.text_area("Ingrese el relato del hecho:", height=200)
-    
-    # El botón DEBE estar dentro del bloque 'with'
-    submit_button = st.form_submit_button("⚡ GENERAR CUADRO")
+# --- BLOQUE UNIFICADO DE PROCESAMIENTO ---
 
-# Procesamiento fuera o dentro del bloque (usando la variable del botón)
-if submit_button:
+# Creamos un único formulario
+with st.form("main_form"):
+    relato_in = st.text_area("Ingrese el relato del hecho:", height=200, placeholder="Pegue el relato aquí...")
+    # El botón debe estar AQUÍ adentro para cerrar el formulario correctamente
+    enviar = st.form_submit_button("⚡ GENERAR CUADRO")
+
+# La lógica de procesamiento se ejecuta solo si se presiona el botón
+if enviar:
     if relato_in:
-        # 1. Extraemos los datos base
+        # 1. Procesamiento de IA
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. REFINAMIENTO DEL MODUS OPERANDI (FILTRO ESTRICTO)
+        # 2. Refinamiento y Limpieza Estricta del Modus Operandi
         import re
         base_mo = mo_ia if mo_ia else relato_in
         
-        # --- FILTROS DE PRIVACIDAD ---
-        # Borrar RUTs
+        # Filtros de privacidad (RUT, Cuentas, Direcciones)
         texto_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-        # Borrar Números de Cuenta / Tarjetas / Teléfonos
         texto_limpio = re.sub(r'N°?\s?\d{5,20}', '', texto_limpio)
         texto_limpio = re.sub(r'CUENTA\s?\w*\s?N°?\d+', '', texto_limpio, flags=re.IGNORECASE)
-        # Borrar Direcciones y Referencias Geográficas
+        
         patrones_direccion = [
             r'AVENIDA\s+[\w\s]+(?=CON|INTERSECCION|DE| MOMENTOS)', 
             r'INTERSECCION\s+[\w\s]+(?=DE| MOMENTOS)',
@@ -340,14 +339,9 @@ if submit_button:
         for patron in patrones_direccion:
             texto_limpio = re.sub(patron, '', texto_limpio, flags=re.IGNORECASE)
         
-        # Borrar citaciones
-        texto_limpio = re.sub(r'CITACION:.*', '', texto_limpio, flags=re.IGNORECASE)
-        
-        # Formateo final
-        mo_final = " ".join(texto_limpio.split())
-        mo_final = mo_final.upper().strip()[:500]
-        
-        # 3. Renderizado de la tabla
+        mo_final = " ".join(texto_limpio.split()).upper().strip()[:500]
+
+        # 3. Renderizado de la Carta de Situación
         html_carta = f"""
         <table class="tabla-carta">
             <tr>
@@ -387,4 +381,4 @@ if submit_button:
         """
         st.markdown(html_carta, unsafe_allow_html=True)
     else:
-        st.warning("Señor, debe ingresar un relato para procesar.")
+        st.warning("Señor, el sistema requiere un relato para iniciar el análisis.")
