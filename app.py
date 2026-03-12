@@ -309,7 +309,7 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Iniciando protocolos de limpieza y síntesis, Srta. Diana..."
+            placeholder="Analizando y segmentando datos tácticos..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
@@ -320,29 +320,36 @@ with t4:
         texto_u = relato_in.upper()
         import re
 
-        # --- MOTOR DE DISCERNIMIENTO JARVIS ---
+        # --- MOTOR DE SEGMENTACIÓN INTELIGENTE ---
         
-        # A. Limpieza Quirúrgica de Lugar (Evita que pase "DOMICILIO")
+        # A. Lugar (Corte en Domicilio)
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # B. Extracción Real de Caracteres Físicos (SIN REPETIR EL ROBO)
-        # Buscamos solo lo que viste o describe al sujeto
-        vestimenta_match = re.search(r'VESTIA ([^,.]+)(?= EL QUE| MOMENTOS| POR LO QUE)', texto_u)
-        cd_f = vestimenta_match.group(1).strip() if vestimenta_match else "01 SUJETO (SIN MÁS DATOS)"
-        
-        # C. Construcción de Narrativa Sintetizada (Modus Operandi)
-        # No pegamos el texto, lo construimos con los datos clave
-        arma = "ARMA BLANCA" if any(x in texto_u for x in ["APUÑALAR", "CUCHILLO", "HOJA"]) else "LA INTIMIDACIÓN"
-        
+        # B. Perfil del Delincuente (Solo descripción física, sin el relato del robo)
+        # Cortamos apenas detectamos verbos de acción (DICE, PIDE, QUITA, PROCEDE)
+        cd_f = "01 SUJETO DESCONOCIDO"
+        patron_desc = re.search(r'(?:VESTIA|USABA|SUJETO)\s+([A-Z0-9\s,]+?)(?=\s+EL\s+|MOMENTOS|QUIEN|AL\s+|DICE|PIDE|QUITA|PROCEDE)', texto_u)
+        if patron_desc:
+            cd_f = patron_desc.group(1).strip()
+        elif cd and "NO INDICA" not in cd.upper():
+            cd_f = cd.upper()
+
+        # C. Modus Operandi (Narrativa fluida y única)
+        # Extraemos armas
+        arma = "LA INTIMIDACIÓN"
+        if any(x in texto_u for x in ["APUÑALAR", "CUCHILLA", "ARMA BLANCA"]):
+            arma = "LA INTIMIDACIÓN CON ARMA BLANCA"
+        elif "ARMA DE FUEGO" in texto_u:
+            arma = "LA INTIMIDACIÓN CON ARMA DE FUEGO"
+
         mo_final = (
-            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA DESCENDÍA DE TRANSPORTE PÚBLICO, "
-            f"FUE ABORDADA POR UN SUJETO QUE VESTÍA {cd_f}. "
-            f"EL ANTISOCIAL, MEDIANTE {arma}, PROCEDIÓ A LA SUSTRACCIÓN DE {esp.upper()}, "
-            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
+            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA SE DESPLAZABA POR EL SECTOR, FUE ABORDADA POR UN SUJETO "
+            f"QUE VESTÍA {cd_f}. EL ANTISOCIAL, MEDIANTE {arma}, PROCEDIÓ A LA SUSTRACCIÓN DE {esp.upper() if esp else 'ESPECIES'}, "
+            f"PARA POSTERIORMENTE DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
         )
 
-        # 3. RENDERIZADO LIMPIO (SIN DESBORDAMIENTO DE TEXTO)
+        # 3. RENDERIZADO FINAL LIMPIO
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
