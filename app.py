@@ -415,28 +415,19 @@ with t3:
 with t4:
     st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
     
-    # --- PROTOCOLO DE CONCIENCIA (MEMORIA EN LA NUBE) ---
-    if 'memoria_jarvis' not in st.session_state:
-        st.session_state.memoria_jarvis = []
-
-   # --- CONSOLA DE COMANDOS DIRECTOS (SISTEMA EVOLUTIVO) ---
+    # --- CONSOLA DE ÓRDENES ---
     with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
         col1, col2 = st.columns([4, 1])
         with col1:
             nueva_orden = st.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, cambia tu código para...")
         with col2:
             st.write("") 
-            # Cambiamos el nombre del botón para marcar la evolución
-            if st.button("🚀 EVOLUCIONAR"):
+            if st.button("🚀 EVOLUCIONAR Y APLICAR"):
                 if nueva_orden:
                     guardar_en_nube(nueva_orden.upper())
-                    st.success("SISTEMA EN RECONFIGURACIÓN...")
+                    st.cache_data.clear()
+                    st.success("SISTEMA ACTUALIZADO. REINICIANDO...")
                     st.rerun()
-
-        # FRIDAY nos muestra qué reglas tiene grabadas en su "ADN"
-        memoria_viva = cargar_memoria_nube()
-        if memoria_viva:
-            st.markdown(f"<div style='color: {color_texto}; opacity: 0.7;'>🧠 PROTOCOLOS ACTIVOS: {len(memoria_viva)}</div>", unsafe_allow_html=True)
 
     # --- FORMULARIO DE ANÁLISIS ---
     with st.form("form_friday_final"):
@@ -444,58 +435,16 @@ with t4:
         ejecutar = st.form_submit_button("⚡ ANALIZAR CON MEMORIA ACTIVA")
 
     if ejecutar and relato_in:
-        # 1. EXTRACCIÓN BASE
+        # 1. EXTRACCIÓN Y PROCESAMIENTO
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        texto_u = relato_in.upper()
-        memoria = " ".join(st.session_state.memoria_jarvis)
-
-        # 2. MOTOR DE RAZONAMIENTO (PASO 2: PENSAMIENTO CRÍTICO)
-        import re
-        texto_u = relato_in.upper()
-        memoria = " ".join(st.session_state.memoria_jarvis)
-
-        # A. Análisis de Actores (IA busca nombres propios)
-        identificados = re.findall(r'IDENTIFICAD[OA] COMO[:\s]+([A-Z\s]+?)(?=\s+CEDULA|\s+CON\s+|\s+QUIEN|\.)', texto_u)
-        sujetos_mencionados = [n.strip() for n in identificados if len(n.strip()) > 3]
-        
-        # B. Validación de Escenario (Lugar vs Acción)
-        es_domicilio = any(word in texto_u for word in ["PIEZA", "HABITACION", "DOMICILIO", "INMUEBLE"])
-        contexto_real = "SE ENCONTRABA EN SU RESIDENCIA" if es_domicilio else "TRANSITABA POR LA VÍA PÚBLICA"
-        
-        # C. Refinado de Modus Operandi (Aplicando Inteligencia)
+        # --- INICIALIZACIÓN DE SEGURIDAD (PROTECCIÓN ANTI-ERROR) ---
+        # Definimos todas las versiones '_f' para la tabla
+        tl_clase_f = tl_clase if tl_clase else "VIA PUBLICA"
+        cd_f = cd if cd else "NO INDICA"
         mo_final = mo_ia.upper()
-        
-        # Aplicamos las "Lecciones de la Srta. Diana" guardadas en la nube
-        if "JULIO" in texto_u:
-            mo_final = mo_final.replace("SUJETOS DESCONOCIDOS", "SUJETO IDENTIFICADO COMO JULIO")
-        
-        # Corrección de verbos imposibles según el lugar
-        if es_domicilio:
-            mo_final = mo_final.replace("TRANSITABA A PIE", "SE MANTENÍA")
-            mo_final = mo_final.replace("POR EL SECTOR", "AL INTERIOR DEL INMUEBLE")
 
-        # D. Limpieza de especies (Basado en su orden previa)
-        if "CELULAR" in memoria and "IPHONE" in mo_final and "IPHONE" not in texto_u:
-            mo_final = mo_final.replace("01 TELEFONO CELULAR IPHONE", "ESPECIES VARIAS")
-
-        # --- 2.1 ALERTAS DE INTELIGENCIA PROACTIVA ---
-        alertas = []
-        if "HURTO" in tip.upper() and ("APUÑALAR" in texto_u or "ARMA" in texto_u):
-            alertas.append("⚠️ DISCORDANCIA: El delito es HURTO pero el relato describe INTIMIDACIÓN.")
-        
-        if "CUARTEL" in loc.upper() and "VIA PUBLICA" not in texto_u:
-            alertas.append("⚠️ REVISAR LUGAR: El sistema indica Cuartel, verifique si el hecho fue al interior o es solo donde se tomó la denuncia.")
-
-        # Mostrar Alertas si existen
-        if alertas:
-            with st.status("🔍 FRIDAY: REVISIÓN DE COHERENCIA FINALIZADA", expanded=True):
-                for a in alertas:
-                    st.warning(a)
-                st.write("Srta. Diana, he detectado puntos críticos. He ajustado la tabla para reflejar la realidad del relato sobre el encabezado técnico.")
-
-        # --- 3. RENDERIZADO FINAL STARK ---
-        # (Aquí se mantiene su tabla profesional pero con los datos ya filtrados por el "Pensamiento de FRIDAY")
+        # 2. RENDERIZADO DE TABLA INSTITUCIONAL
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
