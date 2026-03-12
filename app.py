@@ -464,89 +464,96 @@ with t4:
             st.write("Análisis completado.")
 
 # 3. RENDERIZADO DEFINITIVO (DISEÑO)
-       # --- 1. LIMPIEZA DE DATOS (LÓGICA FRIDAY) ---
-        # Extraemos la dirección exacta (calle/número) para el encabezado
-        # Si el texto contiene "DOMICILIO", cortamos antes de esa palabra
-        loc_texto = str(loc).upper()
-        direccion_final = loc_texto.split("DOMICILIO")[0].strip() if "DOMICILIO" in loc_texto else loc_texto
+    # --- 1. MOTOR DE LIMPIEZA AGRESIVA ---
+        # Extraemos la dirección para el encabezado
+        loc_limpio = str(loc).upper()
+        # Cortamos apenas aparezca la palabra DOMICILIO o cualquier dato sobrante
+        direccion_encabezado = loc_limpio.split("DOMICILIO")[0].replace("VIA PUBLICA", "").strip()
+        if not direccion_encabezado: direccion_encabezado = "VIA PUBLICA"
 
-        # Filtro estricto para la celda "Lugar" del Perfil Víctima
-        # Si el origen menciona Via Pública, se queda solo con eso
-        tl_perfil = "VIA PUBLICA" if "VIA PUBLICA" in loc_texto else tl
+        # Forzamos 'VIA PUBLICA' en el perfil de la víctima si el parte lo indica
+        lugar_perfil = "VIA PUBLICA" if "VIA PUBLICA" in loc_limpio else "DOMICILIO PARTICULAR"
 
-        # --- 2. ESTRUCTURA VISUAL REFINADA ---
+        # --- 2. RENDERIZADO ESTÉTICO (DISEÑO FINO) ---
         st.markdown(f"""
         <style>
-            .tabla-friday {{
+            .t-jarvis {{
                 width: 100%;
                 border-collapse: collapse;
-                font-family: Arial, sans-serif;
-                color: black;
-                border: 1px solid #ccc;
+                font-family: 'Segoe UI', Roboto, sans-serif;
+                color: #222;
+                border: 1px solid #d1d1d1;
             }}
-            .tabla-friday td {{
-                border: 1px solid #ccc;
-                padding: 6px;
+            .t-jarvis td {{
+                border: 1px solid #d1d1d1;
+                padding: 8px;
             }}
-            .header-verde {{
+            .h-verde {{
                 background-color: #1E7421;
                 color: white;
                 text-align: center;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 15px;
             }}
-            .sub-verde {{
+            .h-sub {{
                 background-color: #D7E4BD;
                 text-align: center;
                 font-weight: bold;
                 font-size: 12px;
+                color: #1a1a1a;
             }}
-            .sub-claro {{
+            .h-perfil {{
                 background-color: #EBF1DE;
                 text-align: center;
                 font-weight: bold;
                 font-size: 12px;
+                color: #1a1a1a;
             }}
-            .label-negrita {{
+            .dato-bold {{
                 font-weight: bold;
-                width: 45%;
                 font-size: 12px;
+                width: 40%;
+                color: #333;
+            }}
+            .val-text {{
+                font-size: 12px;
+                color: #000;
             }}
         </style>
 
-        <table class="tabla-friday">
+        <table class="t-jarvis">
             <tr>
-                <td rowspan="2" class="header-verde" style="width:40%;">{tip}</td>
-                <td class="sub-verde" style="width:30%;">TRAMO</td>
-                <td class="sub-verde" style="width:30%;">LUGAR OCURRENCIA</td>
+                <td rowspan="2" class="h-verde" style="width:40%;">{tip}</td>
+                <td class="h-sub" style="width:30%;">TRAMO</td>
+                <td class="h-sub" style="width:30%;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td style="text-align: center; font-weight: bold;">{tr}</td>
-                <td style="text-align: center; font-weight: bold;">{direccion_final}</td>
+                <td style="text-align: center; font-weight: bold; background: white;">{tr}</td>
+                <td style="text-align: center; font-weight: bold; background: white;">{direccion_encabezado}</td>
             </tr>
             <tr>
-                <td class="sub-claro">PERFIL VÍCTIMA</td>
-                <td class="sub-claro">PERFIL DELINCUENTE</td>
-                <td class="sub-claro">MODUS OPERANDI</td>
+                <td class="h-perfil">PERFIL VÍCTIMA</td>
+                <td class="h-perfil">PERFIL DELINCUENTE</td>
+                <td class="h-perfil">MODUS OPERANDI</td>
             </tr>
             <tr>
-                <td style="vertical-align: top; padding: 0;">
+                <td style="vertical-align: top; padding: 0; background: white;">
                     <table style="width:100%; border: none;">
-                        <tr><td style="border:none;" class="label-negrita">GENERO</td><td style="border:none;">{gv}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">LUGAR</td><td style="border:none; font-weight: bold;">{tl_perfil}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">GENERO</td><td style="border:none;" class="val-text">{gv}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">RANGO ETARIO</td><td style="border:none;" class="val-text">{ev}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421;">{lugar_perfil}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">ESPECIE SUST.</td><td style="border:none;" class="val-text">{esp}</td></tr>
                     </table>
                 </td>
-                <td style="vertical-align: top; padding: 0;">
+                <td style="vertical-align: top; padding: 0; background: white;">
                     <table style="width:100%; border: none;">
-                        <tr><td style="border:none;" class="label-negrita">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
-                        <tr><td style="border:none;" class="label-negrita">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">VICTIMARIO</td><td style="border:none;" class="val-text">{gd}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">RANGO EDAD</td><td style="border:none;" class="val-text">{ed}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">CARACT. FÍS.</td><td style="border:none;" class="val-text">{cd}</td></tr>
+                        <tr><td style="border:none;" class="dato-bold">MED. DESPL.</td><td style="border:none;" class="val-text">{md}</td></tr>
                     </table>
                 </td>
-                <td style="vertical-align: top; text-align: justify; font-size: 12px; line-height: 1.3;">
+                <td style="vertical-align: top; text-align: justify; font-size: 11px; line-height: 1.4; background: white; padding: 10px;">
                     {mo}
                 </td>
             </tr>
