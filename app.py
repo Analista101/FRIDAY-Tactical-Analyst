@@ -7,6 +7,27 @@ import io
 from docx.shared import Mm
 import matplotlib.pyplot as plt
 import textwrap
+import json
+import os
+
+# --- SISTEMA DE DISCO DURO DE FRIDAY ---
+def guardar_en_nube(nueva_leccion):
+    archivo = 'memoria_evolutiva.json'
+    datos = []
+    if os.path.exists(archivo):
+        with open(archivo, 'r') as f:
+            datos = json.load(f)
+    
+    datos.append(nueva_leccion)
+    with open(archivo, 'w') as f:
+        json.dump(datos, f)
+
+def cargar_memoria_nube():
+    archivo = 'memoria_evolutiva.json'
+    if os.path.exists(archivo):
+        with open(archivo, 'r') as f:
+            return json.load(f)
+    return []
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
@@ -304,23 +325,23 @@ with t4:
     if 'memoria_jarvis' not in st.session_state:
         st.session_state.memoria_jarvis = []
 
-    # --- CONSOLA DE COMANDOS DIRECTOS ---
+   # --- CONSOLA DE COMANDOS DIRECTOS (VERSION DISCO DURO) ---
     with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
         col1, col2 = st.columns([4, 1])
         with col1:
-            nueva_orden = st.text_input("DAME UNA INSTRUCCIÓN, SRTA. DIANA:", placeholder="Ej: Ignora menciones a seguros si no hay datos...")
+            nueva_orden = st.text_input("DAME UNA INSTRUCCIÓN PERMANENTE:", placeholder="FRIDAY, recuerda esto para siempre...")
         with col2:
-            st.write("") # Espaciado
-            if st.button("💾 APRENDER"):
+            st.write("") 
+            if st.button("💾 GRABAR EN MEMORIA"):
                 if nueva_orden:
-                    st.session_state.memoria_jarvis.append(nueva_orden.upper())
-                    st.success("SISTEMA ACTUALIZADO.")
+                    guardar_en_nube(nueva_orden.upper())
+                    st.success("ORDEN GRABADA EN EL NÚCLEO.")
+                    st.rerun()
 
-        if st.session_state.memoria_jarvis:
-            st.markdown(f"**🧠 ÚLTIMA LECCIÓN APRENDIDA:** *{st.session_state.memoria_jarvis[-1]}*")
-            if st.button("🗑️ BORRAR MEMORIA"):
-                st.session_state.memoria_jarvis = []
-                st.rerun()
+        # Cargar memoria real de la nube
+        memoria_permanente = cargar_memoria_nube()
+        if memoria_permanente:
+            st.markdown(f"**🧠 REGISTRO HISTÓRICO:** {memoria_permanente[-1]}")
 
     # --- FORMULARIO DE ANÁLISIS ---
     with st.form("form_friday_final"):
