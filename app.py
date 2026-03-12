@@ -433,11 +433,10 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (PROTOCOLO FRIDAY) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (DISEÑO SIMÉTRICO) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
-    # 1. ENTRADA DE DATOS
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
@@ -446,8 +445,7 @@ with t4:
     
     col_btn1, col_btn2 = st.columns([1, 1])
     with col_btn1:
-        # Unificamos a un solo botón de acción para evitar conflictos
-        enviar = st.button("⚡ GENERAR ANÁLISIS TÁCTICO (FRIDAY)")
+        enviar = st.button("⚡ GENERAR ANÁLISIS TÁCTICO")
     
     with col_btn2:
         if config_nube.get("boton_limpiar"):
@@ -455,93 +453,81 @@ with t4:
                 st.session_state.key_carta += 1
                 st.rerun()
 
-    # 2. LÓGICA DE PROCESAMIENTO Y VISUALIZACIÓN
-    if enviar:
-        if relato_in:
-            with st.status("🤖 FRIDAY: Ejecutando protocolos de análisis...", expanded=False):
-                # Llamada al motor IA
-                resultado = procesar_relato_ia(relato_in)
-                
-                # Sincronización de seguridad para evitar ValueError
-                if len(resultado) >= 12:
-                    tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
-                else:
-                    # Relleno de seguridad si la IA devuelve menos datos
-                    datos_relleno = resultado + (None,) * (12 - len(resultado))
-                    tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = datos_relleno
+    if enviar and relato_in:
+        with st.status("🤖 FRIDAY: Procesando...", expanded=False):
+            resultado = procesar_relato_ia(relato_in)
+            # Sincronización de variables (Protocolo de 12 campos)
+            if len(resultado) >= 12:
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
+            else:
+                datos_relleno = resultado + (None,) * (12 - len(resultado))
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = datos_relleno
 
-                import re
-                texto_upper = relato_in.upper()
-                
-                # --- REGLA DE ACERO: VIA PUBLICA VS DOMICILIO ---
-                if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
-                    tl_final = "VIA PUBLICA"
-                    # Limpiamos dirección del encabezado cortando en DOMICILIO
-                    loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
-                    if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
-                else:
-                    tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
-                    loc_final = str(loc).upper()
+            import re
+            texto_upper = relato_in.upper()
+            
+            # --- LÓGICA DE LUGAR Y PRIVACIDAD ---
+            if "VIA PUBLICA" in texto_upper or "VÍA PÚBLICA" in texto_upper:
+                tl_final = "VIA PUBLICA"
+                loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
+                if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
+            else:
+                tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
+                loc_final = str(loc).upper()
 
-                # --- FILTROS DE PRIVACIDAD STARK ---
-                base_mo = mo_ia if mo_ia else relato_in
-                # Eliminación de RUT, teléfonos y números de cuenta
-                texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-                texto_l = re.sub(r'(CUENTA|TARJETA|RUT|TELEFONO|CELULAR)\s?N?°?\s?\d+', '', texto_l, flags=re.IGNORECASE)
-                
-                # Formateo final del Modus Operandi (Mayúsculas y limpieza)
-                mo_final = " ".join(texto_l.split()).upper().strip()[:500]
-                
-                st.write("Análisis completado con éxito.")
+            base_mo = mo_ia if mo_ia else relato_in
+            texto_l = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
+            mo_final = " ".join(texto_l.split()).upper().strip()[:500]
 
-            # --- 3. RENDERIZADO ESTÉTICO FINAL (DISEÑO FINO) ---
-            st.markdown(f"""
-            <style>
-                .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #ccc; }}
-                .t-friday td {{ border: 1px solid #ccc; padding: 8px; }}
-                .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 14px; }}
-                .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; font-size: 12px; }}
-                .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; font-size: 12px; }}
-                .label-b {{ font-weight: bold; width: 42%; font-size: 11px; }}
-            </style>
+        # --- RENDERIZADO CON FUENTE Y TAMAÑO UNIFICADO ---
+        st.markdown(f"""
+        <style>
+            .t-friday {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
+            .t-friday td {{ border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: middle; }}
+            .h-verde {{ background-color: #1E7421; color: white; text-align: center; font-weight: bold; font-size: 13px !important; }}
+            .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
+            .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
+            .mini-t {{ width: 100%; border-collapse: collapse; border: none; }}
+            .mini-t td {{ border: none; padding: 3px 5px; font-size: 12px; }}
+            .lbl {{ font-weight: bold; width: 40%; }}
+            .val-resaltado {{ font-weight: bold; color: #1E7421; }}
+        </style>
 
-            <table class="t-friday">
-                <tr>
-                    <td rowspan="2" class="h-verde" style="width:40%;">{tip}</td>
-                    <td class="h-sub" style="width:30%;">TRAMO</td>
-                    <td class="h-sub" style="width:30%;">LUGAR OCURRENCIA</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold; background: white;">{tr}</td>
-                    <td style="text-align: center; font-weight: bold; background: white;">{loc_final}</td>
-                </tr>
-                <tr>
-                    <td class="h-perfil">PERFIL VÍCTIMA</td>
-                    <td class="h-perfil">PERFIL DELINCUENTE</td>
-                    <td class="h-perfil">MODUS OPERANDI</td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: top; padding: 0; background: white;">
-                        <table style="width:100%; border: none;">
-                            <tr><td style="border:none;" class="label-b">GENERO</td><td style="border:none;">{gv}</td></tr>
-                            <tr><td style="border:none;" class="label-b">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
-                            <tr><td style="border:none;" class="label-b">LUGAR</td><td style="border:none; font-weight: bold; color: #1E7421;">{tl_final}</td></tr>
-                            <tr><td style="border:none;" class="label-b">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align: top; padding: 0; background: white;">
-                        <table style="width:100%; border: none;">
-                            <tr><td style="border:none;" class="label-b">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
-                            <tr><td style="border:none;" class="label-b">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
-                            <tr><td style="border:none;" class="label-b">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
-                            <tr><td style="border:none;" class="label-b">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
-                        </table>
-                    </td>
-                    <td style="vertical-align: top; text-align: justify; font-size: 11px; line-height: 1.4; background: white; padding: 10px;">
-                        {mo_final}
-                    </td>
-                </tr>
-            </table>
-            """, unsafe_allow_html=True)
-        else:
-            st.warning("⚠️ SRTA. DIANA: POR FAVOR INGRESE EL RELATO PARA PROCESAR.")
+        <table class="t-friday">
+            <tr>
+                <td rowspan="2" class="h-verde" style="width:35%;">{tip}</td>
+                <td class="h-sub" style="width:30%;">TRAMO</td>
+                <td class="h-sub" style="width:35%;">LUGAR OCURRENCIA</td>
+            </tr>
+            <tr>
+                <td style="text-align: center; font-weight: bold; height: 40px;">{tr}</td>
+                <td style="text-align: center; font-weight: bold;">{loc_final}</td>
+            </tr>
+            <tr>
+                <td class="h-perfil">PERFIL VÍCTIMA</td>
+                <td class="h-perfil">PERFIL DELINCUENTE</td>
+                <td class="h-perfil">MODUS OPERANDI</td>
+            </tr>
+            <tr>
+                <td style="padding: 0; vertical-align: top;">
+                    <table class="mini-t">
+                        <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
+                        <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
+                        <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
+                        <tr><td class="lbl">ESPECIE SUST.</td><td>{esp}</td></tr>
+                    </table>
+                </td>
+                <td style="padding: 0; vertical-align: top;">
+                    <table class="mini-t">
+                        <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
+                        <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
+                        <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
+                        <tr><td class="lbl">MED. DESPL.</td><td>{md}</td></tr>
+                    </table>
+                </td>
+                <td style="text-align: justify; line-height: 1.3; font-size: 11.5px; padding: 10px;">
+                    {mo_final}
+                </td>
+            </tr>
+        </table>
+        """, unsafe_allow_html=True)
