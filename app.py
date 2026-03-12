@@ -102,14 +102,7 @@ with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
-# 1. Entrada de texto con Key dinámica para limpieza
-relato_in = st.text_area(
-    "PEGUE EL PARTE POLICIAL AQUÍ:", 
-    height=250, 
-    key=f"relato_final_{st.session_state.key_carta}"
-)
-
-# 2. Botones de acción alineados
+# 1. Botones de acción alineados
 c1, c2 = st.columns([1, 1])
 with c1:
     ejecutar = st.button("⚡ ANALIZAR CON MEMORIA ACTIVA")
@@ -459,13 +452,13 @@ with t3:
 # --- PESTAÑA 4: CARTA DE SITUACIÓN (BLOQUE FINAL) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
-        # 1. ENTRADA DE TEXTO (Usando la key dinámica para limpieza)
+    
+    # ESTE ES EL ÚNICO LUGAR DONDE DEBE IR EL TEXT_AREA
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
         key=f"relato_final_{st.session_state.key_carta}"
     )
-
     col_btn1, col_btn2 = st.columns([1, 1])
     
     with col_btn1:
