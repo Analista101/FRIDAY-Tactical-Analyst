@@ -433,29 +433,35 @@ with t3:
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
 
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (VERSIÓN CORREGIDA) ---
+# --- PESTAÑA 4: CARTA DE SITUACIÓN (VERSION JARVIS 2.0) ---
 with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
+    # Inicialización de la llave para resetear el text_area
+    if 'key_relato' not in st.session_state:
+        st.session_state.key_relato = 0
+
+    # 1. ENTRADA DE DATOS
     relato_in = st.text_area(
         "PEGUE EL PARTE POLICIAL AQUÍ:", 
         height=250, 
-        key=f"relato_final_{st.session_state.key_carta}"
+        key=f"relato_area_{st.session_state.key_relato}"
     )
     
+    # Botones de Acción
     col_btn1, col_btn2 = st.columns([1, 1])
     with col_btn1:
         enviar = st.button("⚡ GENERAR ANÁLISIS TÁCTICO")
     
     with col_btn2:
-        if config_nube.get("boton_limpiar"):
-            if st.button("🗑️ LIMPIAR RELATO"):
-                st.session_state.key_carta += 1
-                st.rerun()
+        # Botón para limpiar el cuadro de texto
+        if st.button("🗑️ BORRAR RELATO"):
+            st.session_state.key_relato += 1
+            st.rerun()
 
     if enviar and relato_in:
         with st.status("🤖 FRIDAY: Sincronizando perfiles y relato...", expanded=False):
-            # 1. Procesamiento base
+            # Procesamiento base
             resultado = procesar_relato_ia(relato_in)
             
             if len(resultado) >= 12:
@@ -468,7 +474,6 @@ with t4:
             texto_analisis = relato_in.upper()
             
             # --- 2. LÓGICA DE MEDIO DE DESPLAZAMIENTO (MD) ---
-            # Sincronizamos el perfil con la realidad del relato
             if "MOTO" in texto_analisis:
                 md_final = "MOTOCICLETA"
                 delincuente_v = "UN SUJETO EN MOTOCICLETA"
@@ -479,7 +484,7 @@ with t4:
                 md_final = "A PIE"
                 delincuente_v = "UN SUJETO A PIE"
 
-            # --- 3. CONSTRUCCIÓN DEL RESUMEN TÁCTICO ---
+            # --- 3. CONSTRUCCIÓN DEL RESUMEN TÁCTICO (ANONIMIZADO) ---
             transporte_v = "A PIE"
             if "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
             elif "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
@@ -489,10 +494,11 @@ with t4:
 
             resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {delincuente_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
 
-            # Limpieza de privacidad (Nombres y RUT)
-            nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD)'
+            # Filtros de privacidad (Omitir nombres, RUT y teléfonos)
+            nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD|CEDULA)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
+            resumen_final = re.sub(r'(FONO|TEL|NRO|CELULAR)\s?[:°]?\s?\d+', '', resumen_final)
 
             # --- 4. CORRECCIÓN DE LUGAR ---
             if any(x in texto_analisis for x in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA"]):
@@ -503,7 +509,7 @@ with t4:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
 
-        # --- 5. RENDERIZADO TABLA FINAL (CON md_final) ---
+        # --- 5. RENDERIZADO TABLA FINAL ---
         st.markdown(f"""
         <style>
             .t-friday {{ width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; color: black; border: 1px solid #333; }}
@@ -512,7 +518,6 @@ with t4:
             .h-sub {{ background-color: #D7E4BD; text-align: center; font-weight: bold; }}
             .h-perfil {{ background-color: #EBF1DE; text-align: center; font-weight: bold; }}
             .lbl {{ font-weight: bold; width: 42%; }}
-            .val-resaltado {{ font-weight: bold; color: #1E7421; }}
         </style>
 
         <table class="t-friday">
@@ -532,15 +537,15 @@ with t4:
             </tr>
             <tr>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none; border-collapse: collapse;">
+                    <table style="width:100%; border: none;">
                         <tr><td class="lbl">GENERO</td><td>{gv}</td></tr>
                         <tr><td class="lbl">RANGO ETARIO</td><td>{ev}</td></tr>
-                        <tr><td class="lbl">LUGAR</td><td class="val-resaltado">{tl_final}</td></tr>
+                        <tr><td class="lbl">LUGAR</td><td style="color: #1E7421; font-weight: bold;">{tl_final}</td></tr>
                         <tr><td class="lbl">ESPECIE SUST.</td><td>{esp}</td></tr>
                     </table>
                 </td>
                 <td style="padding: 0; vertical-align: top; background: white;">
-                    <table style="width:100%; border: none; border-collapse: collapse;">
+                    <table style="width:100%; border: none;">
                         <tr><td class="lbl">VICTIMARIO</td><td>{gd}</td></tr>
                         <tr><td class="lbl">RANGO EDAD</td><td>{ed}</td></tr>
                         <tr><td class="lbl">CARACT. FÍS.</td><td>{cd}</td></tr>
