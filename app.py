@@ -306,25 +306,30 @@ with t4:
     with st.form("form_carta"):
         relato_in = st.text_area("PEGUE EL RELATO AQUÍ:", height=250, key=f"txt_{st.session_state.key_carta}")
         
-# Procesamiento al presionar el botón
-if st.form_submit_button("⚡ GENERAR CUADRO"):
+# Definición del formulario
+with st.form("formulario_relato"):
+    relato_in = st.text_area("Ingrese el relato del hecho:", height=200)
+    
+    # El botón DEBE estar dentro del bloque 'with'
+    submit_button = st.form_submit_button("⚡ GENERAR CUADRO")
+
+# Procesamiento fuera o dentro del bloque (usando la variable del botón)
+if submit_button:
     if relato_in:
         # 1. Extraemos los datos base
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
         # 2. REFINAMIENTO DEL MODUS OPERANDI (FILTRO ESTRICTO)
         import re
-        
-        # Priorizamos el análisis de la IA para el MO
         base_mo = mo_ia if mo_ia else relato_in
         
         # --- FILTROS DE PRIVACIDAD ---
-        # A. Borrar RUTs
+        # Borrar RUTs
         texto_limpio = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', base_mo)
-        # B. Borrar Números de Cuenta / Tarjetas / Teléfonos (Cadenas largas de dígitos)
+        # Borrar Números de Cuenta / Tarjetas / Teléfonos
         texto_limpio = re.sub(r'N°?\s?\d{5,20}', '', texto_limpio)
         texto_limpio = re.sub(r'CUENTA\s?\w*\s?N°?\d+', '', texto_limpio, flags=re.IGNORECASE)
-        # C. Borrar Direcciones y Referencias Geográficas Específicas
+        # Borrar Direcciones y Referencias Geográficas
         patrones_direccion = [
             r'AVENIDA\s+[\w\s]+(?=CON|INTERSECCION|DE| MOMENTOS)', 
             r'INTERSECCION\s+[\w\s]+(?=DE| MOMENTOS)',
@@ -335,11 +340,11 @@ if st.form_submit_button("⚡ GENERAR CUADRO"):
         for patron in patrones_direccion:
             texto_limpio = re.sub(patron, '', texto_limpio, flags=re.IGNORECASE)
         
-        # D. Borrar citaciones y despedidas
+        # Borrar citaciones
         texto_limpio = re.sub(r'CITACION:.*', '', texto_limpio, flags=re.IGNORECASE)
         
-        # Formateo final: Limpiar espacios extra, mayúsculas y límite de caracteres
-        mo_final = " ".join(texto_limpio.split()) # Elimina espacios y saltos de línea dobles
+        # Formateo final
+        mo_final = " ".join(texto_limpio.split())
         mo_final = mo_final.upper().strip()[:500]
         
         # 3. Renderizado de la tabla
@@ -381,3 +386,5 @@ if st.form_submit_button("⚡ GENERAR CUADRO"):
         </table>
         """
         st.markdown(html_carta, unsafe_allow_html=True)
+    else:
+        st.warning("Señor, debe ingresar un relato para procesar.")
