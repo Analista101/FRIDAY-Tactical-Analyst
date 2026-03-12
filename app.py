@@ -453,54 +453,55 @@ with t4:
                 st.session_state.key_carta += 1
                 st.rerun()
 
-    if enviar and relato_in:
-        with st.status("🤖 FRIDAY: Ejecutando limpieza y resumen táctico...", expanded=False):
-            # 1. PROCESAMIENTO IA
+   
+if enviar and relato_in:
+        with st.status("🤖 FRIDAY: Sincronizando perfiles y relato...", expanded=False):
+            # 1. Procesamiento base
             resultado = procesar_relato_ia(relato_in)
             
-            # Sincronización de 12 campos
             if len(resultado) >= 12:
-                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = resultado[:12]
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md_ia, mo_ia = resultado[:12]
             else:
                 datos_relleno = resultado + (None,) * (12 - len(resultado))
-                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = datos_relleno
+                tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md_ia, mo_ia = datos_relleno
 
             import re
-            # DEFINICIÓN CRÍTICA DE VARIABLE (Para evitar NameError)
             texto_analisis = relato_in.upper()
             
-            # --- 2. CONSTRUCCIÓN DEL RESUMEN TÁCTICO (SOLICITUD SRTA. DIANA) ---
-            # Detectamos elementos clave para redactar el resumen
-            transporte_v = "A PIE"
-            if "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
-            elif "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
+            # --- 2. LÓGICA DE MEDIO DE DESPLAZAMIENTO (MD) ---
+            # Sincronizamos el perfil con la realidad del relato
+            if "MOTO" in texto_analisis:
+                md_final = "MOTOCICLETA"
+                delincuente_v = "UN SUJETO EN MOTOCICLETA"
+            elif "VEHICULO" in texto_analisis or "AUTO" in texto_analisis:
+                md_final = "VEHICULO"
+                delincuente_v = "UN SUJETO EN VEHICULO"
+            else:
+                md_final = "A PIE"
+                delincuente_v = "UN SUJETO A PIE"
 
-            delincuente_v = "UN SUJETO"
-            if "MOTO" in texto_analisis: delincuente_v = "UN SUJETO EN MOTOCICLETA"
-            
-            accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "LO INTIMIDA PARA SUSTRAER"
+            # --- 3. CONSTRUCCIÓN DEL RESUMEN TÁCTICO ---
+            transporte_v = "A PIE"
+            if "BUS" in texto_analisis or "MICRO" in texto_analisis: transporte_v = "EN TRANSPORTE PUBLICO"
+            elif "VEHICULO" in texto_analisis: transporte_v = "EN SU VEHICULO"
+
+            accion_v = "LE ARREBATA" if "ARREBATA" in texto_analisis else "SUSTRAE"
             especie_v = str(esp).upper() if esp else "ESPECIES"
 
-            # Redacción Automática Táctica
             resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {delincuente_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
 
-            # --- 3. LIMPIEZA DE ANTECEDENTES (PRIVACIDAD STARK) ---
-            # Borramos cualquier nombre que la IA haya podido dejar
-            nombres_prohibidos = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|CEDULA|IDENTIDAD)'
-            resumen_final = re.sub(nombres_prohibidos, 'VICTIMA', resumen_final)
-            resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final) # RUT
-            resumen_final = re.sub(r'(FONO|TEL|NRO|CELULAR)\s?[:°]?\s?\d+', '', resumen_final)
+            # Limpieza de privacidad (Nombres y RUT)
+            nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR)'
+            resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
+            resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
 
             # --- 4. CORRECCIÓN DE LUGAR ---
-            if any(x in texto_analisis for x in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA", "INTERSECCION"]):
+            if any(x in texto_analisis for x in ["AVENIDA", "TENIENTE CRUZ", "VIA PUBLICA"]):
                 tl_final = "VIA PUBLICA"
                 loc_final = str(loc).upper().split("DOMICILIO")[0].strip()
-                if not loc_final or loc_final == "NONE": loc_final = "VIA PUBLICA"
             else:
                 tl_final = tl_clase if tl_clase else "DOMICILIO PARTICULAR"
                 loc_final = str(loc).upper()
-
-            st.write("Protocolo de resumen finalizado.")
 
         # --- 5. RENDERIZADO TABLA ESTILO UNIFICADO ---
         st.markdown(f"""
