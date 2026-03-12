@@ -296,104 +296,86 @@ with t3:
 
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
+
 with t4:
-    st.markdown('<div class="section-header">📋 SISTEMA DE INTELIGENCIA TÁCTICA JARVIS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
     
-    if st.button("🗑️ NUEVA MISIÓN (LIMPIAR MEMORIA)"):
+    if st.button("🗑️ NUEVO ANÁLISIS (LIMPIAR)"):
         st.session_state.key_carta += 1
         st.rerun()
 
-    with st.form("form_jarvis_core"):
+    with st.form("form_friday_ajustado"):
         relato_in = st.text_area(
-            "INGRESE PARTE POLICIAL PARA ANÁLISIS:", 
-            height=350, 
-            key=f"jarvis_{st.session_state.key_carta}",
-            placeholder="Sincronizando con base de datos de Carabineros..."
+            "PEGUE EL PARTE POLICIAL AQUÍ:", 
+            height=300, 
+            key=f"in_{st.session_state.key_carta}",
+            placeholder="Esperando ingreso de datos..."
         )
-        analizar = st.form_submit_button("⚡ INICIAR PROCESAMIENTO IA")
+        ejecutar = st.form_submit_button("⚡ PROCESAR CON FRIDAY")
 
-    if analizar and relato_in:
-        # 1. PROCESAMIENTO COGNITIVO (IA pura sin sesgos de robo)
-        # La IA ahora devuelve el análisis real del texto
+    if ejecutar and relato_in:
+        # 1. ANALISIS DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
+        # 2. MOTOR DE RACIONALIDAD (Para que FRIDAY sea coherente)
         texto_u = relato_in.upper()
         import re
 
-        # --- MOTOR DE ADAPTACIÓN DE CONTEXTO ---
+        # Extraer Delito y Dirección real para que coincida con el encabezado
+        delito_real = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
+        tip_f = delito_real.group(1).strip() if delito_real else tip
         
-        # A. Identificación Dinámica del Delito (Desde el encabezado oficial)
-        match_delito = re.search(r'CODIGO DELITO\s?:\s?(\d+\s+[A-Z\s]+)', texto_u)
-        delito_header = match_delito.group(1).strip() if match_delito else tip
-        
-        # B. Lugar de Ocurrencia Real
-        # Prioriza la dirección específica del evento sobre la genérica
-        match_loc = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)(?=\sREGION|\sPROVINCIA)', texto_u)
-        ubicacion_f = match_loc.group(1).strip() if match_loc else loc
+        dir_real = re.search(r'DIRECCIÓN\s?:\s?([A-Z0-9\s/]+)', texto_u)
+        loc_f = dir_real.group(1).strip() if dir_real else loc
 
-        # C. Lógica de "Especie" vs "Hallazgo" (Diferencia Robo de Homicidio)
-        if "HOMICIDIO" in delito_header or "DISPAROS" in texto_u:
-            # En homicidios, el interés son las vainas/proyectiles, no "especies sustraídas"
-            especie_label = "EVIDENCIA/HALLAZGO"
-            especie_val = "VAINAS PERCUTADAS / MUNICIÓN" if "VAINAS" in texto_u else "POR DETERMINAR"
+        # REGLA DE ORO: Si no es robo o no hay especies, poner NO APLICA
+        # Esto evita que FRIDAY alucine con celulares Huawei en un homicidio
+        palabras_robo = ["SUSTRAE", "ROBO", "ESPECIES SUSTRAIDAS", "AVALUO", "PLACA PATENTE", "MOCHILA"]
+        if "HOMICIDIO" in tip_f or not any(x in texto_u for x in palabras_robo):
+            esp_f = "NO APLICA"
         else:
-            especie_label = "ESPECIE SUST."
-            especie_val = esp
+            esp_f = esp.upper()
 
-        # D. Perfil de Víctimas Múltiples (Crítico para el Parte 00241)
-        # Si detecta nombres como Cristobal, Luis o Matias, ajusta el perfil
-        nombres_victimas = re.findall(r'NOMBRES\s?:\s?([A-Z\s]+)', texto_u)
-        if len(nombres_victimas) > 1:
-            perfil_v = f"MULTIPLE ({len(nombres_victimas)} PERSONAS)"
-            genero_v = "MASCULINO / FEMENINO" if "FEMENINA" in texto_u else "MASCULINO"
-        else:
-            perfil_v = ev
-            genero_v = gv
+        # Relato coherente: usamos el resumen de la IA pero aseguramos mayúsculas
+        mo_final = mo_ia.upper() if mo_ia else "RELATO NO DISPONIBLE"
 
-        # E. Modus Operandi (IA de Alto Nivel)
-        # FRIDAY ahora genera una síntesis ejecutiva basada en hechos, no en plantillas
-        def limpiar_relato(t):
-            # Mantiene la esencia táctica eliminando datos de relleno
-            t = re.sub(r'CEDULA DE IDENTIDAD NRO\. [\d\.-]+', '[ID]', t)
-            return t.upper()
-
-        mo_final = limpiar_relato(mo_ia)
-
-        # 3. RENDERIZADO TÁCTICO
-        st.markdown(f"""
+        # 3. RENDERIZADO (SU DISEÑO ORIGINAL)
+        # He mantenido las clases CSS 'tabla-carta', 'celda-titulo', 'mini-tabla', etc.
+        html_carta = f"""
         <table class="tabla-carta">
             <tr>
-                <td rowspan="2" class="celda-titulo" style="width:45%">{delito_header}</td>
-                <td class="celda-sub" style="width:15%">TRAMO</td>
+                <td rowspan="2" class="celda-titulo" style="width:40%">{tip_f}</td>
+                <td class="celda-sub" style="width:20%">TRAMO</td>
                 <td class="celda-sub" style="width:40%">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
                 <td style="text-align:center">{tr}</td>
-                <td style="text-align:center">{ubicacion_f}</td>
+                <td style="text-align:center">{loc_f}</td>
             </tr>
             <tr>
                 <td class="celda-header-perfil">PERFIL VÍCTIMA</td>
                 <td class="celda-header-perfil">PERFIL DELINCUENTE</td>
-                <td class="celda-header-perfil">MODUS OPERANDI TÁCTICO</td>
+                <td class="celda-header-perfil">MODUS OPERANDI</td>
             </tr>
             <tr>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">GÉNERO</td><td>{genero_v}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">SUJETOS</td><td class="border-inner-t">{perfil_v}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ENTORNO</td><td class="border-inner-t">{tl_clase}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">{especie_label}</td><td class="border-inner-t">{especie_val}</td></tr>
+                        <tr><td class="border-inner-r">GENERO</td><td>{gv}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp_f}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
                     <table class="mini-tabla" style="width:100%">
-                        <tr><td class="border-inner-r">AUTOR</td><td>{gd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">EDAD APROX.</td><td class="border-inner-t">{ed}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">CARACTERÍSTICA</td><td class="border-inner-t">{cd}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">MOVILIDAD</td><td class="border-inner-t">{md}</td></tr>
+                        <tr><td class="border-inner-r">VICTIMARIO</td><td>{gd}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">RANGO EDAD</td><td class="border-inner-t">{ed}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">CARACT. FÍS.</td><td class="border-inner-t">{cd}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">MED. DESPL.</td><td class="border-inner-t">{md}</td></tr>
                     </table>
                 </td>
-                <td style="vertical-align:top; text-align:justify; font-size:11px; padding:12px; line-height:1.4;">{mo_final}</td>
+                <td style="vertical-align:top; text-align:justify; font-size:11px; padding:10px;">{mo_final}</td>
             </tr>
         </table>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(html_carta, unsafe_allow_html=True)
