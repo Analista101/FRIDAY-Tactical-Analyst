@@ -309,7 +309,7 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Sistemas listos para análisis de datos, Srta. Diana..."
+            placeholder="Sistemas listos. Procesando detalles específicos, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
@@ -317,45 +317,38 @@ with t4:
         # 1. EXTRACCIÓN DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE COHERENCIA UNIVERSAL (PROYECTO JARVIS)
+        # 2. MOTOR DE PULIDO DINÁMICO (PRESERVA DETALLES)
         texto_u = relato_in.upper()
         import re
 
-        # --- EXTRACCIÓN QUIRÚRGICA DE LUGAR (PERFIL VÍCTIMA) ---
-        # Corta exactamente en el salto de línea para no capturar "DOMICILIO"
+        # --- LUGAR DEL PERFIL (CORTE QUIRÚRGICO) ---
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # --- RECONSTRUCCIÓN LÓGICA DEL RELATO (MODUS OPERANDI) ---
-        especie_f = esp.upper() if esp else "ESPECIES NO DETERMINADAS"
-        
-        # Determinar acción de la víctima
-        if "TRANSITABA" in texto_u or "CAMINANDO" in texto_u:
-            accion = "TRANSITABA A PIE POR EL LUGAR"
-        elif "PARADERO" in texto_u:
-            accion = "SE MANTENÍA EN PARADERO DE LOCOMOCIÓN COLECTIVA"
-        elif "CONDUCIA" in texto_u or "ESTACIONADO" in texto_u:
-            accion = "SE ENCONTRABA EN SU VEHÍCULO"
+        # --- LIMPIEZA DEL RELATO ORIGINAL DE LA IA ---
+        # En lugar de inventar un relato nuevo, limpiamos el que generó la IA
+        if mo_ia:
+            relato_pulido = mo_ia.upper()
+            
+            # Eliminamos frases de "relleno" o incoherentes detectadas
+            frases_a_quitar = [
+                "AL REGRESAR AL LUGAR NOTÓ QUE", 
+                "AL PERCATARSE DE LA SITUACIÓN NOTÓ QUE",
+                "EN DOMICILIO PARTICULAR",
+                "NOTÓ QUE"
+            ]
+            for frase in frases_a_quitar:
+                relato_pulido = relato_pulido.replace(frase, "")
+            
+            # Aseguramos un inicio limpio y profesional
+            if "CIRCUNSTANCIAS" not in relato_pulido:
+                relato_pulido = "EN CIRCUNSTANCIAS QUE " + relato_pulido.strip()
+            
+            mo_final = relato_pulido.replace("  ", " ").strip()
         else:
-            accion = "SE ENCONTRABA EN LA VÍA PÚBLICA"
+            mo_final = "RELATO NO DISPONIBLE"
 
-        # Determinar acción del delincuente
-        if "INTIMIDACION" in texto_u or "ARMA" in texto_u:
-            delito_accion = "MEDIANTE LA INTIMIDACIÓN CON ARMA"
-        elif "SORPRESA" in texto_u or "SORPRESIVAMENTE" in texto_u:
-            delito_accion = "MEDIANTE LA SORPRESA"
-        else:
-            delito_accion = "POR CAUSAS QUE SE INVESTIGAN"
-
-        # Relato final coherente y profesional
-        mo_final = (
-            f"EN CIRCUNSTANCIAS QUE LA VÍCTIMA {accion}, "
-            f"FUE INTERCEPTADA POR SUJETOS DESCONOCIDOS, QUIENES {delito_accion} "
-            f"PROCEDIERON A LA SUSTRACCIÓN DE {especie_f}, "
-            f"PARA LUEGO DARSE A LA FUGA EN DIRECCIÓN DESCONOCIDA."
-        )
-
-        # 3. RENDERIZADO DE TABLA (ESTILO STARK INDUSTRIES)
+        # 3. RENDERIZADO FINAL
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
@@ -378,7 +371,7 @@ with t4:
                         <tr><td class="border-inner-r">GENERO</td><td>{gv if gv else "MASCULINO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">RANGO ETARIO</td><td class="border-inner-t">{ev if ev else "ADULTO"}</td></tr>
                         <tr><td class="border-inner-r border-inner-t">LUGAR</td><td class="border-inner-t">{tl_clase_f}</td></tr>
-                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{especie_f}</td></tr>
+                        <tr><td class="border-inner-r border-inner-t">ESPECIE SUST.</td><td class="border-inner-t">{esp.upper() if esp else "VARIAS"}</td></tr>
                     </table>
                 </td>
                 <td style="padding:0; vertical-align:top;">
