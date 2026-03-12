@@ -309,7 +309,7 @@ with t4:
             "PEGUE EL PARTE POLICIAL AQUÍ:", 
             height=300, 
             key=f"in_{st.session_state.key_carta}",
-            placeholder="Sistemas listos. Procesando detalles específicos, Srta. Diana..."
+            placeholder="Analizando narrativa y detalles tácticos, Srta. Diana..."
         )
         ejecutar = st.form_submit_button("⚡ EJECUTAR ANÁLISIS TÁCTICO")
 
@@ -317,7 +317,7 @@ with t4:
         # 1. EXTRACCIÓN DE IA BASE
         tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia = procesar_relato_ia(relato_in)
         
-        # 2. MOTOR DE PULIDO DINÁMICO (PRESERVA DETALLES)
+        # 2. MOTOR DE NARRATIVA DETALLADA (PROYECTO JARVIS)
         texto_u = relato_in.upper()
         import re
 
@@ -325,28 +325,33 @@ with t4:
         match_lugar = re.search(r'LUGAR DE OCURRENCIA\s?:\s?([^\n\r]+)', texto_u)
         tl_clase_f = match_lugar.group(1).split("DOMICILIO")[0].strip() if match_lugar else "VIA PUBLICA"
 
-        # --- LIMPIEZA DEL RELATO ORIGINAL DE LA IA ---
-        # En lugar de inventar un relato nuevo, limpiamos el que generó la IA
-        if mo_ia:
-            relato_pulido = mo_ia.upper()
-            
-            # Eliminamos frases de "relleno" o incoherentes detectadas
-            frases_a_quitar = [
-                "AL REGRESAR AL LUGAR NOTÓ QUE", 
-                "AL PERCATARSE DE LA SITUACIÓN NOTÓ QUE",
-                "EN DOMICILIO PARTICULAR",
-                "NOTÓ QUE"
-            ]
-            for frase in frases_a_quitar:
-                relato_pulido = relato_pulido.replace(frase, "")
-            
-            # Aseguramos un inicio limpio y profesional
-            if "CIRCUNSTANCIAS" not in relato_pulido:
-                relato_pulido = "EN CIRCUNSTANCIAS QUE " + relato_pulido.strip()
-            
-            mo_final = relato_pulido.replace("  ", " ").strip()
+        # --- EXTRACCIÓN DINÁMICA DE DETALLES PARA EL RELATO ---
+        # Buscamos la cantidad de sujetos y vestimenta
+        sujetos_match = re.search(r'(\d+|TRES|DOS|UN)\s+SUJETOS?|SUJETO EL CUAL\s+([A-Z\s]+)', texto_u)
+        detalles_sujetos = sujetos_match.group(0).strip() if sujetos_match else (cd.upper() if cd else "SUJETOS DESCONOCIDOS")
+
+        # Buscamos dirección de huida
+        huida_match = re.search(r'HUYENDO EN DIRECCIÓN\s+([A-Z\s]+)PERDIÉNDOLO', texto_u)
+        direccion_huida = f"EN DIRECCIÓN A {huida_match.group(1).strip()}" if huida_match else "EN DIRECCIÓN DESCONOCIDA"
+
+        # Buscamos el arma o método
+        arma_match = re.search(r'(ARMAS? BLANCAS?|CUCHILLAS?|ARMA DE FUEGO|INTIMIDACIÓN)', texto_u)
+        metodo = f"MEDIANTE EL USO DE {arma_match.group(1).strip()}" if arma_match else "MEDIANTE LA SORPRESA"
+
+        # --- CONSTRUCCIÓN DEL RELATO COHERENTE Y ESPECÍFICO ---
+        # Tomamos la acción inicial (transitaba, estaba en paradero, etc.)
+        if "PARADERO" in texto_u:
+            contexto = "SE MANTENÍA EN UN PARADERO DE LOCOMOCIÓN COLECTIVA"
+        elif "TRANSITABA" in texto_u:
+            contexto = f"TRANSITABA A PIE {re.search(r'ENTRE CALLE [A-Z\s]+ CON CALLE [A-Z\s]+', texto_u).group(0) if 'ENTRE CALLE' in texto_u else 'POR LA VÍA PÚBLICA'}"
         else:
-            mo_final = "RELATO NO DISPONIBLE"
+            contexto = "SE ENCONTRABA EN EL LUGAR"
+
+        mo_final = (
+            f"MOMENTOS EN QUE LA VÍCTIMA {contexto}, FUE ABORDADA POR {detalles_sujetos}, "
+            f"QUIENES {metodo} PROCEDIERON A LA SUSTRACCIÓN DE {esp.upper() if esp else 'ESPECIES'}, "
+            f"PARA LUEGO DARSE A LA FUGA {direccion_huida}."
+        )
 
         # 3. RENDERIZADO FINAL
         st.markdown(f"""
