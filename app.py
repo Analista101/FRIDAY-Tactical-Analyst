@@ -463,49 +463,51 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-# 3. RENDERIZADO CORREGIDO (ASEGÚRESE DE COPIAR HASTA EL FINAL)
+# --- RENDERIZADO FINAL DE LA CARTA DE SITUACIÓN ---
         st.markdown(f"""
-        <table class="tabla-carta" style="width:100%; border-collapse: collapse;">
+        <table style="width:100%; border-collapse: collapse; border: 1px solid black; font-family: Arial, sans-serif;">
             <tr>
-                <td rowspan="2" class="celda-titulo" style="width:40%; font-size: 16px; background-color: #1E7421; color: white; padding: 10px; text-align: center;">{tip}</td>
-                <td class="celda-sub" style="width:25%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black;">TRAMO</td>
-                <td class="celda-sub" style="width:35%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black;">LUGAR OCURRENCIA</td>
+                <td rowspan="2" style="width:40%; background-color: #1E7421; color: white; padding: 10px; text-align: center; font-weight: bold; border: 1px solid black;">
+                    {tip}
+                </td>
+                <td style="width:30%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black;">TRAMO</td>
+                <td style="width:30%; text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white;">{tr}</td>
-                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white;">{loc}</td>
+                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white; color: black; padding: 5px;">{tr}</td>
+                <td style="text-align: center; font-weight: bold; border: 1px solid black; background-color: white; color: black; padding: 5px;">{loc}</td>
             </tr>
             
             <tr>
-                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black;">PERFIL VÍCTIMA</td>
-                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black;">PERFIL DELINCUENTE</td>
-                <td class="celda-header-perfil" style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black;">MODUS OPERANDI</td>
+                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">PERFIL VÍCTIMA</td>
+                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">PERFIL DELINCUENTE</td>
+                <td style="text-align: center; background-color: #D7E4BD; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">MODUS OPERANDI</td>
             </tr>
 
             <tr>
                 <td style="vertical-align: top; padding: 0; border: 1px solid black; background-color: white;">
                     <table style="width:100%; border-collapse: collapse; border: none;">
-                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px;">GENERO</td><td style="border:none;">{gv}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">LUGAR</td><td style="border:none;">{tl}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px; color: black;">GENERO</td><td style="border:none; color: black;">{gv}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">RANGO ETARIO</td><td style="border:none; color: black;">{ev}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">LUGAR</td><td style="border:none; color: black;">{tl}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">ESPECIE SUST.</td><td style="border:none; color: black;">{esp}</td></tr>
                     </table>
                 </td>
                 <td style="vertical-align: top; padding: 0; border: 1px solid black; background-color: white;">
                     <table style="width:100%; border-collapse: collapse; border: none;">
-                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px;">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
-                        <tr><td style="border:none; font-weight:bold; padding: 5px;">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; width:45%; padding: 5px; color: black;">VICTIMARIO</td><td style="border:none; color: black;">{gd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">RANGO EDAD</td><td style="border:none; color: black;">{ed}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">CARACT. FÍS.</td><td style="border:none; color: black;">{cd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold; padding: 5px; color: black;">MED. DESPL.</td><td style="border:none; color: black;">{md}</td></tr>
                     </table>
                 </td>
-                <td style="vertical-align: top; text-align: justify; padding: 10px; font-size: 13px; border: 1px solid black; background-color: white;">
+                <td style="vertical-align: top; text-align: justify; padding: 10px; font-size: 13px; border: 1px solid black; background-color: white; color: black;">
                     {mo}
                 </td>
             </tr>
             <tr>
-                <td class="celda-sub" style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black;">BASE LEGAL</td>
-                <td colspan="2" style="background-color: #f9f9f9; font-size: 12px; border: 1px solid black; padding: 5px;">{legal}</td>
+                <td style="text-align: center; background-color: #EBF1DE; font-weight: bold; border: 1px solid black; color: black; padding: 5px;">BASE LEGAL</td>
+                <td colspan="2" style="background-color: #f9f9f9; font-size: 12px; border: 1px solid black; padding: 5px; color: black;">{legal}</td>
             </tr>
         </table>
-        """, unsafe_allow_html=True) # <--- ESTA LÍNEA ES LA QUE ACTIVA LA TABLA
+        """, unsafe_allow_html=True)
