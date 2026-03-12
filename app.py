@@ -11,75 +11,113 @@ import json
 import os
 import requests
 
-# --- 1. EL "CEREBRO" DE FRIDAY (MEMORIA DINÁMICA) ---
+# --- 1. NÚCLEO DE MEMORIA Y CONFIGURACIÓN (EL DISCO DURO) ---
 def cargar_config_friday():
     archivo = 'friday_settings.json'
     if not os.path.exists(archivo):
-        return {"boton_limpiar": False, "modo_oscuro": False, "mayusculas_auto": True}
-    with open(archivo, 'r') as f:
-        return json.load(f)
+        # Configuraciones iniciales por defecto
+        return {
+            "boton_limpiar": False, 
+            "mayusculas_auto": True,
+            "estilo_visual": "STARK"
+        }
+    try:
+        with open(archivo, 'r') as f:
+            return json.load(f)
+    except:
+        return {"boton_limpiar": False}
 
 def guardar_config_friday(config):
     with open('friday_settings.json', 'w') as f:
         json.dump(config, f)
 
-# Cargamos la configuración actual
-config = cargar_config_friday()
+# Inicializamos la configuración al arrancar
+if 'config' not in st.session_state:
+    st.session_state.config = cargar_config_friday()
 
-# --- 2. EL MOTOR DE EVOLUCIÓN (PROCESADOR DE ÓRDENES) ---
-def procesar_orden_autonoma(orden):
-    orden = orden.upper()
-    cambio = False
+# --- 2. MOTOR DE AUTONOMÍA (INTERPRETE DE ÓRDENES) ---
+def aplicar_evolucion_universal(orden_usuario=None):
+    """
+    Esta es la función que causaba el error. 
+    Ahora está blindada y procesa órdenes reales.
+    """
+    if not orden_usuario:
+        return False
+        
+    orden = orden_usuario.upper()
+    actualizado = False
     
+    # Herramienta: Botón de Limpieza
     if "LIMPIAR" in orden or "BOTON DE LIMPIEZA" in orden:
-        config["boton_limpiar"] = True
-        cambio = True
-    
-    if "BORRAR LIMPIAR" in orden:
-        config["boton_limpiar"] = False
-        cambio = True
+        st.session_state.config["boton_limpiar"] = True
+        actualizado = True
+        
+    # Herramienta: Desactivar Limpieza
+    if "QUITA EL BOTON" in orden or "BORRA LIMPIAR" in orden:
+        st.session_state.config["boton_limpiar"] = False
+        actualizado = True
 
-    if cambio:
-        guardar_config_friday(config)
+    if actualizado:
+        guardar_config_friday(st.session_state.config)
         return True
     return False
 
-# --- 3. INTERFAZ QUE REACCIONA A FRIDAY ---
-st.title("SISTEMA OPERATIVO FRIDAY")
+# --- 3. CONFIGURACIÓN DE LA INTERFAZ ---
+st.set_page_config(page_title="PROYECTO JARVIS", layout="wide")
 
-with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
-    comando = st.text_input("ORDEN PARA FRIDAY:", placeholder="Ej: Friday, crea un boton para limpiar...")
-    if st.button("🚀 EVOLUCIONAR"):
-        if procesar_orden_autonoma(comando):
-            st.success("SISTEMA RECONFIGURADO. APLICANDO CAMBIOS...")
+st.markdown("""
+    <style>
+    .stApp { background-color: #D1D8C4; }
+    .section-header { 
+        background-color: #004A2F; color: white; padding: 10px; 
+        border-radius: 5px; font-weight: bold; border-left: 10px solid #C5A059; 
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
+
+# --- 4. CONSOLA DE ÓRDENES (AUTONOMÍA EN ACCIÓN) ---
+with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
+    col_input, col_btn = st.columns([4, 1])
+    nueva_orden = col_input.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, activa el botón de limpieza...")
+    
+    if col_btn.button("🚀 EVOLUCIONAR"):
+        if nueva_orden:
+            exito = aplicar_evolucion_universal(nueva_orden)
+            if exito:
+                st.success("SISTEMA RECONFIGURADO. APLICANDO...")
+                st.rerun()
+            else:
+                st.info("FRIDAY: Orden registrada, pero esa función aún no está en mi base de herramientas.")
+
+# --- 5. ÁREA DE TRABAJO (CARTA DE SITUACIÓN) ---
+if "key_carta" not in st.session_state:
+    st.session_state.key_carta = 0
+
+# El área de texto usa una 'key' que cambia para limpiarse sola
+relato_in = st.text_area(
+    "PEGUE EL PARTE POLICIAL AQUÍ:", 
+    height=250, 
+    key=f"relato_{st.session_state.key_carta}"
+)
+
+c1, c2 = st.columns([1, 1])
+
+with c1:
+    if st.button("⚡ ANALIZAR CON MEMORIA ACTIVA"):
+        st.info("Analizando parte policial...")
+
+with c2:
+    # AQUÍ ESTÁ LA AUTONOMÍA: El botón solo aparece si FRIDAY lo activó en su memoria
+    if st.session_state.config.get("boton_limpiar"):
+        if st.button("🗑️ LIMPIAR RELATO"):
+            st.session_state.key_carta += 1
             st.rerun()
-        else:
-            st.warning("FRIDAY: Orden recibida, pero no tengo esa herramienta en mi base de datos aún.")
 
-st.divider()
-
-# --- 4. ÁREA DE TRABAJO DINÁMICA ---
-# Aquí es donde ocurre la magia: El botón SOLO aparece si FRIDAY lo "activó" en su memoria
-if "key_relato" not in st.session_state:
-    st.session_state.key_relato = 0
-
-relato = st.text_area("PEGUE EL PARTE AQUÍ:", key=f"area_{st.session_state.key_relato}")
-
-col1, col2 = st.columns([1, 1])
-
-with col1:
-    if st.button("⚡ ANALIZAR"):
-        st.info("Procesando...")
-
-with col2:
-    # AUTONOMÍA REAL: FRIDAY decide si este botón existe o no
-    if config.get("boton_limpiar"):
-        if st.button("🗑️ LIMPIAR RELATO (ACTIVADO POR FRIDAY)"):
-            st.session_state.key_relato += 1
-            st.rerun()
-
-if config.get("boton_limpiar"):
-    st.caption("✨ Función 'Botón Limpiar' habilitada por orden superior.")
+# Feedback de estado
+if st.session_state.config.get("boton_limpiar"):
+    st.caption("✅ Función de limpieza habilitada por protocolo autónomo.")
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
