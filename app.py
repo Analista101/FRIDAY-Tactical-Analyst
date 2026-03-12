@@ -11,67 +11,75 @@ import json
 import os
 import requests
 
-# --- 1. PRIMERO DEFINIMOS CÓMO FUNCIONA LA MEMORIA ---
-def cargar_memoria_nube():
-    archivo = 'memoria_evolutiva.json'
-    if os.path.exists(archivo):
-        try:
-            with open(archivo, 'r') as f:
-                contenido = f.read().strip()
-                if not contenido: 
-                    return []
-                return json.loads(contenido)
-        except (json.JSONDecodeError, Exception):
-            # Si el archivo está corrupto, FRIDAY lo ignora para no romperse
-            return []
-    return []
+# --- 1. EL "CEREBRO" DE FRIDAY (MEMORIA DINÁMICA) ---
+def cargar_config_friday():
+    archivo = 'friday_settings.json'
+    if not os.path.exists(archivo):
+        return {"boton_limpiar": False, "modo_oscuro": False, "mayusculas_auto": True}
+    with open(archivo, 'r') as f:
+        return json.load(f)
 
-def guardar_en_nube(nueva_leccion):
-    archivo = 'memoria_evolutiva.json'
-    datos = cargar_memoria_nube()
-    datos.append(nueva_leccion)
-    with open(archivo, 'w') as f:
-        json.dump(datos, f)
+def guardar_config_friday(config):
+    with open('friday_settings.json', 'w') as f:
+        json.dump(config, f)
 
-# --- 2. DESPUÉS CARGAMOS LA MEMORIA Y EL ESTILO ---
-memoria_historia = cargar_memoria_nube()
-color_texto = "white" # <--- Este valor cambia 'dinámicamente'
+# Cargamos la configuración actual
+config = cargar_config_friday()
 
-for leccion in memoria_historia:
-    if "LETRA NEGRA" in leccion:
-        color_texto = "black" # <--- Aquí ocurre el cambio de estado
-
-def aplicar_evolucion_universal():
-    memoria = cargar_memoria_nube()
-    if not memoria: return
+# --- 2. EL MOTOR DE EVOLUCIÓN (PROCESADOR DE ÓRDENES) ---
+def procesar_orden_autonoma(orden):
+    orden = orden.upper()
+    cambio = False
     
-    adn = " ".join(memoria).upper()
+    if "LIMPIAR" in orden or "BOTON DE LIMPIEZA" in orden:
+        config["boton_limpiar"] = True
+        cambio = True
+    
+    if "BORRAR LIMPIAR" in orden:
+        config["boton_limpiar"] = False
+        cambio = True
 
-    # --- A. PROTOCOLO DE BÚSQUEDA (INTERNET) ---
-    if "INVESTIGA" in adn or "BUSCA" in adn:
-        termino = adn.split("INVESTIGA")[-1].strip() if "INVESTIGA" in adn else adn.split("BUSCA")[-1].strip()
-        st.sidebar.info(f"🌐 FRIDAY EN LA RED: Buscando '{termino}'...")
-        if "DIRECCION" in adn or "MAPA" in adn:
-            st.sidebar.markdown(f"📍 [Ver ubicación en Maps](https://www.google.com/maps/search/{termino.replace(' ', '+')})")
+    if cambio:
+        guardar_config_friday(config)
+        return True
+    return False
 
-    # --- B. PROTOCOLO DE CREACIÓN DE INTERFAZ (AUTOPROGRAMACIÓN) ---
-    if "AGREGA BOTON" in adn:
-        nombre_b = adn.split("AGREGA BOTON")[-1].strip().split()[0]
-        if st.sidebar.button(f"🔘 {nombre_b}"):
-            st.toast(f"Acción ejecutada: {nombre_b}")
+# --- 3. INTERFAZ QUE REACCIONA A FRIDAY ---
+st.title("SISTEMA OPERATIVO FRIDAY")
 
-    # --- C. PROTOCOLO DE ELIMINACIÓN (REESTRUCTURACIÓN) ---
-    if "BORRA PESTAÑA" in adn:
-        st.sidebar.warning("⚠️ FRIDAY ha modificado la estructura de pestañas por orden superior.")
+with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
+    comando = st.text_input("ORDEN PARA FRIDAY:", placeholder="Ej: Friday, crea un boton para limpiar...")
+    if st.button("🚀 EVOLUCIONAR"):
+        if procesar_orden_autonoma(comando):
+            st.success("SISTEMA RECONFIGURADO. APLICANDO CAMBIOS...")
+            st.rerun()
+        else:
+            st.warning("FRIDAY: Orden recibida, pero no tengo esa herramienta en mi base de datos aún.")
 
-# Aplicamos el estilo que FRIDAY decidió basándose en su memoria
-st.markdown(f"""
-    <style>
-    .stApp {{
-        color: {color_texto};
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+st.divider()
+
+# --- 4. ÁREA DE TRABAJO DINÁMICA ---
+# Aquí es donde ocurre la magia: El botón SOLO aparece si FRIDAY lo "activó" en su memoria
+if "key_relato" not in st.session_state:
+    st.session_state.key_relato = 0
+
+relato = st.text_area("PEGUE EL PARTE AQUÍ:", key=f"area_{st.session_state.key_relato}")
+
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    if st.button("⚡ ANALIZAR"):
+        st.info("Procesando...")
+
+with col2:
+    # AUTONOMÍA REAL: FRIDAY decide si este botón existe o no
+    if config.get("boton_limpiar"):
+        if st.button("🗑️ LIMPIAR RELATO (ACTIVADO POR FRIDAY)"):
+            st.session_state.key_relato += 1
+            st.rerun()
+
+if config.get("boton_limpiar"):
+    st.caption("✨ Función 'Botón Limpiar' habilitada por orden superior.")
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
 def extract_value(text, pattern):
