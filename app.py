@@ -462,49 +462,49 @@ with t4:
             (tip, tr, loc, gv, ev, tl, esp, gd, ed, cd, md, mo, legal) = datos
             st.write("Análisis completado.")
 
-       # 3. RENDERIZADO CORRECTO (DISEÑO ORIGINAL PROYECTO JARVIS)
+  # 3. RENDERIZADO FIEL AL FORMATO ORIGINAL (IMAGEN CARGADA)
         st.markdown(f"""
         <table class="tabla-carta">
             <tr>
-                <td colspan="3" class="celda-titulo">CARTA DE SITUACIÓN TÁCTICA</td>
+                <td rowspan="2" class="celda-titulo" style="width:40%; font-size: 16px;">{tip}</td>
+                <td class="celda-sub" style="width:25%; text-align: center;">TRAMO</td>
+                <td class="celda-sub" style="width:35%; text-align: center;">LUGAR OCURRENCIA</td>
             </tr>
             <tr>
-                <td class="celda-sub" style="width:25%;">TIPIFICACIÓN</td>
-                <td style="width:30%;">{tip}</td>
-                <td class="celda-header-perfil" style="width:45%;">MODUS OPERANDI (ANÁLISIS IA)</td>
+                <td style="text-align: center; font-weight: bold;">{tr}</td>
+                <td style="text-align: center; font-weight: bold;">{loc}</td>
             </tr>
+            
             <tr>
-                <td class="celda-sub">TRAMO HORARIO</td>
-                <td>{tr}</td>
-                <td rowspan="7" style="vertical-align: top; text-align: justify; padding: 15px; background-color: white;">
+                <td class="celda-header-perfil" style="text-align: center;">PERFIL VÍCTIMA</td>
+                <td class="celda-header-perfil" style="text-align: center;">PERFIL DELINCUENTE</td>
+                <td class="celda-header-perfil" style="text-align: center;">MODUS OPERANDI</td>
+            </tr>
+
+            <tr>
+                <td style="vertical-align: top; padding: 0;">
+                    <table style="width:100%; border-collapse: collapse; border: none;">
+                        <tr><td style="border:none; font-weight:bold; width:40%;">GENERO</td><td style="border:none;">{gv}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">RANGO ETARIO</td><td style="border:none;">{ev}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">LUGAR</td><td style="border:none;">{tl}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">ESPECIE SUST.</td><td style="border:none;">{esp}</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align: top; padding: 0;">
+                    <table style="width:100%; border-collapse: collapse; border: none;">
+                        <tr><td style="border:none; font-weight:bold; width:40%;">VICTIMARIO</td><td style="border:none;">{gd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">RANGO EDAD</td><td style="border:none;">{ed}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">CARACT. FÍS.</td><td style="border:none;">{cd}</td></tr>
+                        <tr><td style="border:none; font-weight:bold;">MED. DESPL.</td><td style="border:none;">{md}</td></tr>
+                    </table>
+                </td>
+                <td style="vertical-align: top; text-align: justify; padding: 10px; font-size: 13px;">
                     {mo}
                 </td>
             </tr>
             <tr>
-                <td class="celda-sub">LUGAR / CLASE</td>
-                <td>{loc} / {tl}</td>
-            </tr>
-            <tr>
-                <td colspan="2" class="celda-header-perfil">PERFIL VÍCTIMA</td>
-            </tr>
-            <tr>
-                <td class="celda-sub">GÉNERO / EDAD</td>
-                <td>{gv} / {ev}</td>
-            </tr>
-            <tr>
-                <td class="celda-sub">ESPECIE SUSTRAÍDA</td>
-                <td>{esp}</td>
-            </tr>
-            <tr>
-                <td colspan="2" class="celda-header-perfil">PERFIL DELINCUENTE</td>
-            </tr>
-            <tr>
-                <td class="celda-sub">VESTIMENTA / MÓVIL</td>
-                <td>{cd} / {md}</td>
-            </tr>
-            <tr>
-                <td class="celda-sub">BASE LEGAL</td>
-                <td colspan="2" style="background-color: #EBF1DE;">{legal}</td>
+                <td class="celda-sub" style="text-align: center;">BASE LEGAL</td>
+                <td colspan="2" style="background-color: #f9f9f9; font-size: 12px;">{legal}</td>
             </tr>
         </table>
         """, unsafe_allow_html=True)
