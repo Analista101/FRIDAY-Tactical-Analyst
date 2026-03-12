@@ -10,7 +10,6 @@ import streamlit as st
 import json
 import os
 import requests
-
 import streamlit as st
 import json
 import os
@@ -93,54 +92,47 @@ with st.expander("🗣️ CONSOLA DE ÓRDENES", expanded=True):
     col_in, col_ev = st.columns([4, 1])
     nueva_orden = col_in.text_input("INSTRUCCIÓN:", placeholder="Friday, activa el botón de limpieza...")
     if col_ev.button("🚀 EVOLUCIONAR"):
-        if aplicar_evolucion_universal(nueva_orden):
-            st.success("SISTEMA ACTUALIZADO.")
-            st.rerun()
+        if nueva_orden:
+            # Aquí usamos la función que definimos en el núcleo anterior
+            if aplicar_evolucion_universal(nueva_orden):
+                st.success("SISTEMA ACTUALIZADO.")
+                st.rerun()
 
 # --- 5. ÁREA DE TRABAJO (CARTA DE SITUACIÓN) ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
-# NOTA: Solo existe UN st.text_area en todo el código para evitar el Duplicate Key Error
+# 1. Entrada de texto con Key dinámica para limpieza
 relato_in = st.text_area(
     "PEGUE EL PARTE POLICIAL AQUÍ:", 
     height=250, 
-    key=f"relato_unico_{st.session_state.key_carta}"
+    key=f"relato_final_{st.session_state.key_carta}"
 )
 
+# 2. Botones de acción alineados
 c1, c2 = st.columns([1, 1])
-
 with c1:
-    if st.button("⚡ ANALIZAR CON MEMORIA ACTIVA"):
-        st.info("Iniciando protocolos de análisis...")
+    ejecutar = st.button("⚡ ANALIZAR CON MEMORIA ACTIVA")
 
 with c2:
-    # El botón solo aparece si FRIDAY lo tiene activo en su configuración
+    # Solo se muestra si FRIDAY activó la configuración
     if config_nube.get("boton_limpiar"):
         if st.button("🗑️ LIMPIAR RELATO"):
             st.session_state.key_carta += 1
             st.rerun()
 
-# Barra lateral de estado
+# 3. Lógica de procesamiento
+if ejecutar and relato_in:
+    st.info("🤖 FRIDAY: Procesando datos del parte policial...")
+    # Aquí es donde llamaremos a procesar_relato_ia(relato_in)
+    # y luego mostraremos la tabla negra/dorada.
+
+# --- SIDEBAR DE ESTADO ---
 st.sidebar.markdown(f"### 🛡️ NÚCLEO ACTIVO")
 st.sidebar.write(f"Lecciones: {len(memoria_historia)}")
 if config_nube.get("boton_limpiar"):
     st.sidebar.success("BOTÓN LIMPIAR: ON")
-
-# --- 0. FUNCIONES AUXILIARES (INTEGRADAS AL NÚCLEO) ---
-import re  # Asegúrese de tener esta línea arriba para evitar NameError
-
-def extract_value(text, pattern):
-    """Extrae valores específicos usando regex para FRIDAY."""
-    match = re.search(pattern, text, re.IGNORECASE)
-    return match.group(1).strip() if match else "NO DETECTADO"
-
-def ajustar_texto_largo(texto, ancho=30):
-    """Evita que los textos largos rompan las tablas de la carta."""
-    if not texto: return ""
-    import textwrap
-    return "\n".join(textwrap.wrap(str(texto), width=ancho))
-
+    
 # --- 1. CONFIGURACIÓN VISUAL (SISTEMA STARK INDUSTRIES) ---
 # Nota: st.set_page_config ya se llamó en el núcleo, así que aquí solo definimos el estilo.
 
@@ -463,46 +455,3 @@ with t3:
 
             except Exception as e:
                 st.error(f"Error en el motor FRIDAY: {e}")
-
-with t4:
-    st.markdown('<div class="section-header">📋 CARTA DE SITUACIÓN (PROYECTO JARVIS)</div>', unsafe_allow_html=True)
-    
-    # --- CONSOLA DE ÓRDENES ---
-    with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            nueva_orden = st.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, cambia tu código para...")
-        with col2:
-            st.write("") 
-            if st.button("🚀 EVOLUCIONAR Y APLICAR"):
-                if nueva_orden:
-                    guardar_en_nube(nueva_orden.upper())
-                    st.success("SISTEMA ACTUALIZADO. REINICIANDO...")
-                    st.rerun()
-
-    # --- FORMULARIO DE ANÁLISIS ---
-    with st.form("form_friday_final", clear_on_submit=False):
-        # Usamos la key dinámica para poder limpiar el área de texto
-        relato_in = st.text_area(
-            "PEGUE EL PARTE POLICIAL AQUÍ:", 
-            height=250, 
-            key=f"relato_{st.session_state.key_carta}"
-        )
-        
-        col_btn1, col_btn2 = st.columns([3, 1])
-        with col_btn1:
-            ejecutar = st.form_submit_button("⚡ ANALIZAR CON MEMORIA ACTIVA")
-        with col_btn2:
-            # Este es el botón que usted solicitó en su instrucción
-            limpiar = st.form_submit_button("🗑️ LIMPIAR RELATO")
-
-    # Lógica del botón Limpiar (fuera del diseño, pero activa)
-    if limpiar:
-        st.session_state.key_carta += 1
-        st.rerun()
-
-    if ejecutar and relato_in:
-        # 1. EXTRACCIÓN Y PROCESAMIENTO
-        tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md, mo_ia, base_legal_res = procesar_relato_ia(relato_in)
-        
-        # --- (El resto del código de la tabla HTML sigue igual aquí abajo) ---
