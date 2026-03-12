@@ -11,59 +11,65 @@ import json
 import os
 import requests
 
-# --- 1. NÚCLEO DE MEMORIA Y CONFIGURACIÓN (EL DISCO DURO) ---
-def cargar_config_friday():
-    archivo = 'friday_settings.json'
-    if not os.path.exists(archivo):
-        # Configuraciones iniciales por defecto
-        return {
-            "boton_limpiar": False, 
-            "mayusculas_auto": True,
-            "estilo_visual": "STARK"
+# --- 1. NÚCLEO DE MEMORIA Y CONFIGURACIÓN (EL DISCO DURO INTEGRADO) ---
+def inicializar_sistema_friday():
+    archivo_config = 'friday_settings.json'
+    # Si el archivo no existe, creamos el ADN básico de FRIDAY
+    if not os.path.exists(archivo_config):
+        base = {
+            "config": {
+                "boton_limpiar": False, 
+                "mayusculas_auto": True,
+                "estilo_visual": "STARK"
+            },
+            "historial": []
         }
+        with open(archivo_config, 'w') as f:
+            json.dump(base, f)
+        return base
+    
     try:
-        with open(archivo, 'r') as f:
+        with open(archivo_config, 'r') as f:
             return json.load(f)
     except:
-        return {"boton_limpiar": False}
+        return {"config": {"boton_limpiar": False}, "historial": []}
 
-def guardar_config_friday(config):
+def guardar_cambios_friday(datos):
     with open('friday_settings.json', 'w') as f:
-        json.dump(config, f)
+        json.dump(datos, f)
 
-# Inicializamos la configuración al arrancar
-if 'config' not in st.session_state:
-    st.session_state.config = cargar_config_friday()
+# CARGA INICIAL: Aquí definimos 'config' y 'memoria_historia' de una vez por todas
+datos_maestros = inicializar_sistema_friday()
+config = datos_maestros["config"]
+memoria_historia = datos_maestros["historial"]
 
 # --- 2. MOTOR DE AUTONOMÍA (INTERPRETE DE ÓRDENES) ---
 def aplicar_evolucion_universal(orden_usuario=None):
-    """
-    Esta es la función que causaba el error. 
-    Ahora está blindada y procesa órdenes reales.
-    """
     if not orden_usuario:
         return False
         
     orden = orden_usuario.upper()
     actualizado = False
     
-    # Herramienta: Botón de Limpieza
+    # Lógica de Autonomía: FRIDAY activa sus herramientas internas
     if "LIMPIAR" in orden or "BOTON DE LIMPIEZA" in orden:
-        st.session_state.config["boton_limpiar"] = True
+        config["boton_limpiar"] = True
         actualizado = True
         
-    # Herramienta: Desactivar Limpieza
     if "QUITA EL BOTON" in orden or "BORRA LIMPIAR" in orden:
-        st.session_state.config["boton_limpiar"] = False
+        config["boton_limpiar"] = False
         actualizado = True
 
     if actualizado:
-        guardar_config_friday(st.session_state.config)
+        # Guardamos la orden en el historial para que no se pierda la evolución
+        memoria_historia.append(f"Protocolo activado: {orden}")
+        datos_actualizados = {"config": config, "historial": memoria_historia}
+        guardar_cambios_friday(datos_actualizados)
         return True
     return False
 
 # --- 3. CONFIGURACIÓN DE LA INTERFAZ ---
-st.set_page_config(page_title="PROYECTO JARVIS", layout="wide")
+st.set_page_config(page_title="PROJECT JARVIS", layout="wide")
 
 st.markdown("""
     <style>
@@ -77,25 +83,23 @@ st.markdown("""
 
 st.markdown('<div class="section-header">🧠 FRIDAY: COMANDO CENTRAL DE INTELIGENCIA</div>', unsafe_allow_html=True)
 
-# --- 4. CONSOLA DE ÓRDENES (AUTONOMÍA EN ACCIÓN) ---
+# --- 4. CONSOLA DE ÓRDENES (HABLAR CON FRIDAY) ---
 with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
     col_input, col_btn = st.columns([4, 1])
     nueva_orden = col_input.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, activa el botón de limpieza...")
     
     if col_btn.button("🚀 EVOLUCIONAR"):
         if nueva_orden:
-            exito = aplicar_evolucion_universal(nueva_orden)
-            if exito:
-                st.success("SISTEMA RECONFIGURADO. APLICANDO...")
+            if aplicar_evolucion_universal(nueva_orden):
+                st.success("SISTEMA RECONFIGURADO. APLICANDO PROTOCOLO...")
                 st.rerun()
             else:
-                st.info("FRIDAY: Orden registrada, pero esa función aún no está en mi base de herramientas.")
+                st.info("FRIDAY: Orden registrada, pero esa función no está en mi base de datos.")
 
 # --- 5. ÁREA DE TRABAJO (CARTA DE SITUACIÓN) ---
 if "key_carta" not in st.session_state:
     st.session_state.key_carta = 0
 
-# El área de texto usa una 'key' que cambia para limpiarse sola
 relato_in = st.text_area(
     "PEGUE EL PARTE POLICIAL AQUÍ:", 
     height=250, 
@@ -106,90 +110,61 @@ c1, c2 = st.columns([1, 1])
 
 with c1:
     if st.button("⚡ ANALIZAR CON MEMORIA ACTIVA"):
-        st.info("Analizando parte policial...")
+        st.info("Iniciando análisis de datos...")
 
 with c2:
-    # AQUÍ ESTÁ LA AUTONOMÍA: El botón solo aparece si FRIDAY lo activó en su memoria
-    if st.session_state.config.get("boton_limpiar"):
+    # EL BOTÓN AUTÓNOMO: Aparece solo si FRIDAY leyó su orden
+    if config.get("boton_limpiar"):
         if st.button("🗑️ LIMPIAR RELATO"):
             st.session_state.key_carta += 1
             st.rerun()
 
-# Feedback de estado
-if st.session_state.config.get("boton_limpiar"):
-    st.caption("✅ Función de limpieza habilitada por protocolo autónomo.")
+# Historial de evolución para confirmar que FRIDAY trabaja
+if memoria_historia:
+    with st.expander("📜 REGISTRO DE EVOLUCIÓN"):
+        for h in memoria_historia[-5:]: # Muestra las últimas 5 órdenes
+            st.write(f"· {h}")
 
-# --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
+# --- 0. FUNCIONES AUXILIARES (INTEGRADAS AL NÚCLEO) ---
+import re  # Asegúrese de tener esta línea arriba para evitar NameError
+
 def extract_value(text, pattern):
     """Extrae valores específicos usando regex para FRIDAY."""
     match = re.search(pattern, text, re.IGNORECASE)
-    return match.group(1).strip() if match else None
+    return match.group(1).strip() if match else "NO DETECTADO"
 
-# --- 1. CONFIGURACIÓN VISUAL FRIDAY (SISTEMA REPARADO) ---
-# Nota: st.set_page_config DEBE ser el primer comando de Streamlit. 
-# Si da error, asegúrese de que no haya otros st. antes de este.
-if 'config_ejecutada' not in st.session_state:
-    st.set_page_config(page_title="SISTEMA FRIDAY - COMANDO CENTRAL", layout="wide")
-    st.session_state.config_ejecutada = True
+def ajustar_texto_largo(texto, ancho=30):
+    """Evita que los textos largos rompan las tablas de la carta."""
+    if not texto: return ""
+    import textwrap
+    return "\n".join(textwrap.wrap(str(texto), width=ancho))
 
-# FRIDAY revisa sus órdenes universales antes de mostrar nada
-aplicar_evolucion_universal()
+# --- 1. CONFIGURACIÓN VISUAL (SISTEMA STARK INDUSTRIES) ---
+# Nota: st.set_page_config ya se llamó en el núcleo, así que aquí solo definimos el estilo.
 
-# Unificamos todo el CSS en un solo bloque seguro
 st.markdown("""
     <style>
-    /* Fondo y Base */
+    /* El ADN Visual de FRIDAY */
     .stApp { background-color: #D1D8C4 !important; }
     .stTabs [data-baseweb="tab-list"] { background-color: #004A2F !important; }
-    .reportview-container .main .block-container { padding: 25px; }
     
-    /* Encabezados y Cajas de IA */
     .section-header { 
         background-color: #004A2F !important; 
-        color: white; 
-        padding: 10px; 
-        border-radius: 5px; 
-        font-weight: bold; 
-        border-left: 10px solid #C5A059; 
+        color: white; padding: 10px; border-radius: 5px; 
+        font-weight: bold; border-left: 10px solid #C5A059; 
         margin-bottom: 20px; 
     }
-    .ia-box { 
-        background-color: #002D1D; 
-        color: #C5A059; 
-        padding: 20px; 
-        border-radius: 10px; 
-        border: 2px solid #C5A059; 
-        font-family: 'Arial', sans-serif; 
-    }
-    
-    /* Output Legal (Corregido) */
-    .legal-output-black { 
-        background-color: #000000 !important; 
-        color: #FFFFFF !important; 
-        border-radius: 10px; 
-        border: 2px solid #C5A059; 
-        font-family: 'Arial'; 
-        line-height: 1.6;
-        font-size: 16px;
-        padding: 15px;
-    }
-    
-    /* Etiquetas y Tablas */
-    label { color: black !important; font-weight: bold; }
+
+    /* Estilo de la Tabla de Situación (Blanco/Verde Institucional) */
     .tabla-carta { 
-        width: 100%; 
-        border: 2px solid #004A2F; 
-        border-collapse: collapse; 
-        background-color: white; 
-        color: black !important; 
-        font-family: 'Arial', sans-serif; 
-        font-size: 12px; 
-        text-transform: uppercase; 
-        font-weight: bold; 
+        width: 100%; border: 2px solid #004A2F; 
+        border-collapse: collapse; background-color: white; 
+        color: black !important; font-family: 'Arial', sans-serif; 
+        font-size: 12px; text-transform: uppercase; 
     }
-    .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; }
+    .tabla-carta td { border: 1.5px solid #004A2F; padding: 8px; font-weight: bold; }
     .celda-titulo { background-color: #4F6228 !important; color: white !important; text-align: center !important; font-size: 16px !important; }
-    .celda-sub { background-color: #EBF1DE !important; text-align: center !important; color: black !important; }
+    .celda-sub { background-color: #EBF1DE !important; text-align: center !important; }
     .celda-header-perfil { background-color: #D7E3BC !important; text-align: center !important; }
     .mini-tabla td { border: none !important; padding: 3px !important; }
     .border-inner-r { border-right: 1.5px solid #004A2F !important; width: 45%; }
@@ -197,19 +172,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- PROTOCOLO DE SALUDO FRIDAY ---
-if memoria_historia:
-    st.sidebar.success(f"✅ NÚCLEO ACTIVO: {len(memoria_historia)} LECCIONES CARGADAS")
-    st.sidebar.info(f"ÚLTIMO RECUERDO: {memoria_historia[-1]}")
-else:
-    st.sidebar.warning("⚠️ NÚCLEO VACÍO: Esperando instrucciones iniciales, Srta. Diana.")
+# --- 2. PROTOCOLO DE ESTADO EN BARRA LATERAL ---
+# Esto reemplaza su código de sidebar para que use las variables del núcleo
+if 'memoria_historia' in globals():
+    st.sidebar.markdown(f"### 🛡️ NÚCLEO FRIDAY")
+    if memoria_historia:
+        st.sidebar.success(f"✅ {len(memoria_historia)} LECCIONES ACTIVAS")
+    else:
+        st.sidebar.warning("⚠️ ESPERANDO ÓRDENES")
 
-# --- 2. GESTIÓN DE ESTADO ---
-if "key_carta" not in st.session_state:
-    st.session_state.key_carta = 0
-
+# Función de limpieza optimizada para el sistema de Keys
 def limpiar_solo_carta():
     st.session_state.key_carta += 1
+    # No necesitamos st.rerun() aquí si se llama desde un botón que ya refresca
 
 # --- 2. MOTOR DE INTELIGENCIA FRIDAY (CARTA DE SITUACIÓN) ---
 def procesar_relato_ia(texto):
