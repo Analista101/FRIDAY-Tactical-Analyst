@@ -10,23 +10,77 @@ import textwrap
 import json
 import os
 
-# --- SISTEMA DE DISCO DURO DE FRIDAY ---
-def guardar_en_nube(nueva_leccion):
-    archivo = 'memoria_evolutiva.json'
-    datos = []
-    if os.path.exists(archivo):
-        with open(archivo, 'r') as f:
-            datos = json.load(f)
+# --- PROTOCOLO DE AUTONOMÍA NIVEL 4: AUTO-CODIFICACIÓN ---
+def aplicar_evolucion_codigo():
+    memoria = cargar_memoria_nube()
     
-    datos.append(nueva_leccion)
-    with open(archivo, 'w') as f:
-        json.dump(datos, f)
+    for instruccion in memoria:
+        # Ejemplo: Si la instrucción es cambiar colores de tabla
+        if "TABLA COLOR" in instruccion:
+            # FRIDAY inyecta una regla de estilo nueva sin que usted toque el CSS
+            st.markdown("""
+                <style>
+                .tabla-carta { border: 2px solid #ed1c24 !important; background-color: #f0f0f0; }
+                .celda-titulo { background-color: #000000 !important; color: gold !important; }
+                </style>
+            """, unsafe_allow_html=True)
+            
+        # Ejemplo: Si la instrucción es cambiar el saludo o el nombre
+        if "LLÁMAME" in instruccion:
+            nuevo_nombre = instruccion.split("LLÁMAME")[-1].strip()
+            st.session_state.nombre_asistente = f"FRIDAY (Modo: {nuevo_nombre})"
 
+# --- LÓGICA DE AUTO-CONFIGURACIÓN DE FRIDAY ---
+memoria_historia = cargar_memoria_nube()
+color_texto = "white" # Color base
+
+for leccion in memoria_historia:
+    if "LETRA NEGRA" in leccion:
+        color_texto = "black"
+    if "LETRA ROJA" in leccion:
+        color_texto = "red"
+    # Aquí es donde FRIDAY irá añadiendo sus propias reglas
+
+# Aplicamos el estilo que FRIDAY decidió basándose en su memoria
+st.markdown(f"""
+    <style>
+    .stApp {{
+        color: {color_texto};
+    }}
+    .section-header {{
+        color: {color_texto} !important;
+        font-weight: bold;
+        border-bottom: 2px solid #ed1c24;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }}
+    /* Forzamos que los mensajes de FRIDAY también cambien */
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
+        color: {color_texto} !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+# --- PROTOCOLO DE SALUDO FRIDAY ---
+memoria_historia = cargar_memoria_nube()
+if memoria_historia:
+    st.sidebar.success(f"✅ NÚCLEO ACTIVO: {len(memoria_historia)} LECCIONES CARGADAS")
+    st.sidebar.info(f"ÚLTIMO RECUERDO: {memoria_historia[-1]}")
+else:
+    st.sidebar.warning("⚠️ NÚCLEO VACÍO: Esperando instrucciones iniciales, Srta. Diana.")
+
+# --- SISTEMA DE DISCO DURO DE FRIDAY ---
 def cargar_memoria_nube():
     archivo = 'memoria_evolutiva.json'
     if os.path.exists(archivo):
-        with open(archivo, 'r') as f:
-            return json.load(f)
+        try:
+            with open(archivo, 'r') as f:
+                contenido = f.read().strip()
+                if not contenido: # Si el archivo está vacío
+                    return []
+                return json.loads(contenido)
+        except json.JSONDecodeError:
+            # Si el archivo está corrupto, FRIDAY lo ignora para no romperse
+            return []
     return []
 
 # --- 0. FUNCIÓN AUXILIAR (CRÍTICA PARA EVITAR NAMEERROR) ---
@@ -325,23 +379,24 @@ with t4:
     if 'memoria_jarvis' not in st.session_state:
         st.session_state.memoria_jarvis = []
 
-   # --- CONSOLA DE COMANDOS DIRECTOS (VERSION DISCO DURO) ---
+   # --- CONSOLA DE COMANDOS DIRECTOS (SISTEMA EVOLUTIVO) ---
     with st.expander("🗣️ CONSOLA DE ÓRDENES (HABLAR CON FRIDAY)", expanded=True):
         col1, col2 = st.columns([4, 1])
         with col1:
-            nueva_orden = st.text_input("DAME UNA INSTRUCCIÓN PERMANENTE:", placeholder="FRIDAY, recuerda esto para siempre...")
+            nueva_orden = st.text_input("INSTRUCCIÓN PARA EL SISTEMA:", placeholder="FRIDAY, cambia tu código para...")
         with col2:
             st.write("") 
-            if st.button("💾 GRABAR EN MEMORIA"):
+            # Cambiamos el nombre del botón para marcar la evolución
+            if st.button("🚀 EVOLUCIONAR"):
                 if nueva_orden:
                     guardar_en_nube(nueva_orden.upper())
-                    st.success("ORDEN GRABADA EN EL NÚCLEO.")
+                    st.success("SISTEMA EN RECONFIGURACIÓN...")
                     st.rerun()
 
-        # Cargar memoria real de la nube
-        memoria_permanente = cargar_memoria_nube()
-        if memoria_permanente:
-            st.markdown(f"**🧠 REGISTRO HISTÓRICO:** {memoria_permanente[-1]}")
+        # FRIDAY nos muestra qué reglas tiene grabadas en su "ADN"
+        memoria_viva = cargar_memoria_nube()
+        if memoria_viva:
+            st.markdown(f"<div style='color: {color_texto}; opacity: 0.7;'>🧠 PROTOCOLOS ACTIVOS: {len(memoria_viva)}</div>", unsafe_allow_html=True)
 
     # --- FORMULARIO DE ANÁLISIS ---
     with st.form("form_friday_final"):
