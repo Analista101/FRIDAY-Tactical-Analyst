@@ -358,80 +358,103 @@ with t3:
         
         submit_geo = st.form_submit_button("🛡️ GENERAR INFORME GEO")
 
-# LA LÓGICA DE PROCESAMIENTO FUERA DEL FORM, PERO DEPENDIENTE DEL BOTÓN
-    if submit_geo:
-        if not mapa_img or not excel_geo:
-            st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
-        else:
-            try:
-                # 1. PROCESAMIENTO DE DATOS
-                df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
-                df.columns = [c.upper().strip() for c in df.columns]
-                total_casos = len(df)
+## --- FUNCIÓN DE SOPORTE (Asegúrese de que esté definida antes del bloque principal) ---
+def ajustar_texto_largo(texto, ancho=35):
+    """Divide el texto para evitar desbordamientos en las tablas del informe."""
+    import textwrap
+    if not isinstance(texto, str):
+        texto = str(texto)
+    return "\n".join(textwrap.wrap(texto, width=ancho))
 
-                if 'DELITO' in df.columns:
-                    df['DELITO'] = df['DELITO'].astype(str).str.upper()
-                    resumen_dmcs = df['DELITO'].value_counts().reset_index()
-                    resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
-                    
-                    # Usamos la función de ajuste de texto para que no se corte
-                    resumen_dmcs_tabla = resumen_dmcs.copy()
-                    resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'] = resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'].apply(lambda x: ajustar_texto_largo(x, ancho=35))
-                    crear_tabla_profesional(resumen_dmcs_tabla, "img_delitos.png", ancho_pulgadas=12)
+# --- LÓGICA DE PROCESAMIENTO (Fuera del Form, dependiente del botón) ---
+if submit_geo:
+    if not mapa_img or not excel_geo:
+        st.error("❌ Faltan archivos (Mapa o Excel) para procesar.")
+    else:
+        try:
+            # 1. PROCESAMIENTO DE DATOS
+            # Soporte para CSV y Excel con limpieza de cabeceras
+            df = pd.read_csv(excel_geo) if excel_geo.name.endswith('csv') else pd.read_excel(excel_geo)
+            df.columns = [c.upper().strip() for c in df.columns]
+            total_casos = len(df)
 
-                if 'DIA' in df.columns and 'RANGO HORA' in df.columns:
-                    resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
-                    resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(10)
-                    resumen_tramos.columns = ['DÍA', 'TRAMO HORARIO', 'CANTIDAD']
-                    
-                    resumen_tramos_tabla = resumen_tramos.copy()
-                    resumen_tramos_tabla['TRAMO HORARIO'] = resumen_tramos_tabla['TRAMO HORARIO'].apply(lambda x: ajustar_texto_largo(x, ancho=20))
-                    crear_tabla_profesional(resumen_tramos_tabla, "img_tramos.png", ancho_pulgadas=10)
-                    
-                    dia_frec = df['DIA'].mode()[0]
-                    hora_frec = df['RANGO HORA'].mode()[0]
-                else:
-                    dia_frec, hora_frec = "NO IDENTIFICADO", "NO IDENTIFICADO"
+            # Inicializar variables de seguridad
+            resumen_dmcs = pd.DataFrame()
+            dia_frec, hora_frec = "NO IDENTIFICADO", "NO IDENTIFICADO"
+
+            if 'DELITO' in df.columns:
+                df['DELITO'] = df['DELITO'].astype(str).str.upper()
+                resumen_dmcs = df['DELITO'].value_counts().reset_index()
+                resumen_dmcs.columns = ['TIPO DE DELITO (DMCS)', 'CANTIDAD']
                 
-                delito_principal = resumen_dmcs.iloc[0]['TIPO DE DELITO (DMCS)'] if not resumen_dmcs.empty else "DMCS"
-                cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD'] if not resumen_dmcs.empty else 0
+                # Aplicación corregida de la función de ajuste (usando 'ancho')
+                resumen_dmcs_tabla = resumen_dmcs.copy()
+                resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'] = resumen_dmcs_tabla['TIPO DE DELITO (DMCS)'].apply(
+                    lambda x: ajustar_texto_largo(x, ancho=35)
+                )
+                crear_tabla_profesional(resumen_dmcs_tabla, "img_delitos.png", ancho_pulgadas=12)
 
-                analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS en el periodo. "
-                              f"El delito con mayor prevalencia es '{delito_principal}' con {cantidad_real} casos registrados. "
-                              f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
-                              f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
+            if 'DIA' in df.columns and 'RANGO HORA' in df.columns:
+                resumen_tramos = df.groupby(['DIA', 'RANGO HORA']).size().reset_index(name='CANTIDAD')
+                resumen_tramos = resumen_tramos.sort_values(by=['CANTIDAD', 'DIA'], ascending=[False, True]).head(10)
+                resumen_tramos.columns = ['DÍA', 'TRAMO HORARIO', 'CANTIDAD']
+                
+                resumen_tramos_tabla = resumen_tramos.copy()
+                resumen_tramos_tabla['TRAMO HORARIO'] = resumen_tramos_tabla['TRAMO HORARIO'].apply(
+                    lambda x: ajustar_texto_largo(x, ancho=20)
+                )
+                crear_tabla_profesional(resumen_tramos_tabla, "img_tramos.png", ancho_pulgadas=10)
+                
+                dia_frec = df['DIA'].mode()[0] if not df['DIA'].empty else "N/A"
+                hora_frec = df['RANGO HORA'].mode()[0] if not df['RANGO HORA'].empty else "N/A"
+            
+            # Variables para el análisis
+            delito_principal = resumen_dmcs.iloc[0]['TIPO DE DELITO (DMCS)'] if not resumen_dmcs.empty else "DMCS"
+            cantidad_real = resumen_dmcs.iloc[0]['CANTIDAD'] if not resumen_dmcs.empty else 0
 
-                # 2. GENERACIÓN DEL DOCUMENTO WORD (Procesamiento de Imágenes)
-                doc = DocxTemplate("INFORME GEO.docx")
-                o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
-                o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
-                o_tabla2 = InlineImage(doc, "img_tramos.png", width=Mm(130))
+            analisis_ia = (f"Tras el análisis georreferencial en el cuadrante {cuadrante}, se registran {total_casos} eventos DMCS en el periodo. "
+                           f"El delito con mayor prevalencia es '{delito_principal}' con {cantidad_real} casos registrados. "
+                           f"La criticidad se concentra los días {dia_frec} en el tramo {hora_frec}. "
+                           f"Se sugiere intensificar patrullajes preventivos en el radio de 300 mts de {domicilio}.")
 
-                # Manejo seguro del periodo
-                p_split = periodo_txt.split(" al ")
-                p_inicio = p_split[0] if len(p_split) > 0 else "INICIO"
-                p_fin = p_split[1] if len(p_split) > 1 else "FIN"
+            # 2. GENERACIÓN DEL DOCUMENTO WORD
+            doc = DocxTemplate("INFORME GEO.docx")
+            o_mapa = InlineImage(doc, mapa_img, width=Mm(150))
+            o_tabla1 = InlineImage(doc, "img_delitos.png", width=Mm(145))
+            o_tabla2 = InlineImage(doc, "img_tramos.png", width=Mm(130))
 
-                contexto = {
-                    "domicilio": domicilio.upper(), "jurisdiccion": subcomisaria.upper(), "fecha_actual": inf_fecha.upper(),
-                    "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado.upper(),
-                    "solicitante": funcionario.upper(), "unidad_solic": unidad.upper(),
-                    "periodo_inicio": p_inicio, "periodo_fin": p_fin,
-                    "cuadrante": cuadrante, "mapa": o_mapa, "total_dmcs": total_casos,
-                    "tabla": o_tabla1, "tabla_horarios": o_tabla2,
-                    "dia_max": dia_frec, "hora_max": hora_frec, "conclusion_ia": analisis_ia.upper()
-                }
+            # Manejo seguro del periodo
+            p_split = periodo_txt.split(" al ")
+            p_inicio = p_split[0] if len(p_split) > 0 else "INICIO"
+            p_fin = p_split[1] if len(p_split) > 1 else "FIN"
 
-                doc.render(contexto)
-                output = io.BytesIO()
-                doc.save(output)
-                output.seek(0)
+            contexto = {
+                "domicilio": domicilio.upper(), "jurisdiccion": subcomisaria.upper(), "fecha_actual": inf_fecha.upper(),
+                "doe": doe_n, "fecha_doe": doe_fecha, "grado_solic": grado.upper(),
+                "solicitante": funcionario.upper(), "unidad_solic": unidad.upper(),
+                "periodo_inicio": p_inicio, "periodo_fin": p_fin,
+                "cuadrante": cuadrante, "mapa": o_mapa, "total_dmcs": total_casos,
+                "tabla": o_tabla1, "tabla_horarios": o_tabla2,
+                "dia_max": dia_frec, "hora_max": hora_frec, "conclusion_ia": analisis_ia.upper()
+            }
 
-                st.success("✅ Informe generado exitosamente.")
-                st.download_button("📥 DESCARGAR INFORME OFICIAL", data=output, file_name=f"Informe_Geo_{cuadrante}.docx")
+            doc.render(contexto)
+            
+            # Guardado en memoria
+            output = io.BytesIO()
+            doc.save(output)
+            output.seek(0)
 
-            except Exception as e:
-                st.error(f"Error en el motor FRIDAY: {e}")
+            st.success("✅ Informe generado exitosamente.")
+            st.download_button(
+                label="📥 DESCARGAR INFORME OFICIAL",
+                data=output,
+                file_name=f"Informe_Geo_{cuadrante}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
+        except Exception as e:
+            st.error(f"Error en el motor FRIDAY: {e}")
 
 # --- PESTAÑA 4: CARTA DE SITUACIÓN (ESTILO Y LÓGICA FINAL) ---
 with t4:
@@ -477,7 +500,7 @@ with t4:
 
             # 3. CONSTRUCCIÓN DEL RESUMEN TÁCTICO
             if es_lesion:
-                accion_v = "PROBINA GOLPES A LA VÍCTIMA" if "GOLPE" in texto_analisis else "AGREDE FÍSICAMENTE A LA VÍCTIMA"
+                accion_v = "PROPINA GOLPES A LA VÍCTIMA" if "GOLPE" in texto_analisis else "AGREDE FÍSICAMENTE A LA VÍCTIMA"
                 resumen_final = f"VICTIMA SE ENCONTRABA EN LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN SIN PROVOCACION PREVIA {accion_v}, RESULTANDO ESTA CON LESIONES DE DIVERSA CONSIDERACION, PARA LUEGO DARSE A LA FUGA."
                 especie_display = "NO REGISTRA (PROCEDIMIENTO POR LESIONES)"
             else:
