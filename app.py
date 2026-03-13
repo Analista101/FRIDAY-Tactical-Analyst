@@ -10,28 +10,28 @@ import streamlit as st
 import json
 import os
 import requests
-import streamlit as st
-import json
-import os
-import re
-import google.generativeai as genai
 
-# Asegúrese de que los nombres coincidan exactamente con sus archivos:
+# Importaciones de los módulos (Asegúrese de que los archivos existan)
 from pestana_geo import render_pestana_georreferenciacion
 from pestana_mensual import render_pestana_mensual
 from pestana_trimestral import render_pestana_trimestral
-from pestana_cartasituacion import render_pestana_situacion # <-- Verifique este nombre
+from pestana_cartasituacion import render_pestana_situacion
 
 st.set_page_config(page_title="Proyecto FRIDAY - Stark Industries", layout="wide")
 
 # Menú Lateral Estilo Stark
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/b/b5/Stark_Industries_logo.png", width=200)
+st.sidebar.image(
+    "https://upload.wikimedia.org/wikipedia/commons/b/b5/Stark_Industries_logo.png",
+    width=200,
+)
 st.sidebar.title("SISTEMA FRIDAY")
 
-opcion = st.sidebar.radio("MÓDULOS ACTIVOS:", 
-    ["Georreferenciación", "Acta Mensual", "Acta Trimestral", "Carta de Situación"])
+opcion = st.sidebar.radio(
+    "MÓDULOS ACTIVOS:",
+    ["Georreferenciación", "Acta Mensual", "Acta Trimestral", "Carta de Situación"],
+)
 
-# Enrutador de funciones
+# Enrutador de funciones (Sangría corregida a nivel 0 y nivel 1)
 if opcion == "Georreferenciación":
     render_pestana_georreferenciacion()
 elif opcion == "Acta Mensual":
