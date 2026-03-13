@@ -11,7 +11,7 @@ import json
 import os
 import requests
 
-# Importaciones de los módulos (Asegúrese de que los archivos existan)
+# Importación de módulos externos
 from pestana_geo import render_pestana_georreferenciacion
 from pestana_mensual import render_pestana_mensual
 from pestana_trimestral import render_pestana_trimestral
@@ -31,7 +31,7 @@ opcion = st.sidebar.radio(
     ["Georreferenciación", "Acta Mensual", "Acta Trimestral", "Carta de Situación"],
 )
 
-# Enrutador de funciones (Sangría corregida a nivel 0 y nivel 1)
+# Enrutador de funciones con sangría estándar (4 espacios)
 if opcion == "Georreferenciación":
     render_pestana_georreferenciacion()
 elif opcion == "Acta Mensual":
