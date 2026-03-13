@@ -6,3 +6,5 @@ openpyxl
 docxtpl
 seaborn
 PyPDF2
+google-generativeai
+requests
