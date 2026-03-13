@@ -14,78 +14,14 @@ import streamlit as st
 import json
 import os
 import re
+import google.generativeai as genai
+from motor_ia import procesar_relato_ia
 from motor_friday import ajustar_texto_largo, crear_tabla_profesional
+
 def render_pestana_situacion():
-    st.header("📋 Carta de Situación Tactica")
-    st.info("Este módulo automatiza el resumen de Modus Operandi y Tramos Horarios por Cuadrante.")
-
-    with st.form("form_situacion"):
-        col1, col2 = st.columns(2)
-        with col1:
-            unidad_policial = st.text_input("UNIDAD", value="PUDAHUEL").upper()
-        with col2:
-            fecha_reporte = st.date_input("FECHA DEL REPORTE")
-        
-        archivo_situacion = st.file_uploader("Cargar Base de Datos (Excel de Partes Policiales)", type=['xlsx'])
-        
-        submit_situacion = st.form_submit_button("GENERAR CARTA DE SITUACIÓN")
-
-    if submit_situacion:
-        if archivo_situacion:
-            try:
-                # 1. CARGA Y LIMPIEZA (Protocolo Stark: Todo a Mayúsculas)
-                df = pd.read_excel(archivo_situacion)
-                df.columns = [c.upper().strip() for c in df.columns]
-                
-                # 2. FILTRADO DE LOS 10 CUADRANTES
-                # FRIDAY filtra automáticamente los sectores del 1 al 10
-                st.write("🔍 Analizando cuadrantes y extrayendo Modus Operandi...")
-                
-                # --- AQUÍ VA SU LÓGICA DE PROCESAMIENTO ---
-                # Ejemplo de aplicación de las reglas que definimos antes:
-                # - Sin nombres/RUTs
-                # - Todo en UPPERCASE
-                # - Tramos horarios de 1 hora
-                
-                st.success("✅ Análisis de Carta de Situación finalizado.")
-                
-            except Exception as e:
-                st.error(f"Error en motor FRIDAY (Situación): {e}")
-        else:
-            st.warning("⚠️ Requiere archivo Excel para proceder.")
-2. Actualización del Cerebro Central (app.py)
-Ahora simplemente añadimos la nueva opción al menú lateral. Su archivo principal quedará así de limpio:
-
-Python
-import streamlit as st
-from pestana_geo import render_pestana_georreferenciacion
-from pestana_mensual import render_pestana_mensual
-from pestana_trimestral import render_pestana_trimestral
-from pestana_situacion import render_pestana_situacion # <-- Nuevo
-
-st.set_page_config(page_title="Proyecto JARVIS - Stark Industries", layout="wide")
-
-# Menú Lateral Estilo Stark
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/b/b5/Stark_Industries_logo.png", width=200)
-st.sidebar.title("SISTEMA FRIDAY")
-
-opcion = st.sidebar.radio("MÓDULOS ACTIVOS:", 
-    ["Georreferenciación", "Acta Mensual", "Acta Trimestral", "Carta de Situación"])
-
-# Enrutador de funciones
-if opcion == "Georreferenciación":
-    render_pestana_georreferenciacion()
-elif opcion == "Acta Mensual":
-    render_pestana_mensual()
-elif opcion == "Acta Trimestral":
-    render_pestana_trimestral()
-elif opcion == "Carta de Situación":
-    render_pestana_situacion()
-
-# --- PESTAÑA 4: CARTA DE SITUACIÓN (ESTILO Y LÓGICA FINAL) ---
-with t4:
     st.markdown('<div class="section-header">📋 GENERADOR DE CARTA DE SITUACIÓN</div>', unsafe_allow_html=True)
     
+    # Manejo de estado para el botón borrar
     if 'key_relato' not in st.session_state:
         st.session_state.key_relato = 0
 
@@ -105,19 +41,24 @@ with t4:
 
     if enviar and relato_in:
         with st.status("🤖 FRIDAY: Analizando naturaleza del procedimiento...", expanded=False):
-            resultado = procesar_relato_ia(relato_in)
-            
-            # Sincronización de campos
+            # Asumimos que procesar_relato_ia está definida en su motor
+            try:
+                from motor_ia import procesar_relato_ia
+                resultado = procesar_relato_ia(relato_in)
+            except ImportError:
+                st.error("Error: No se encontró la función procesar_relato_ia")
+                return
+
+            # Sincronización de campos (Manejo de tuplas)
             if len(resultado) >= 12:
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md_ia, mo_ia = resultado[:12]
             else:
                 datos_relleno = resultado + (None,) * (12 - len(resultado))
                 tip, tr, loc, gv, ev, tl_clase, esp, gd, ed, cd, md_ia, mo_ia = datos_relleno
 
-            import re
             texto_analisis = relato_in.upper()
             
-            # 1. DETECCIÓN DE DELITO
+            # 1. DETECCIÓN DE DELITO (Protocolo Lesiones)
             es_lesion = any(x in texto_analisis for x in ["LESION", "GOLPE", "AGRESION", "RIÑA", "PUÑO", "PATADA"])
             
             # 2. SINCRONIZACIÓN DE MEDIO DE DESPLAZAMIENTO
@@ -139,12 +80,12 @@ with t4:
                 resumen_final = f"VICTIMA TRANSITABA {transporte_v} POR LA VIA PUBLICA, MOMENTOS EN QUE ES ABORDADA POR {sujeto_v}, QUIEN {accion_v} {especie_v}, DÁNDOSE POSTERIORMENTE A LA FUGA."
                 especie_display = esp if esp else "SIN ESPECIFICAR"
 
-            # 4. LIMPIEZA DE PRIVACIDAD
+            # 4. LIMPIEZA DE PRIVACIDAD (PII)
             nombres_p = r'(YESSENIA|DEL CARMEN|GARCIA|ARO|JENIPHER|SABANDO|TOLEDO|MARIVOR|DOMICILIADA|IDENTIDAD|CEDULA)'
             resumen_final = re.sub(nombres_p, 'VICTIMA', resumen_final)
             resumen_final = re.sub(r'\d{1,2}\.\d{3}\.\d{3}-[\dKk]', '', resumen_final)
 
-            # 5. LÓGICA DE LUGAR
+            # 5. LÓGICA DE LUGAR (Prioridad lugar de ocurrencia)
             if any(h in texto_analisis for h in ["HOSPITAL", "CLINICA", "POSTA"]):
                 tl_final = "CENTRO DE SALUD"
                 loc_final = str(loc).upper()
@@ -152,7 +93,7 @@ with t4:
                 tl_final = "VIA PUBLICA" if any(v in texto_analisis for v in ["AVENIDA", "CALLE", "TENIENTE CRUZ"]) else tl_clase
                 loc_final = str(loc).upper()
 
-        # --- 6. RENDERIZADO CON TAMAÑO DE LETRA CORREGIDO ---
+        # 6. RENDERIZADO HTML/CSS
         st.markdown(f"""
         <style>
             .tabla-final {{ width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; color: black; border: 1px solid #333; }}
@@ -196,4 +137,3 @@ with t4:
             </tr>
         </table>
         """, unsafe_allow_html=True)
-

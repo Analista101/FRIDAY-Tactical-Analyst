@@ -14,6 +14,13 @@ import streamlit as st
 import json
 import os
 import re
+import google.generativeai as genai
+
+# Asegúrese de que los nombres coincidan exactamente con sus archivos:
+from pestana_geo import render_pestana_georreferenciacion
+from pestana_mensual import render_pestana_mensual
+from pestana_trimestral import render_pestana_trimestral
+from pestana_cartasituacion import render_pestana_situacion # <-- Verifique este nombre
 
 st.set_page_config(page_title="Proyecto FRIDAY - Stark Industries", layout="wide")
 

@@ -1,0 +1,6 @@
+{
+    "unidad": "Prefectura Central - Analista Civil",
+    "path_informes": "./informes_generados/",
+    "path_db": "./database/delitos_2026.xlsx",
+    "api_key": "TU_API_KEY_AQUÍ"
+}
